@@ -60,10 +60,12 @@ Any type name can be used. The tool counts classes/structs that inherit from or 
 { "types": ["XCTestCase", "QuickSpec"] }
 ```
 
-**Generics:**
+**Generics (with wildcard):**
 ```json
-{ "types": ["BaseCoordinator<", "Repository<", "UseCase<"] }
+{ "types": ["BaseCoordinator<*>", "Repository<*>", "UseCase<*>"] }
 ```
+
+Use `<*>` wildcard to match any generic variant (e.g., `BaseCoordinator<*>` matches `BaseCoordinator<SomeFlow>`, `BaseCoordinator<OtherFlow>`). Without the wildcard, only exact type name matches.
 
 **Custom base classes:**
 ```json
