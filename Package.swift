@@ -1,7 +1,5 @@
 // swift-tools-version: 6.2
-
 import PackageDescription
-
 let package = Package(
     name: "Scout",
     platforms: [
@@ -80,7 +78,10 @@ let package = Package(
                     package: "swift-log-oslog"
                 ),
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .target(
             name: "CodeReader",
@@ -95,7 +96,10 @@ let package = Package(
                 ),
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .executableTarget(
             name: "CountTypes",
@@ -111,7 +115,10 @@ let package = Package(
                 "CodeReader",
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .executableTarget(
             name: "CountFiles",
@@ -126,7 +133,10 @@ let package = Package(
                 ),
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .executableTarget(
             name: "CountImports",
@@ -142,7 +152,10 @@ let package = Package(
                 "CodeReader",
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .executableTarget(
             name: "CountLOC",
@@ -158,7 +171,10 @@ let package = Package(
                 "CodeReader",
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .executableTarget(
             name: "ExtractBuildSettings",
@@ -173,7 +189,10 @@ let package = Package(
                 ),
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
         ),
         .testTarget(
             name: "CodeReaderTests",
@@ -186,6 +205,9 @@ let package = Package(
             ],
             resources: [
                 .copy("Samples")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
             ]
         ),
     ]
