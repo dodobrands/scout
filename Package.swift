@@ -23,8 +23,8 @@ let package = Package(
             targets: ["FilesSDK"]
         ),
         .library(
-            name: "ImportsSDK",
-            targets: ["ImportsSDK"]
+            name: "PatternSDK",
+            targets: ["PatternSDK"]
         ),
         .library(
             name: "LOCSDK",
@@ -133,13 +133,12 @@ let package = Package(
             ]
         ),
         .target(
-            name: "ImportsSDK",
+            name: "PatternSDK",
             dependencies: [
                 .product(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "CodeReader",
                 "Common",
             ],
             swiftSettings: [
@@ -212,7 +211,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "CountImports",
+            name: "Search",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -222,7 +221,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "ImportsSDK",
+                "PatternSDK",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -277,7 +276,7 @@ let package = Package(
                 ),
                 "CountTypes",
                 "CountFiles",
-                "CountImports",
+                "Search",
                 "CountLOC",
                 "ExtractBuildSettings",
             ]
