@@ -2,6 +2,10 @@
 
 import PackageDescription
 
+let swiftSettings: [SwiftSetting] = [
+    .treatAllWarnings(as: .error),
+]
+
 let package = Package(
     name: "Scout",
     platforms: [
@@ -80,7 +84,8 @@ let package = Package(
                     package: "swift-log-oslog"
                 ),
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: swiftSettings
         ),
         .target(
             name: "CodeReader",
@@ -95,7 +100,8 @@ let package = Package(
                 ),
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: swiftSettings
         ),
         .executableTarget(
             name: "CountTypes",
@@ -111,7 +117,8 @@ let package = Package(
                 "CodeReader",
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: swiftSettings
         ),
         .executableTarget(
             name: "CountFiles",
@@ -126,7 +133,8 @@ let package = Package(
                 ),
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: swiftSettings
         ),
         .executableTarget(
             name: "CountImports",
@@ -142,7 +150,8 @@ let package = Package(
                 "CodeReader",
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: swiftSettings
         ),
         .executableTarget(
             name: "CountLOC",
@@ -158,7 +167,8 @@ let package = Package(
                 "CodeReader",
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: swiftSettings
         ),
         .executableTarget(
             name: "ExtractBuildSettings",
@@ -173,7 +183,8 @@ let package = Package(
                 ),
                 "Common",
             ],
-            exclude: ["README.md"]
+            exclude: ["README.md"],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "CodeReaderTests",
@@ -186,7 +197,8 @@ let package = Package(
             ],
             resources: [
                 .copy("Samples")
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
     ]
 )
