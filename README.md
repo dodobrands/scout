@@ -111,11 +111,7 @@ scout build-settings --config build.json
 All tools support `--commits` option to analyze specific commits. This enables tracking metrics over time:
 
 ```bash
-# Analyze multiple commits
-scout types --commits "abc123,def456,ghi789"
-
-# Combine with other options
-scout types --commits "abc123,def456" --config types.json
+scout types UIView --commits abc123 def456 ghi789
 ```
 
 Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.

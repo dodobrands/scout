@@ -48,9 +48,10 @@ public struct Types: AsyncParsableCommand {
 
     @Option(
         name: [.long, .short],
-        help: "Comma-separated list of commit hashes to analyze. If not provided, uses HEAD."
+        parsing: .upToNextOption,
+        help: "Commit hashes to analyze (default: HEAD)"
     )
-    public var commits: String?
+    public var commits: [String] = []
 
     @Option(name: [.long, .short], help: "Path to save JSON results")
     public var output: String?
@@ -83,10 +84,8 @@ public struct Types: AsyncParsableCommand {
             ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
 
         let commitHashes: [String]
-        if let commits {
-            commitHashes = commits.split(separator: ",").map {
-                String($0.trimmingCharacters(in: .whitespaces))
-            }
+        if !commits.isEmpty {
+            commitHashes = commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
