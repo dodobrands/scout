@@ -41,12 +41,7 @@ scout <subcommand> [options]
 Count Swift types by inheritance. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
 ```bash
-scout types --config types.json
-```
-
-```json
-// types.json
-{"types": ["UIView", "UIViewController", "View"]}
+scout types --config types.json  # {"types": ["UIView", "UIViewController", "View"]}
 ```
 
 ```json
@@ -60,12 +55,7 @@ scout types --config types.json
 Count files by extension. Useful for tracking storyboard, xib, swift files count.
 
 ```bash
-scout files --config files.json
-```
-
-```json
-// files.json
-{"filetypes": ["storyboard", "xib"]}
+scout files --config files.json  # {"filetypes": ["storyboard", "xib"]}
 ```
 
 ```json
@@ -79,16 +69,11 @@ scout files --config files.json
 Search for string patterns in source files. Useful for tracking import statements, API usage, etc.
 
 ```bash
-scout pattern --config pattern.json
+scout pattern --config pattern.json  # {"patterns": ["import UIKit", "import SwiftUI"]}
 ```
 
 ```json
-// pattern.json
-{"patterns": ["import UIKit", "import SwiftUI", "// TODO:"]}
-```
-
-```json
-{"commit":"abc123","date":"2025-01-15","results":{"import UIKit":89,"import SwiftUI":45,"// TODO:":23}}
+{"commit":"abc123","date":"2025-01-15","results":{"import UIKit":89,"import SwiftUI":45}}
 ```
 
 📖 [Full documentation](Sources/Pattern/README.md)
@@ -98,12 +83,7 @@ scout pattern --config pattern.json
 Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
 
 ```bash
-scout loc --config loc.json
-```
-
-```json
-// loc.json
-{"configurations": [{"languages": ["Swift"], "include": ["Sources"], "exclude": ["Vendor"]}]}
+scout loc --config loc.json  # {"configurations": [{"languages": ["Swift"], "include": ["Sources"]}]}
 ```
 
 ```json
@@ -117,16 +97,11 @@ scout loc --config loc.json
 Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
 
 ```bash
-scout build-settings --config build-settings.json
+scout build-settings --config build.json  # {"configuration": "Release"}
 ```
 
 ```json
-// build-settings.json
-{"buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"], "configuration": "Release"}
-```
-
-```json
-{"commit":"abc123","date":"2025-01-15","results":[{"target":"MyApp","buildSettings":{"SWIFT_VERSION":"5.0","IPHONEOS_DEPLOYMENT_TARGET":"15.0"}}]}
+{"commit":"abc123","date":"2025-01-15","results":[{"target":"MyApp","buildSettings":{"SWIFT_VERSION":"5.0"}}]}
 ```
 
 📖 [Full documentation](Sources/BuildSettings/README.md)
