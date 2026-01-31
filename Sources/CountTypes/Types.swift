@@ -11,7 +11,7 @@ public struct Types: AsyncParsableCommand {
 
     public static let configuration = CommandConfiguration(
         commandName: "types",
-        abstract: "Count types inherited from specified base types"
+        abstract: "Count Swift types inherited from specified base types"
     )
 
     struct Summary: JobSummaryFormattable {
@@ -34,8 +34,8 @@ public struct Types: AsyncParsableCommand {
         }
     }
 
-    @Option(name: [.long, .short], help: "Path to iOS repository")
-    public var iosSources: String
+    @Option(name: [.long, .short], help: "Path to repository with Swift sources")
+    public var repoPath: String
 
     @Option(name: .long, help: "Path to configuration JSON file")
     public var config: String?
@@ -66,9 +66,9 @@ public struct Types: AsyncParsableCommand {
         let configFilePath = SystemPackage.FilePath(config ?? "count-types-config.json")
         let config = try await CountTypesConfig(configFilePath: configFilePath)
 
-        let repoPath =
-            try URL(string: iosSources)
-            ?! URLError.invalidURL(parameter: "iosSources", value: iosSources)
+        let repoPathURL =
+            try URL(string: repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
 
         let commitHashes: [String]
         if let commits {
@@ -76,7 +76,7 @@ public struct Types: AsyncParsableCommand {
                 String($0.trimmingCharacters(in: .whitespaces))
             }
         } else {
-            let head = try await Git.headCommit(in: repoPath)
+            let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
@@ -99,7 +99,7 @@ public struct Types: AsyncParsableCommand {
             for hash in commitHashes {
                 lastResult = try await sdk.analyzeCommit(
                     hash: hash,
-                    repoPath: repoPath,
+                    repoPath: repoPathURL,
                     typeName: typeName,
                     initializeSubmodules: initializeSubmodules
                 )
