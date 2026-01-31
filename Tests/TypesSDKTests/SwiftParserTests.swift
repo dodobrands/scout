@@ -1,12 +1,12 @@
 import Foundation
 import Testing
 
-@testable import CodeReader
+@testable import TypesSDK
 
-struct CodeReaderTests {
+struct SwiftParserTests {
     @Test("Read UIView classes")
     func readUIView() throws {
-        let sut = CodeReader()
+        let sut = SwiftParser()
         let objects = try sut.parseFile(from: CodeFiles.uiviews)
         let types = objects.filter {
             sut.isInherited(objectFromCode: $0, from: "UIView", allObjects: objects)
@@ -16,7 +16,7 @@ struct CodeReaderTests {
 
     @Test("Read SwiftUI View classes")
     func readSwiftUIView() throws {
-        let sut = CodeReader()
+        let sut = SwiftParser()
         let objects = try sut.parseFile(from: CodeFiles.swiftuiviews)
         let types = objects.filter {
             sut.isInherited(objectFromCode: $0, from: "View", allObjects: objects)
@@ -26,7 +26,7 @@ struct CodeReaderTests {
 
     @Test("Read JsonAsyncRequest generic types with wildcard")
     func readJsonAsyncRequestWithWildcard() throws {
-        let sut = CodeReader()
+        let sut = SwiftParser()
         let objects = try sut.parseFile(from: CodeFiles.genericTypes)
         let types = objects.filter {
             sut.isInherited(objectFromCode: $0, from: "JsonAsyncRequest<*>", allObjects: objects)
@@ -36,7 +36,7 @@ struct CodeReaderTests {
 
     @Test("Exact type match without wildcard does not match generics")
     func exactTypeMatchWithoutWildcard() throws {
-        let sut = CodeReader()
+        let sut = SwiftParser()
         let objects = try sut.parseFile(from: CodeFiles.genericTypes)
         let types = objects.filter {
             sut.isInherited(objectFromCode: $0, from: "JsonAsyncRequest", allObjects: objects)

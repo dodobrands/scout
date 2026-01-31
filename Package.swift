@@ -11,10 +11,6 @@ let package = Package(
             targets: ["Common"]
         ),
         .library(
-            name: "CodeReader",
-            targets: ["CodeReader"]
-        ),
-        .library(
             name: "TypesSDK",
             targets: ["TypesSDK"]
         ),
@@ -88,7 +84,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "CodeReader",
+            name: "TypesSDK",
             dependencies: [
                 .product(
                     name: "SourceKittenFramework",
@@ -98,21 +94,6 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "Common",
-            ],
-            exclude: ["README.md"],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-            ]
-        ),
-        .target(
-            name: "TypesSDK",
-            dependencies: [
-                .product(
-                    name: "Logging",
-                    package: "swift-log"
-                ),
-                "CodeReader",
                 "Common",
             ],
             swiftSettings: [
@@ -152,7 +133,6 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "CodeReader",
                 "Common",
             ],
             swiftSettings: [
@@ -282,9 +262,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "CodeReaderTests",
+            name: "TypesSDKTests",
             dependencies: [
-                "CodeReader",
+                "TypesSDK",
                 .product(
                     name: "InlineSnapshotTesting",
                     package: "swift-snapshot-testing"

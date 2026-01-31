@@ -2,12 +2,23 @@ import Common
 import Foundation
 import SourceKittenFramework
 
-public class CodeReader {
-    public init() {}
+/// Parsed Swift code object with name and inheritance information.
+public struct ObjectFromCode: Sendable {
+    public let name: String
+    public let inheritedTypes: [String]
 
-    public func parseFile(
-        from swiftFile: URL
-    ) throws -> [ObjectFromCode] {
+    public init(name: String, inheritedTypes: [String]) {
+        self.name = name
+        self.inheritedTypes = inheritedTypes
+    }
+}
+
+/// Parser for Swift source files using SourceKitten.
+struct SwiftParser {
+    /// Parses a Swift source file and extracts type definitions.
+    /// - Parameter swiftFile: URL to the Swift source file
+    /// - Returns: Array of parsed code objects
+    func parseFile(from swiftFile: URL) throws -> [ObjectFromCode] {
         guard let file = File(path: swiftFile.path(percentEncoded: false)) else { return [] }
         let structure = try Structure(file: file)
         guard let substructure = structure.dictionary["key.substructure"] as? [[String: Any]] else {
@@ -31,7 +42,13 @@ public class CodeReader {
         return parsedStructs
     }
 
-    public func isInherited(
+    /// Checks if a code object inherits from the specified base type.
+    /// - Parameters:
+    ///   - objectFromCode: The object to check
+    ///   - inheritance: Base type pattern (use `<*>` suffix for generic matching)
+    ///   - allObjects: All parsed objects for indirect inheritance lookup
+    /// - Returns: `true` if the object inherits from the base type
+    func isInherited(
         objectFromCode: ObjectFromCode,
         from inheritance: String,
         allObjects: [ObjectFromCode]
@@ -83,32 +100,5 @@ public class CodeReader {
             return String(typeName[..<genericStartIndex])
         }
         return typeName
-    }
-
-    public func linesOfCode(at path: URL, language: String) async throws -> String {
-        let clocOutput = try await Shell.execute(
-            "cloc",
-            arguments: ["--quiet", "--include-lang=\(language)", path.path(percentEncoded: false)]
-        )
-        let lines = clocOutput.split(separator: "\n")
-        for line in lines {
-            if line.contains(language) {
-                let parts = line.split(whereSeparator: { $0.isWhitespace })
-                if parts.count >= 5 {
-                    return String(parts[4])
-                }
-            }
-        }
-        return "0"
-    }
-}
-
-public struct ObjectFromCode {
-    public let name: String
-    public let inheritedTypes: [String]
-
-    public init(name: String, inheritedTypes: [String]) {
-        self.name = name
-        self.inheritedTypes = inheritedTypes
     }
 }
