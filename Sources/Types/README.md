@@ -46,12 +46,29 @@ scout types --repo-path /path/to/repo --config types-config.json
 |-------|------|-------------|
 | `types` | `[String]` | Types to count by inheritance |
 
-### Supported Types
+### Examples
 
-- `UIView` — UIKit view classes
-- `UIViewController` — UIKit view controller classes
-- `View` — SwiftUI view structs
-- `XCTestCase` — XCTest framework test classes
+Any type name can be used. The tool counts classes/structs that inherit from or conform to the specified types.
+
+**UIKit/SwiftUI:**
+```json
+{ "types": ["UIView", "UIViewController", "View"] }
+```
+
+**Testing frameworks:**
+```json
+{ "types": ["XCTestCase", "QuickSpec"] }
+```
+
+**Generics:**
+```json
+{ "types": ["BaseCoordinator<", "Repository<", "UseCase<"] }
+```
+
+**Custom base classes:**
+```json
+{ "types": ["BaseViewModel", "BaseService", "FeatureModule"] }
+```
 
 ## See Also
 
