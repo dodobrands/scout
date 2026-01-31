@@ -82,17 +82,6 @@ scout build-settings --repo-path /path/to/repo --config config.json --commits "a
 
 📖 [Full documentation](Sources/BuildSettings/README.md)
 
-## Libraries
-
-| Module | Description |
-|--------|-------------|
-| **Common** | Shared utilities (shell, git, logging, retry logic) |
-| **CodeReader** | Source code parsing with SourceKitten |
-
-## Configuration
-
-Each subcommand requires a JSON config file. See individual README files in `Sources/*/README.md` for config format.
-
 ## Requirements
 
 - macOS 15+
