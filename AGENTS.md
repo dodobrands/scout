@@ -61,3 +61,9 @@ When changing public APIs of any tool, update all relevant READMEs in `Sources/*
 ## Issues
 
 When creating issues, use the issue template in `.github/ISSUE_TEMPLATE.md`.
+
+## Pull Requests
+
+Each issue must be solved in a separate PR. Never combine multiple issues in one PR unless explicitly told otherwise.
+
+When creating PRs, use the PR template in `.github/pull_request_template.md`.
