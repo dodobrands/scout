@@ -40,8 +40,11 @@ public struct Types: AsyncParsableCommand {
     @Option(name: .long, help: "Path to configuration JSON file")
     public var config: String?
 
-    @Option(name: [.long, .short], help: "Comma-separated list of commit hashes to analyze")
-    public var commits: String
+    @Option(
+        name: [.long, .short],
+        help: "Comma-separated list of commit hashes to analyze. If not provided, uses HEAD."
+    )
+    public var commits: String?
 
     @Flag(name: [.long, .short])
     public var verbose: Bool = false
@@ -64,8 +67,15 @@ public struct Types: AsyncParsableCommand {
             try URL(string: iosSources)
             ?! URLError.invalidURL(parameter: "iosSources", value: iosSources)
 
-        let commitHashes = commits.split(separator: ",").map {
-            String($0.trimmingCharacters(in: .whitespaces))
+        let commitHashes: [String]
+        if let commits {
+            commitHashes = commits.split(separator: ",").map {
+                String($0.trimmingCharacters(in: .whitespaces))
+            }
+        } else {
+            let head = try await Git.headCommit(in: repoPath)
+            commitHashes = [head]
+            Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
         var typeResults: [(typeName: String, count: Int)] = []
