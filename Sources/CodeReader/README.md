@@ -25,12 +25,14 @@ let fileURL = URL(fileURLWithPath: "/path/to/file.swift")
 // Parse file and get all objects
 let objects = try reader.parseFile(from: fileURL)
 
-// Check if an object inherits from a base class
-let isUIView = reader.isInherited(
-    objectFromCode: someObject,
-    from: "UIView",
-    allObjects: objects
-)
+// Count objects inheriting from UIView
+let viewCount = objects.filter { object in
+    reader.isInherited(
+        objectFromCode: object,
+        from: "UIView",
+        allObjects: objects
+    )
+}.count
 
 // Read imports from a file
 let imports = try reader.readImports(from: fileURL)
