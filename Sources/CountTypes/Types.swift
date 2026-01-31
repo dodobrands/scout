@@ -6,9 +6,13 @@ import Logging
 import System
 import SystemPackage
 
-@main
-public class CountTypes: AsyncParsableCommand {
-    required public init() {}
+public struct Types: AsyncParsableCommand {
+    public init() {}
+
+    public static let configuration = CommandConfiguration(
+        commandName: "types",
+        abstract: "Count types inherited from specified base types"
+    )
 
     struct Summary: JobSummaryFormattable {
         let typeResults: [(typeName: String, count: Int)]

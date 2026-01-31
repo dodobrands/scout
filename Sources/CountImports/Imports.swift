@@ -1,26 +1,31 @@
 import ArgumentParser
+import CodeReader
 import Common
 import Foundation
 import Logging
 import System
 import SystemPackage
 
-@main
-public class CountFiles: AsyncParsableCommand {
-    required public init() {}
+public struct Imports: AsyncParsableCommand {
+    public init() {}
+
+    public static let configuration = CommandConfiguration(
+        commandName: "imports",
+        abstract: "Count import statements"
+    )
 
     struct Summary: JobSummaryFormattable {
-        let filetypeResults: [(filetype: String, count: Int)]
+        let importResults: [(importName: String, count: Int)]
 
         var markdown: String {
-            var md = "## CountFiles Summary\n\n"
+            var md = "## CountImports Summary\n\n"
 
-            if !filetypeResults.isEmpty {
-                md += "### File Type Counts\n\n"
-                md += "| File Type | Count |\n"
-                md += "|-----------|-------|\n"
-                for result in filetypeResults {
-                    md += "| `.\(result.filetype)` | \(result.count) |\n"
+            if !importResults.isEmpty {
+                md += "### Import Counts\n\n"
+                md += "| Import | Count |\n"
+                md += "|--------|-------|\n"
+                for result in importResults {
+                    md += "| `\(result.importName)` | \(result.count) |\n"
                 }
                 md += "\n"
             }
@@ -29,7 +34,7 @@ public class CountFiles: AsyncParsableCommand {
         }
     }
 
-    @Option(name: [.long, .short], help: "Path to repository")
+    @Option(name: [.long, .short], help: "Path to iOS repository")
     public var repoPath: String
 
     @Option(name: .long, help: "Path to configuration JSON file")
@@ -47,13 +52,13 @@ public class CountFiles: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    private static let logger = Logger(label: "mobile-code-metrics.CountFiles")
+    private static let logger = Logger(label: "mobile-code-metrics.CountImports")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let configFilePath = SystemPackage.FilePath(config ?? "count-files-config.json")
-        let config = try await CountFilesConfig(configFilePath: configFilePath)
+        let configFilePath = SystemPackage.FilePath(config ?? "count-imports-config.json")
+        let config = try await CountImportsConfig(configFilePath: configFilePath)
 
         let repoPathURL =
             try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
@@ -62,44 +67,44 @@ public class CountFiles: AsyncParsableCommand {
             String($0.trimmingCharacters(in: .whitespaces))
         }
 
-        var filetypeResults: [(filetype: String, count: Int)] = []
+        var importResults: [(importName: String, count: Int)] = []
 
-        for filetype in config.filetypes {
-            Self.logger.info("Processing file type: \(filetype)")
+        for importName in config.imports {
+            Self.logger.info("Processing import: \(importName)")
 
             Self.logger.info(
-                "Will analyze \(commitHashes.count) commits for file type '\(filetype)'",
+                "Will analyze \(commitHashes.count) commits for import '\(importName)'",
                 metadata: [
                     "commits": .array(commitHashes.map { .string($0) })
                 ]
             )
 
-            var lastFiletypeCount = 0
+            var lastImportCount = 0
             for hash in commitHashes {
-                lastFiletypeCount = try await analyzeCommit(
+                lastImportCount = try await analyzeCommit(
                     hash: hash,
                     repoPath: repoPathURL,
-                    filetype: filetype
+                    importName: importName
                 )
             }
 
             Self.logger.notice(
-                "Summary for '\(filetype)': analyzed \(commitHashes.count) commit(s)"
+                "Summary for '\(importName)': analyzed \(commitHashes.count) commit(s)"
             )
             if !commitHashes.isEmpty {
-                filetypeResults.append((filetype, lastFiletypeCount))
+                importResults.append((importName, lastImportCount))
             }
         }
 
-        let summary = Summary(filetypeResults: filetypeResults)
+        let summary = Summary(importResults: importResults)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: Summary) {
-        if !summary.filetypeResults.isEmpty {
-            Self.logger.info("File type counts:")
-            for result in summary.filetypeResults {
-                Self.logger.info("  - \(result.filetype): \(result.count)")
+        if !summary.importResults.isEmpty {
+            Self.logger.info("Import counts:")
+            for result in summary.importResults {
+                Self.logger.info("  - \(result.importName): \(result.count)")
             }
         }
 
@@ -113,7 +118,7 @@ public class CountFiles: AsyncParsableCommand {
     private func analyzeCommit(
         hash: String,
         repoPath: URL,
-        filetype: String
+        importName: String
     ) async throws -> Int {
         try await Shell.execute(
             "git",
@@ -122,13 +127,20 @@ public class CountFiles: AsyncParsableCommand {
         )
         try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
 
-        let files = findFiles(of: filetype, in: repoPath) ?? []
+        let files = findFiles(of: "swift", in: repoPath) ?? []
+        let codeReader = CodeReader()
+        let imports =
+            try files
+            .flatMap { try codeReader.readImports(from: $0) }
+            .filter { $0 == importName }
+
+        let value = imports.count
 
         Self.logger.notice(
-            "Found \(files.count) files of type '\(filetype)' at \(hash)"
+            "Found \(value) imports '\(importName)' at \(hash)"
         )
 
-        return files.count
+        return value
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL]? {

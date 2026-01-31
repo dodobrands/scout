@@ -33,9 +33,13 @@ extension ClocError: LocalizedError {
     }
 }
 
-@main
-public class CountLOC: AsyncParsableCommand {
-    required public init() {}
+public struct LOC: AsyncParsableCommand {
+    public init() {}
+
+    public static let configuration = CommandConfiguration(
+        commandName: "loc",
+        abstract: "Count lines of code"
+    )
 
     struct Summary: JobSummaryFormattable {
         let locResults: [(metric: String, count: Int)]

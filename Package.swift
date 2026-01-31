@@ -15,24 +15,8 @@ let package = Package(
             targets: ["CodeReader"]
         ),
         .executable(
-            name: "CountTypes",
-            targets: ["CountTypes"]
-        ),
-        .executable(
-            name: "CountFiles",
-            targets: ["CountFiles"]
-        ),
-        .executable(
-            name: "CountImports",
-            targets: ["CountImports"]
-        ),
-        .executable(
-            name: "CountLOC",
-            targets: ["CountLOC"]
-        ),
-        .executable(
-            name: "ExtractBuildSettings",
-            targets: ["ExtractBuildSettings"]
+            name: "scout",
+            targets: ["Scout"]
         ),
     ],
     dependencies: [
@@ -101,7 +85,7 @@ let package = Package(
                 .swiftLanguageMode(.v6),
             ]
         ),
-        .executableTarget(
+        .target(
             name: "CountTypes",
             dependencies: [
                 .product(
@@ -120,7 +104,7 @@ let package = Package(
                 .swiftLanguageMode(.v6),
             ]
         ),
-        .executableTarget(
+        .target(
             name: "CountFiles",
             dependencies: [
                 .product(
@@ -138,7 +122,7 @@ let package = Package(
                 .swiftLanguageMode(.v6),
             ]
         ),
-        .executableTarget(
+        .target(
             name: "CountImports",
             dependencies: [
                 .product(
@@ -157,7 +141,7 @@ let package = Package(
                 .swiftLanguageMode(.v6),
             ]
         ),
-        .executableTarget(
+        .target(
             name: "CountLOC",
             dependencies: [
                 .product(
@@ -176,7 +160,7 @@ let package = Package(
                 .swiftLanguageMode(.v6),
             ]
         ),
-        .executableTarget(
+        .target(
             name: "ExtractBuildSettings",
             dependencies: [
                 .product(
@@ -192,6 +176,20 @@ let package = Package(
             exclude: ["README.md"],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
+            ]
+        ),
+        .executableTarget(
+            name: "Scout",
+            dependencies: [
+                .product(
+                    name: "ArgumentParser",
+                    package: "swift-argument-parser"
+                ),
+                "CountTypes",
+                "CountFiles",
+                "CountImports",
+                "CountLOC",
+                "ExtractBuildSettings",
             ]
         ),
         .testTarget(
