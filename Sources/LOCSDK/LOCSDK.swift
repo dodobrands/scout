@@ -1,4 +1,3 @@
-import CodeReader
 import Common
 import Foundation
 import System
@@ -81,7 +80,7 @@ public struct LOCSDK: Sendable {
         try await Self.checkClocInstalled()
         try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
 
-        let codeReader = CodeReader()
+        let clocRunner = ClocRunner()
         let foldersToAnalyze = foldersToAnalyze(
             in: repoPath,
             include: configuration.include,
@@ -92,7 +91,7 @@ public struct LOCSDK: Sendable {
             try await configuration.languages
             .asyncFlatMap { language in
                 try await foldersToAnalyze.asyncMap {
-                    try await codeReader.linesOfCode(at: $0, language: language)
+                    try await clocRunner.linesOfCode(at: $0, language: language)
                 }
             }
             .compactMap { Int($0) }

@@ -1,4 +1,3 @@
-import CodeReader
 import Common
 import Foundation
 import Logging
@@ -32,17 +31,17 @@ public struct TypesSDK: Sendable {
         typeName: String,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
-        let codeReader = CodeReader()
+        let parser = SwiftParser()
 
         try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
 
         let swiftFiles = findSwiftFiles(in: repoPath)
         let objects = try swiftFiles.flatMap {
-            try codeReader.parseFile(from: $0)
+            try parser.parseFile(from: $0)
         }
 
         let types = objects.filter {
-            codeReader.isInherited(
+            parser.isInherited(
                 objectFromCode: $0,
                 from: typeName,
                 allObjects: objects
