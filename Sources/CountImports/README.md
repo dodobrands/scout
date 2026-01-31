@@ -1,4 +1,4 @@
-# CountImports
+# imports
 
 Counts import statement usage across git history. Finds specific import statements in Swift files and uploads metrics to Google Sheets.
 
@@ -18,13 +18,13 @@ Analyzes Swift source files across git commit history to count occurrences of sp
 Build from source:
 
 ```bash
-swift build --product CountImports
+swift build
 ```
 
 Or run directly:
 
 ```bash
-swift run CountImports [arguments]
+swift run scout imports [arguments]
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ swift run CountImports [arguments]
 ### Basic Command
 
 ```bash
-swift run CountImports \
+swift run scout imports \
   --repo-path /path/to/ios/repo \
   --config-path count-imports-config.json
 ```
@@ -106,7 +106,7 @@ Create `count-imports-config.json`:
 Run:
 ```bash
 export GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
-swift run CountImports \
+swift run scout imports \
   --repo-path ~/Developer/dodo-mobile-ios \
   --config-path count-imports-config.json
 ```
@@ -124,7 +124,7 @@ Create `count-imports-config.json`:
 Run:
 ```bash
 export GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
-swift run CountImports \
+swift run scout imports \
   --repo-path ~/Developer/dodo-mobile-ios \
   --config-path count-imports-config.json
 ```
@@ -133,7 +133,7 @@ swift run CountImports \
 
 ```bash
 export GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
-swift run CountImports \
+swift run scout imports \
   --repo-path ~/Developer/dodo-mobile-ios \
   --config-path count-imports-config.json \
   --branch develop \
@@ -144,7 +144,7 @@ swift run CountImports \
 
 ```bash
 export GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
-swift run CountImports \
+swift run scout imports \
   --repo-path ~/Developer/dodo-mobile-ios \
   --config-path count-imports-config.json \
   --dry-run

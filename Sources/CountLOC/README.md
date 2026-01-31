@@ -1,4 +1,4 @@
-# CountLOC
+# loc
 
 Counts lines of code (LOC) across git history using `cloc`. Analyzes code in specified languages and directories, filters by include/exclude patterns, and uploads metrics to Google Sheets.
 
@@ -19,13 +19,13 @@ Uses the `cloc` tool to count lines of code in specified programming languages a
 ### Build from Source
 
 ```bash
-swift build --product CountLOC
+swift build
 ```
 
 Or run directly:
 
 ```bash
-swift run CountLOC [arguments]
+swift run scout loc [arguments]
 ```
 
 ### cloc Installation
@@ -56,7 +56,7 @@ If `cloc` is not installed, CountLOC shows a helpful error message with installa
 ### Basic Command
 
 ```bash
-swift run CountLOC \
+swift run scout loc \
   --repo-path /path/to/repo \
   --languages "Java,Kotlin" \
   --include "src/main" \
@@ -113,7 +113,7 @@ swift run CountLOC \
 ### Android Repository
 
 ```bash
-swift run CountLOC \
+swift run scout loc \
   --repo-path ~/Developer/dodo-mobile-android \
   --languages "Java,Kotlin" \
   --include "src/main" \
@@ -125,7 +125,7 @@ swift run CountLOC \
 ### iOS Repository
 
 ```bash
-swift run CountLOC \
+swift run scout loc \
   --repo-path ~/Developer/dodo-mobile-ios \
   --languages "Swift" \
   --include "Sources" \
@@ -137,7 +137,7 @@ swift run CountLOC \
 ### Multiple Include Patterns
 
 ```bash
-swift run CountLOC \
+swift run scout loc \
   --repo-path ~/Developer/dodo-mobile-android \
   --languages "Java,Kotlin" \
   --include "app/src/main,domain/src/main" \
@@ -149,7 +149,7 @@ swift run CountLOC \
 ### Custom Branch and Interval
 
 ```bash
-swift run CountLOC \
+swift run scout loc \
   --repo-path ~/Developer/dodo-mobile-android \
   --languages "Java,Kotlin" \
   --include "src/main" \
@@ -163,7 +163,7 @@ swift run CountLOC \
 ### Dry-Run Mode
 
 ```bash
-swift run CountLOC \
+swift run scout loc \
   --repo-path ~/Developer/dodo-mobile-android \
   --languages "Java,Kotlin" \
   --include "src/main" \

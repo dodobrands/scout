@@ -1,4 +1,4 @@
-# CountFiles
+# files
 
 Counts files by type across git history. Finds files with specified extensions and uploads file counts to Google Sheets.
 
@@ -18,13 +18,13 @@ Analyzes repository structure across git commit history to count files with spec
 Build from source:
 
 ```bash
-swift build --product CountFiles
+swift build
 ```
 
 Or run directly:
 
 ```bash
-swift run CountFiles [arguments]
+swift run scout files [arguments]
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ swift run CountFiles [arguments]
 ### Basic Command
 
 ```bash
-swift run CountFiles \
+swift run scout files \
   --repo-path /path/to/repo \
   --filetype storyboard \
   --sheet-name pizza-ios \
@@ -79,7 +79,7 @@ swift run CountFiles \
 ### Basic Usage
 
 ```bash
-swift run CountFiles \
+swift run scout files \
   --repo-path ~/Developer/dodo-mobile-ios \
   --filetype storyboard \
   --sheet-name pizza-ios \
@@ -89,7 +89,7 @@ swift run CountFiles \
 ### Custom Branch and Interval
 
 ```bash
-swift run CountFiles \
+swift run scout files \
   --repo-path ~/Developer/dodo-mobile-ios \
   --filetype storyboard \
   --sheet-name pizza-ios \
@@ -101,7 +101,7 @@ swift run CountFiles \
 ### Dry-Run Mode
 
 ```bash
-swift run CountFiles \
+swift run scout files \
   --repo-path ~/Developer/dodo-mobile-ios \
   --filetype storyboard \
   --sheet-name pizza-ios \

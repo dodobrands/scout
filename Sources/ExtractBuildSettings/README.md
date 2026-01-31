@@ -1,4 +1,4 @@
-# ExtractBuildSettings
+# build-settings
 
 Extracts build settings from Xcode targets across git history. Executes project setup, extracts specific build settings parameters for each target, and uploads metrics to Google Sheets.
 
@@ -28,13 +28,13 @@ For each commit in git history:
 Build from source:
 
 ```bash
-swift build --product ExtractBuildSettings
+swift build
 ```
 
 Or run directly:
 
 ```bash
-swift run ExtractBuildSettings [arguments]
+swift run scout build-settings [arguments]
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ swift run ExtractBuildSettings [arguments]
 ### Basic Command
 
 ```bash
-swift run ExtractBuildSettings \
+swift run scout build-settings \
   --repo-path /path/to/ios/repo \
   --config-path extract-build-settings-config.json
 ```

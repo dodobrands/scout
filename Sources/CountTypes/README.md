@@ -1,4 +1,4 @@
-# CountTypes
+# types
 
 Counts Swift types by inheritance across git history. Finds classes conforming to specific base types and uploads type counts to Google Sheets.
 
@@ -18,13 +18,13 @@ Analyzes Swift source files across git commit history to count types that inheri
 Build from source:
 
 ```bash
-swift build --product CountTypes
+swift build
 ```
 
 Or run directly:
 
 ```bash
-swift run CountTypes [arguments]
+swift run scout types [arguments]
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ swift run CountTypes [arguments]
 ### Basic Command
 
 ```bash
-swift run CountTypes \
+swift run scout types \
   --ios-sources /path/to/ios/repo \
   --type UIView \
   --sheet-name pizza-ios \
@@ -96,7 +96,7 @@ CountTypes can count types inheriting from or conforming to:
 ### Basic Usage
 
 ```bash
-swift run CountTypes \
+swift run scout types \
   --ios-sources ~/Developer/dodo-mobile-ios \
   --type UIView \
   --sheet-name pizza-ios \
@@ -106,7 +106,7 @@ swift run CountTypes \
 ### Analyze Specific Commit
 
 ```bash
-swift run CountTypes \
+swift run scout types \
   --ios-sources ~/Developer/dodo-mobile-ios \
   --type UIView \
   --sheet-name pizza-ios \
@@ -117,7 +117,7 @@ swift run CountTypes \
 ### Custom Branch and Interval
 
 ```bash
-swift run CountTypes \
+swift run scout types \
   --ios-sources ~/Developer/dodo-mobile-ios \
   --type UIView \
   --sheet-name pizza-ios \
@@ -129,7 +129,7 @@ swift run CountTypes \
 ### Dry-Run Mode
 
 ```bash
-swift run CountTypes \
+swift run scout types \
   --ios-sources ~/Developer/dodo-mobile-ios \
   --type UIView \
   --sheet-name pizza-ios \
