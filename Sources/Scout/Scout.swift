@@ -1,9 +1,9 @@
 import ArgumentParser
 import CountFiles
-import CountImports
 import CountLOC
 import CountTypes
 import ExtractBuildSettings
+import Search
 
 @main
 struct Scout: AsyncParsableCommand {
@@ -13,7 +13,7 @@ struct Scout: AsyncParsableCommand {
         subcommands: [
             Types.self,
             Files.self,
-            Imports.self,
+            Search.self,
             LOC.self,
             BuildSettings.self,
         ]
