@@ -5,9 +5,13 @@ import Logging
 import System
 import SystemPackage
 
-@main
-public class CountFiles: AsyncParsableCommand {
-    required public init() {}
+public struct Files: AsyncParsableCommand {
+    public init() {}
+
+    public static let configuration = CommandConfiguration(
+        commandName: "files",
+        abstract: "Count files by extension"
+    )
 
     struct Summary: JobSummaryFormattable {
         let filetypeResults: [(filetype: String, count: Int)]

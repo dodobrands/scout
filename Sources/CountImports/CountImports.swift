@@ -6,9 +6,13 @@ import Logging
 import System
 import SystemPackage
 
-@main
-public class CountImports: AsyncParsableCommand {
-    required public init() {}
+public struct Imports: AsyncParsableCommand {
+    public init() {}
+
+    public static let configuration = CommandConfiguration(
+        commandName: "imports",
+        abstract: "Count import statements"
+    )
 
     struct Summary: JobSummaryFormattable {
         let importResults: [(importName: String, count: Int)]

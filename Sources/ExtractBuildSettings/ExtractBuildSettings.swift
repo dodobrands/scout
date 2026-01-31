@@ -5,9 +5,13 @@ import Logging
 import System
 import SystemPackage
 
-@main
-public class ExtractBuildSettings: AsyncParsableCommand {
-    required public init() {}
+public struct BuildSettings: AsyncParsableCommand {
+    public init() {}
+
+    public static let configuration = CommandConfiguration(
+        commandName: "build-settings",
+        abstract: "Extract build settings from Xcode projects"
+    )
 
     struct Summary: JobSummaryFormattable {
         let parameterResults: [(parameter: String, targetCount: Int)]
