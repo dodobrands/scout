@@ -14,6 +14,26 @@ let package = Package(
             name: "CodeReader",
             targets: ["CodeReader"]
         ),
+        .library(
+            name: "TypesSDK",
+            targets: ["TypesSDK"]
+        ),
+        .library(
+            name: "FilesSDK",
+            targets: ["FilesSDK"]
+        ),
+        .library(
+            name: "ImportsSDK",
+            targets: ["ImportsSDK"]
+        ),
+        .library(
+            name: "LOCSDK",
+            targets: ["LOCSDK"]
+        ),
+        .library(
+            name: "BuildSettingsSDK",
+            targets: ["BuildSettingsSDK"]
+        ),
         .executable(
             name: "scout",
             targets: ["Scout"]
@@ -86,6 +106,74 @@ let package = Package(
             ]
         ),
         .target(
+            name: "TypesSDK",
+            dependencies: [
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "CodeReader",
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "FilesSDK",
+            dependencies: [
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "ImportsSDK",
+            dependencies: [
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "CodeReader",
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "LOCSDK",
+            dependencies: [
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "CodeReader",
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "BuildSettingsSDK",
+            dependencies: [
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
             name: "CountTypes",
             dependencies: [
                 .product(
@@ -96,7 +184,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "CodeReader",
+                "TypesSDK",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -115,6 +203,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
+                "FilesSDK",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -133,7 +222,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "CodeReader",
+                "ImportsSDK",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -152,7 +241,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "CodeReader",
+                "LOCSDK",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -171,6 +260,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
+                "BuildSettingsSDK",
                 "Common",
             ],
             exclude: ["README.md"],

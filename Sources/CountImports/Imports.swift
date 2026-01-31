@@ -1,7 +1,7 @@
 import ArgumentParser
-import CodeReader
 import Common
 import Foundation
+import ImportsSDK
 import Logging
 import System
 import SystemPackage
@@ -55,7 +55,7 @@ public struct Imports: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    private static let logger = Logger(label: "mobile-code-metrics.CountImports")
+    private static let logger = Logger(label: "scout.CountImports")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
@@ -77,6 +77,7 @@ public struct Imports: AsyncParsableCommand {
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
+        let sdk = ImportsSDK()
         var importResults: [(importName: String, count: Int)] = []
 
         for importName in config.imports {
@@ -89,20 +90,25 @@ public struct Imports: AsyncParsableCommand {
                 ]
             )
 
-            var lastImportCount = 0
+            var lastResult: ImportsSDK.Result?
             for hash in commitHashes {
-                lastImportCount = try await analyzeCommit(
+                lastResult = try await sdk.analyzeCommit(
                     hash: hash,
                     repoPath: repoPathURL,
-                    importName: importName
+                    importName: importName,
+                    initializeSubmodules: initializeSubmodules
+                )
+
+                Self.logger.notice(
+                    "Found \(lastResult!.count) imports '\(importName)' at \(hash)"
                 )
             }
 
             Self.logger.notice(
                 "Summary for '\(importName)': analyzed \(commitHashes.count) commit(s)"
             )
-            if !commitHashes.isEmpty {
-                importResults.append((importName, lastImportCount))
+            if let result = lastResult {
+                importResults.append((importName, result.count))
             }
         }
 
@@ -118,69 +124,6 @@ public struct Imports: AsyncParsableCommand {
             }
         }
 
-        writeJobSummary(summary)
-    }
-
-    private func writeJobSummary(_ summary: Summary) {
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func analyzeCommit(
-        hash: String,
-        repoPath: URL,
-        importName: String
-    ) async throws -> Int {
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", hash],
-            workingDirectory: System.FilePath(repoPath.path(percentEncoded: false))
-        )
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
-
-        let files = findFiles(of: "swift", in: repoPath) ?? []
-        let codeReader = CodeReader()
-        let imports =
-            try files
-            .flatMap { try codeReader.readImports(from: $0) }
-            .filter { $0 == importName }
-
-        let value = imports.count
-
-        Self.logger.notice(
-            "Found \(value) imports '\(importName)' at \(hash)"
-        )
-
-        return value
-    }
-
-    private func findFiles(of type: String, in directory: URL) -> [URL]? {
-        let fileManager = FileManager.default
-
-        guard fileManager.fileExists(atPath: directory.path) else {
-            Self.logger.info("Directory does not exist.")
-            return nil
-        }
-
-        guard
-            let enumerator = fileManager.enumerator(
-                at: directory,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: [.skipsHiddenFiles],
-                errorHandler: nil
-            )
-        else {
-            Self.logger.info("Failed to create enumerator.")
-            return nil
-        }
-
-        var matchingFiles: [URL] = []
-
-        for case let fileURL as URL in enumerator {
-            if fileURL.pathExtension == type {
-                matchingFiles.append(fileURL)
-            }
-        }
-
-        return matchingFiles
     }
 }

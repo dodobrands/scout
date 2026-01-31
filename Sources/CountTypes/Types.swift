@@ -1,10 +1,10 @@
 import ArgumentParser
-import CodeReader
 import Common
 import Foundation
 import Logging
 import System
 import SystemPackage
+import TypesSDK
 
 public struct Types: AsyncParsableCommand {
     public init() {}
@@ -55,7 +55,7 @@ public struct Types: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    private static let logger = Logger(label: "mobile-code-metrics.CountTypes")
+    private static let logger = Logger(label: "scout.CountTypes")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
@@ -78,6 +78,7 @@ public struct Types: AsyncParsableCommand {
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
+        let sdk = TypesSDK()
         var typeResults: [(typeName: String, count: Int)] = []
 
         for typeName in config.types {
@@ -90,20 +91,25 @@ public struct Types: AsyncParsableCommand {
                 ]
             )
 
-            var lastTypeCount = 0
+            var lastResult: TypesSDK.Result?
             for hash in commitHashes {
-                lastTypeCount = try await analyzeCommit(
+                lastResult = try await sdk.analyzeCommit(
                     hash: hash,
                     repoPath: repoPath,
-                    typeName: typeName
+                    typeName: typeName,
+                    initializeSubmodules: initializeSubmodules
+                )
+
+                Self.logger.notice(
+                    "Found \(lastResult!.count) types inherited from \(typeName) at \(hash)"
                 )
             }
 
             Self.logger.notice(
                 "Summary for '\(typeName)': analyzed \(commitHashes.count) commit(s)"
             )
-            if !commitHashes.isEmpty {
-                typeResults.append((typeName, lastTypeCount))
+            if let result = lastResult {
+                typeResults.append((typeName, result.count))
             }
         }
 
@@ -119,82 +125,6 @@ public struct Types: AsyncParsableCommand {
             }
         }
 
-        writeJobSummary(summary)
-    }
-
-    private func writeJobSummary(_ summary: Summary) {
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func analyzeCommit(
-        hash: String,
-        repoPath: URL,
-        typeName: String
-    ) async throws -> Int {
-
-        let codeReader = CodeReader()
-
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", hash],
-            workingDirectory: System.FilePath(iosSources)
-        )
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
-
-        let swiftFiles = findSwiftFiles(in: repoPath) ?? []
-        let objects = try swiftFiles.flatMap {
-            try codeReader.parseFile(from: $0)
-        }
-
-        let types = objects.filter {
-            codeReader.isInherited(
-                objectFromCode: $0,
-                from: typeName,
-                allObjects: objects
-            )
-        }.sorted(by: { $0.name < $1.name })
-
-        Self.logger.debug("Types conforming to \(typeName): \(types.map { $0.name })")
-
-        Self.logger.notice(
-            "Found \(types.count) types inherited from \(typeName) at \(hash)"
-        )
-
-        return types.count
-    }
-
-    private func findSwiftFiles(in directory: URL) -> [URL]? {
-        let fileManager = FileManager.default
-
-        // Ensure the directory exists
-        guard fileManager.fileExists(atPath: directory.path) else {
-            Self.logger.info("Directory does not exist.")
-            return nil
-        }
-
-        // Get the enumerator for the directory
-        guard
-            let enumerator = fileManager.enumerator(
-                at: directory,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: [.skipsHiddenFiles],
-                errorHandler: nil
-            )
-        else {
-            Self.logger.info("Failed to create enumerator.")
-            return nil
-        }
-
-        var swiftFiles: [URL] = []
-
-        // Iterate through the files
-        for case let fileURL as URL in enumerator {
-            // Check if the file has a .swift extension
-            if fileURL.pathExtension == "swift" {
-                swiftFiles.append(fileURL)
-            }
-        }
-
-        return swiftFiles
     }
 }
