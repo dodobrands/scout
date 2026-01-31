@@ -57,3 +57,7 @@ swift test
 ## Documentation Updates
 
 When changing public APIs of any tool, update all relevant READMEs in `Sources/*/README.md`.
+
+## Issues
+
+When creating issues, use the issue template in `.github/ISSUE_TEMPLATE.md`.
