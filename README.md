@@ -36,11 +36,19 @@ scout <subcommand> [options]
 
 Count Swift types by inheritance across git history. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
+```bash
+scout types --ios-sources /path/to/repo --config config.json --commits "abc123,def456"
+```
+
 📖 [Full documentation](Sources/Types/README.md)
 
 ### files
 
 Count files by extension across git history. Useful for tracking storyboard, xib, swift files count over time.
+
+```bash
+scout files --repo-path /path/to/repo --config config.json --commits "abc123"
+```
 
 📖 [Full documentation](Sources/Files/README.md)
 
@@ -48,11 +56,19 @@ Count files by extension across git history. Useful for tracking storyboard, xib
 
 Count import statement usage across git history. Extracts base module name and performs exact matching.
 
+```bash
+scout imports --repo-path /path/to/repo --config config.json --commits "abc123"
+```
+
 📖 [Full documentation](Sources/Pattern/README.md)
 
 ### loc
 
 Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
+
+```bash
+scout loc --repo-path /path/to/repo --config config.json --commits "abc123"
+```
 
 📖 [Full documentation](Sources/LOC/README.md)
 
@@ -60,17 +76,11 @@ Count lines of code using `cloc`. Supports filtering by languages, include/exclu
 
 Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
 
-📖 [Full documentation](Sources/BuildSettings/README.md)
-
-### Examples
-
 ```bash
-scout types --ios-sources /path/to/repo --config config.json --commits "abc123,def456"
-scout files --repo-path /path/to/repo --config config.json --commits "abc123"
-scout imports --repo-path /path/to/repo --config config.json --commits "abc123"
-scout loc --repo-path /path/to/repo --config config.json --commits "abc123"
 scout build-settings --repo-path /path/to/repo --config config.json --commits "abc123"
 ```
+
+📖 [Full documentation](Sources/BuildSettings/README.md)
 
 ## Libraries
 
