@@ -8,6 +8,16 @@ Code analysis tools for mobile repositories.
 
 ## Installation
 
+### Using mise (recommended)
+
+Install [mise](https://mise.jdx.dev/getting-started.html) if you haven't already, then:
+
+```bash
+mise use github:dodobrands/scout
+```
+
+### Building from source
+
 ```bash
 swift build
 ```
@@ -17,39 +27,60 @@ swift build
 Scout provides a single CLI with subcommands:
 
 ```bash
-swift run scout <subcommand> [options]
+scout <subcommand> [options]
 ```
 
-### Available Subcommands
+## Tools
 
-| Subcommand | Description |
-|------------|-------------|
-| `types` | Count types by inheritance (UIView, UIViewController, etc.) |
-| `files` | Count files by extension (storyboard, xib, etc.) |
-| `imports` | Count import statements |
-| `loc` | Count lines of code with cloc |
-| `build-settings` | Extract Xcode build settings |
+### types
 
-### Examples
+Count Swift types by inheritance across git history. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
 ```bash
-swift run scout types --ios-sources /path/to/repo --config config.json --commits "abc123,def456"
-swift run scout files --repo-path /path/to/repo --config config.json --commits "abc123"
-swift run scout imports --repo-path /path/to/repo --config config.json --commits "abc123"
-swift run scout loc --repo-path /path/to/repo --config config.json --commits "abc123"
-swift run scout build-settings --repo-path /path/to/repo --config config.json --commits "abc123"
+scout types --repo-path /path/to/repo --commits "abc123,def456"
 ```
 
-## Libraries
+📖 [Full documentation](Sources/Types/README.md)
 
-| Module | Description |
-|--------|-------------|
-| **Common** | Shared utilities (shell, git, logging, retry logic) |
-| **CodeReader** | Source code parsing with SourceKitten |
+### files
 
-## Configuration
+Count files by extension across git history. Useful for tracking storyboard, xib, swift files count over time.
 
-Each subcommand requires a JSON config file. See individual README files in `Sources/*/README.md` for config format.
+```bash
+scout files --repo-path /path/to/repo --commits "abc123"
+```
+
+📖 [Full documentation](Sources/Files/README.md)
+
+### pattern
+
+Search for string patterns in source files across git history. Useful for tracking import statements, API usage, etc.
+
+```bash
+scout pattern --repo-path /path/to/repo --commits "abc123"
+```
+
+📖 [Full documentation](Sources/Pattern/README.md)
+
+### loc
+
+Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
+
+```bash
+scout loc --repo-path /path/to/repo --commits "abc123"
+```
+
+📖 [Full documentation](Sources/LOC/README.md)
+
+### build-settings
+
+Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
+
+```bash
+scout build-settings --repo-path /path/to/repo --commits "abc123"
+```
+
+📖 [Full documentation](Sources/BuildSettings/README.md)
 
 ## Requirements
 

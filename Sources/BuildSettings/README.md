@@ -5,9 +5,8 @@ Extract build settings from Xcode projects.
 ## Usage
 
 ```bash
-swift run scout build-settings \
-  --repo-path /path/to/ios/repo \
-  --config extract-build-settings-config.json \
+scout build-settings \
+  --repo-path /path/to/repo \
   --commits "abc123,def456"
 ```
 
@@ -16,45 +15,50 @@ swift run scout build-settings \
 ### Required
 
 - `--repo-path, -r <path>` — Path to repository
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze
 
 ### Optional
 
-- `--config <path>` — Path to configuration JSON file (default: `extract-build-settings-config.json`)
+- `--config <path>` — Path to configuration JSON file
+- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
 
-## Configuration
+## Configuration (Optional)
 
-Create `extract-build-settings-config.json`:
+Configuration file is optional. Pass it via `--config` flag:
+
+```bash
+scout build-settings --repo-path /path/to/repo --config build-settings-config.json
+```
+
+### JSON Format
 
 ```json
 {
-  "workingDirectory": "DodoPizza",
   "setupCommands": [
-    "mise install",
-    "tuist install",
-    "tuist generate --no-open"
+    { "command": "mise install" },
+    { "command": "tuist install", "workingDirectory": "App" },
+    { "command": "tuist generate --no-open", "workingDirectory": "App" }
   ],
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
-  "workspaceName": "DodoPizza",
+  "workspaceName": "MyApp",
   "configuration": "Debug"
 }
 ```
 
 ### Fields
 
-- `workingDirectory` — Directory where setup commands run (relative to repo root)
-- `setupCommands` — Commands to execute before analyzing
-- `buildSettingsParameters` — Build settings to extract
-- `workspaceName` — Xcode workspace/project name (without extension)
-- `configuration` — Build configuration (Debug, Release, etc.)
+| Field | Type | Description |
+|-------|------|-------------|
+| `setupCommands` | `[SetupCommand]` | Commands to execute before analyzing |
+| `setupCommands[].command` | `String` | Shell command to execute |
+| `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
+| `buildSettingsParameters` | `[String]` | Build settings to extract |
+| `workspaceName` | `String` | Xcode workspace/project name (without extension) |
+| `configuration` | `String` | Build configuration (Debug, Release, etc.) |
 
 ## Requirements
 
 - `xcodebuild` command-line tool
 - For Tuist projects: `tuist` CLI
-
-## See Also
-
-- [AGENTS.md](../../AGENTS.md) — General project documentation

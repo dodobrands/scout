@@ -1,13 +1,12 @@
-# imports
+# pattern
 
-Count import statement usage across git history.
+Search for string patterns in source files across git history.
 
 ## Usage
 
 ```bash
-swift run scout imports \
-  --repo-path /path/to/ios/repo \
-  --config count-imports-config.json \
+scout pattern \
+  --repo-path /path/to/repo \
   --commits "abc123,def456"
 ```
 
@@ -15,34 +14,49 @@ swift run scout imports \
 
 ### Required
 
-- `--repo-path, -r <path>` — Path to iOS repository
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze
+- `--repo-path, -r <path>` — Path to repository
 
 ### Optional
 
-- `--config <path>` — Path to configuration JSON file (default: `count-imports-config.json`)
+- `--config <path>` — Path to configuration JSON file
+- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--output, -o <path>` — Path to save JSON results
+- `--extensions, -e <extensions>` — Comma-separated file extensions to search (default: swift)
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
 
-## Configuration
+## Configuration (Optional)
 
-Create `count-imports-config.json`:
+Configuration file is optional. Pass it via `--config` flag:
+
+```bash
+scout pattern --repo-path /path/to/repo --config pattern-config.json
+```
+
+### JSON Format
 
 ```json
 {
-  "imports": ["Testing", "Quick", "Nimble"]
+  "patterns": ["import Testing", "import Quick", "// TODO:"],
+  "extensions": ["swift", "m"]
 }
 ```
 
-## Import Matching
+### Fields
 
-Extracts base module name and performs exact matching:
+| Field | Type | Description |
+|-------|------|-------------|
+| `patterns` | `[String]` | String patterns to search for |
+| `extensions` | `[String]?` | File extensions to search in (default: `["swift"]`) |
 
-- `import Testing` → "Testing"
-- `@testable import Testing` → "Testing"
-- `import Testing.Foundation` → "Testing"
+## Pattern Matching
+
+Performs exact string matching. Useful for:
+
+- Counting import statements: `"import Testing"`, `"@testable import Quick"`
+- Finding TODOs: `"// TODO:"`, `"// FIXME:"`
+- Tracking API usage: `"periphery:ignore"`, `"@available"`
 
 ## See Also
 
-- [AGENTS.md](../../AGENTS.md) — General project documentation
 - [CodeReader](../CodeReader/README.md) — Code parsing library

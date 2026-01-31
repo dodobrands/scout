@@ -5,9 +5,8 @@ Count files by extension across git history.
 ## Usage
 
 ```bash
-swift run scout files \
+scout files \
   --repo-path /path/to/repo \
-  --config count-files-config.json \
   --commits "abc123,def456"
 ```
 
@@ -16,17 +15,24 @@ swift run scout files \
 ### Required
 
 - `--repo-path, -r <path>` — Path to repository
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze
 
 ### Optional
 
-- `--config <path>` — Path to configuration JSON file (default: `count-files-config.json`)
+- `--config <path>` — Path to configuration JSON file
+- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
 
-## Configuration
+## Configuration (Optional)
 
-Create `count-files-config.json`:
+Configuration file is optional. Pass it via `--config` flag:
+
+```bash
+scout files --repo-path /path/to/repo --config files-config.json
+```
+
+### JSON Format
 
 ```json
 {
@@ -34,6 +40,12 @@ Create `count-files-config.json`:
 }
 ```
 
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `filetypes` | `[String]` | File extensions to count (without dot)
+
 ## See Also
 
-- [AGENTS.md](../../AGENTS.md) — General project documentation
+- [CodeReader](../CodeReader/README.md) — Code parsing library
