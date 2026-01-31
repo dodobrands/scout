@@ -1,0 +1,46 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+  merge_group:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read Xcode version
+        id: xcode-version
+        run: echo "version=$(<.xcode-version)" >> $GITHUB_OUTPUT
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ steps.xcode-version.outputs.version }}
+
+      - name: Lint
+        run: sh scripts/lint.sh
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build
+        env:
+          NSUnbufferedIO: YES
+        run: swift build --build-tests
+
+      - name: Test
+        env:
+          NSUnbufferedIO: YES
+        run: swift test --skip-build

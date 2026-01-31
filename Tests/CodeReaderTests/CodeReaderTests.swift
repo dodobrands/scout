@@ -72,3 +72,12 @@ enum CodeFiles {
         }
     }
 }
+
+private func codeFile(name: String, extension ext: String) throws -> URL {
+    guard
+        let url = Bundle.module.url(forResource: name, withExtension: ext, subdirectory: "Samples")
+    else {
+        throw CocoaError(.fileNoSuchFile)
+    }
+    return url
+}

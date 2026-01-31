@@ -70,7 +70,9 @@ public class ExtractBuildSettings: AsyncParsableCommand {
             "Will analyze \(commitHashes.count) commits for \(extractConfig.buildSettingsParameters.count) parameter(s)",
             metadata: [
                 "commits": .array(commitHashes.map { Logger.MetadataValue.string($0) }),
-                "parameters": .array(extractConfig.buildSettingsParameters.map { Logger.MetadataValue.string($0) }),
+                "parameters": .array(
+                    extractConfig.buildSettingsParameters.map { Logger.MetadataValue.string($0) }
+                ),
             ]
         )
 
@@ -88,7 +90,10 @@ public class ExtractBuildSettings: AsyncParsableCommand {
                 await fixGitIssuesSafely(in: repoPathURL, commitHash: hash)
 
                 do {
-                    try await SetupCommandExecutor.execute(extractConfig.setupCommands, in: repoPathURL)
+                    try await SetupCommandExecutor.execute(
+                        extractConfig.setupCommands,
+                        in: repoPathURL
+                    )
                 } catch let error as SetupCommandExecutionError {
                     let errorDescription = error.errorDescription ?? error.localizedDescription
                     var errorMetadata: Logger.Metadata = [
@@ -132,7 +137,9 @@ public class ExtractBuildSettings: AsyncParsableCommand {
                         metadata: [
                             "hash": "\(hash)",
                             "parameters": .array(
-                                extractConfig.buildSettingsParameters.map { Logger.MetadataValue.string($0) }
+                                extractConfig.buildSettingsParameters.map {
+                                    Logger.MetadataValue.string($0)
+                                }
                             ),
                         ]
                     )
