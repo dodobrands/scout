@@ -27,18 +27,8 @@ swift build
 Scout provides a single CLI with subcommands:
 
 ```bash
-swift run scout <subcommand> [options]
+scout <subcommand> [options]
 ```
-
-### Available Subcommands
-
-| Subcommand | Description |
-|------------|-------------|
-| `types` | Count types by inheritance (UIView, UIViewController, etc.) |
-| `files` | Count files by extension (storyboard, xib, etc.) |
-| `imports` | Count import statements |
-| `loc` | Count lines of code with cloc |
-| `build-settings` | Extract Xcode build settings |
 
 ## Tools
 
@@ -75,11 +65,11 @@ Extract build settings from Xcode projects. Supports Tuist-generated projects wi
 ### Examples
 
 ```bash
-swift run scout types --ios-sources /path/to/repo --config config.json --commits "abc123,def456"
-swift run scout files --repo-path /path/to/repo --config config.json --commits "abc123"
-swift run scout imports --repo-path /path/to/repo --config config.json --commits "abc123"
-swift run scout loc --repo-path /path/to/repo --config config.json --commits "abc123"
-swift run scout build-settings --repo-path /path/to/repo --config config.json --commits "abc123"
+scout types --ios-sources /path/to/repo --config config.json --commits "abc123,def456"
+scout files --repo-path /path/to/repo --config config.json --commits "abc123"
+scout imports --repo-path /path/to/repo --config config.json --commits "abc123"
+scout loc --repo-path /path/to/repo --config config.json --commits "abc123"
+scout build-settings --repo-path /path/to/repo --config config.json --commits "abc123"
 ```
 
 ## Libraries
