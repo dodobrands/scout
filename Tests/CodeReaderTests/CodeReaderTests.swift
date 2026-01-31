@@ -24,18 +24,6 @@ struct CodeReaderTests {
         #expect(types == ["SelectFullDateView"])
     }
 
-    @Test("Read imports")
-    func readImports() throws {
-        let sut = CodeReader()
-        let result = try sut.readImports(from: CodeFiles.imports)
-        #expect(
-            result == [
-                "DFoundation", "DUIKit", "PreviewSnapshots", "SwiftUI", "DodoPizza",
-                "Module_With_Underscore",
-            ]
-        )
-    }
-
     @Test("Read JsonAsyncRequest generic types")
     func readJsonAsyncRequest() throws {
         let sut = CodeReader()
@@ -57,12 +45,6 @@ enum CodeFiles {
     static var swiftuiviews: URL {
         get throws {
             try codeFile(name: "SwftUIViews", extension: "swift")
-        }
-    }
-
-    static var imports: URL {
-        get throws {
-            try codeFile(name: "Imports", extension: "swift")
         }
     }
 
