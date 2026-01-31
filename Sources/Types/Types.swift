@@ -43,6 +43,9 @@ public struct Types: AsyncParsableCommand {
     @Option(name: .long, help: "Path to configuration JSON file")
     public var config: String?
 
+    @Argument(help: "Type names to count (e.g., UIView UIViewController)")
+    public var types: [String] = []
+
     @Option(
         name: [.long, .short],
         help: "Comma-separated list of commit hashes to analyze. If not provided, uses HEAD."
@@ -66,8 +69,14 @@ public struct Types: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let configFilePath = SystemPackage.FilePath(config ?? "count-types-config.json")
-        let config = try await CountTypesConfig(configFilePath: configFilePath)
+        let typeNames: [String]
+        if !types.isEmpty {
+            typeNames = types
+        } else {
+            let configFilePath = SystemPackage.FilePath(config ?? "count-types-config.json")
+            let configData = try await CountTypesConfig(configFilePath: configFilePath)
+            typeNames = configData.types
+        }
 
         let repoPathURL =
             try URL(string: repoPath)
@@ -88,7 +97,7 @@ public struct Types: AsyncParsableCommand {
         var typeResults: [(typeName: String, count: Int)] = []
         var allResults: [TypesSDK.Result] = []
 
-        for typeName in config.types {
+        for typeName in typeNames {
             Self.logger.info("Processing type: \(typeName)")
 
             Self.logger.info(

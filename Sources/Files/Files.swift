@@ -40,6 +40,9 @@ public struct Files: AsyncParsableCommand {
     @Option(name: .long, help: "Path to configuration JSON file")
     public var config: String?
 
+    @Argument(help: "File extensions to count (e.g., swift storyboard xib)")
+    public var filetypes: [String] = []
+
     @Option(
         name: [.long, .short],
         help: "Comma-separated list of commit hashes to analyze. If not provided, uses HEAD."
@@ -63,8 +66,14 @@ public struct Files: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let configFilePath = SystemPackage.FilePath(config ?? "count-files-config.json")
-        let config = try await CountFilesConfig(configFilePath: configFilePath)
+        let filetypeList: [String]
+        if !filetypes.isEmpty {
+            filetypeList = filetypes
+        } else {
+            let configFilePath = SystemPackage.FilePath(config ?? "count-files-config.json")
+            let configData = try await CountFilesConfig(configFilePath: configFilePath)
+            filetypeList = configData.filetypes
+        }
 
         let repoPathURL =
             try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
@@ -84,7 +93,7 @@ public struct Files: AsyncParsableCommand {
         var filetypeResults: [(filetype: String, count: Int)] = []
         var allResults: [FilesSDK.Result] = []
 
-        for filetype in config.filetypes {
+        for filetype in filetypeList {
             Self.logger.info("Processing file type: \(filetype)")
 
             Self.logger.info(
