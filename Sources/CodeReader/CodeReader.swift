@@ -31,34 +31,6 @@ public class CodeReader {
         return parsedStructs
     }
 
-    public func readImports(from swiftFile: URL) throws -> Set<String> {
-        let fileContent = try String(
-            contentsOfFile: swiftFile.path(percentEncoded: false),
-            encoding: .utf8
-        )
-
-        // Define a regular expression to match import statements
-        let regex = try NSRegularExpression(
-            pattern: "^\\s*(?:@testable\\s)?import\\s+([A-Za-z0-9_]+)",
-            options: [.anchorsMatchLines]
-        )
-
-        // Find matches in the file content
-        let matches = regex.matches(
-            in: fileContent,
-            options: [],
-            range: NSRange(location: 0, length: fileContent.utf16.count)
-        )
-
-        // Extract import statements
-        let importsList = matches.compactMap { match -> String? in
-            guard let range = Range(match.range(at: 1), in: fileContent) else { return nil }
-            return String(fileContent[range])
-        }
-
-        return Set(importsList)
-    }
-
     public func isInherited(
         objectFromCode: ObjectFromCode,
         from inheritance: String,

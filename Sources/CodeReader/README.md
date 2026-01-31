@@ -5,16 +5,13 @@ Swift AST parsing library for analyzing Swift source code.
 ## What It Does
 
 - Parses Swift source files using SourceKitten to extract class definitions and inheritance relationships
-- Reads import statements from Swift files
-- Provides structured data about code structure (classes, structs, enums, imports)
+- Provides structured data about code structure (classes, structs, enums)
 
 ## Architecture
 
-- **`CodeReader`** — Main service for parsing Swift files and extracting class/import information
+- **`CodeReader`** — Main service for parsing Swift files and extracting type information
 
 ## Usage
-
-### Parsing Swift Files
 
 ```swift
 import CodeReader
@@ -33,10 +30,6 @@ let viewCount = objects.filter { object in
         allObjects: objects
     )
 }.count
-
-// Read imports from a file
-let imports = try reader.readImports(from: fileURL)
-// Returns: Set<String>, e.g. ["UIKit", "SwiftUI", "Foundation"]
 ```
 
 ## API Reference
@@ -91,41 +84,11 @@ let isJsonRequest = reader.isInherited(
 )
 ```
 
-**Example with generic types:**
-```swift
-// Source code:
-// open class JsonAsyncRequest<Dto>: JsonRequest<Dto> { }
-// public final class CancelOrderRequest: JsonAsyncRequest<CancelOrderDTO> { }
-
-// This will return true:
-reader.isInherited(
-    objectFromCode: cancelOrderRequest,
-    from: "JsonAsyncRequest",  // Matches "JsonAsyncRequest<CancelOrderDTO>"
-    allObjects: objects
-)
-```
-
-#### `readImports(from:)`
-
-Extracts import statements from a Swift file.
-
-**Parameters:**
-- `from fileURL: URL` — Path to Swift source file
-
-**Returns:** `Set<String>` — Set of import module names
-
-**Example:**
-```swift
-let imports = try reader.readImports(from: fileURL)
-// Returns: Set<String>, e.g. ["UIKit", "SwiftUI", "Foundation"]
-```
-
 ## Dependencies
 
 - **SourceKitten** (0.36.0+) — Swift AST parsing
-- **Common** — Shared utilities (FileError, Logging)
+- **Common** — Shared utilities
 - **Foundation** — File and URL handling
-- **Logging** — Structured logging
 
 ## See Also
 
