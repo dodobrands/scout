@@ -1,5 +1,9 @@
 # Scout
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fdodobrands%2Fscout%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/dodobrands/scout)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fdodobrands%2Fscout%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/dodobrands/scout)
+[![](https://github.com/dodobrands/scout/actions/workflows/tests.yml/badge.svg)](https://github.com/dodobrands/scout/actions/workflows/tests.yml)
+
 <p align="center">
   <img width="128" height="128" alt="Scout Logo" src="https://github.com/user-attachments/assets/b9ef981b-0f65-4a16-abfb-6391af834d7a" />
 </p>
