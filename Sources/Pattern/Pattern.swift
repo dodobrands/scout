@@ -34,8 +34,8 @@ public struct Pattern: AsyncParsableCommand {
         }
     }
 
-    @Option(name: [.long, .short], help: "Path to repository")
-    public var repoPath: String
+    @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
+    public var repoPath: String = FileManager.default.currentDirectoryPath
 
     @Option(name: .long, help: "Path to configuration JSON file")
     public var config: String?
