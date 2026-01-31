@@ -1,7 +1,6 @@
 import Foundation
 import Testing
-
-@testable import TypesSDK
+import TypesSDK
 
 struct TypesSDKTests {
     let sut = TypesSDK()
