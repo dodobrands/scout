@@ -21,7 +21,7 @@ struct CodeReaderTests {
         let types = objects.filter {
             sut.isInherited(objectFromCode: $0, from: "View", allObjects: objects)
         }.map { $0.name }
-        #expect(types == ["SelectFullDateView"])
+        #expect(types == ["HelloView"])
     }
 
     @Test("Read JsonAsyncRequest generic types")
