@@ -44,7 +44,7 @@ enum CodeFiles {
 
     static var swiftuiviews: URL {
         get throws {
-            try codeFile(name: "SwftUIViews", extension: "swift")
+            try codeFile(name: "SwiftUIViews", extension: "swift")
         }
     }
 
