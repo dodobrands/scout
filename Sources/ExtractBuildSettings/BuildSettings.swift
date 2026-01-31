@@ -46,6 +46,9 @@ public struct BuildSettings: AsyncParsableCommand {
     )
     public var commits: String?
 
+    @Option(name: [.long, .short], help: "Path to save JSON results")
+    public var output: String?
+
     @Flag(name: [.long, .short])
     public var verbose: Bool = false
 
@@ -127,7 +130,7 @@ public struct BuildSettings: AsyncParsableCommand {
 
             for parameter in extractConfig.buildSettingsParameters {
                 var targetValues: [String: String] = [:]
-                for targetWithSettings in result.targetsWithBuildSettings {
+                for targetWithSettings in result {
                     if let value = targetWithSettings.buildSettings[parameter] {
                         targetValues[targetWithSettings.target] = value
                     }
@@ -150,6 +153,10 @@ public struct BuildSettings: AsyncParsableCommand {
                     parameterResults.append((parameter, targetValues.count))
                 }
             }
+
+            if let output {
+                try saveResults(result, to: output)
+            }
         }
 
         let summary = Summary(parameterResults: parameterResults)
@@ -165,5 +172,13 @@ public struct BuildSettings: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
+    }
+
+    private func saveResults(_ results: BuildSettingsSDK.Result, to path: String) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(results)
+        try data.write(to: URL(fileURLWithPath: path))
+        Self.logger.info("Results saved to \(path)")
     }
 }

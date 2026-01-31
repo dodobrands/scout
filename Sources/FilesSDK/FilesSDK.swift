@@ -10,15 +10,13 @@ public struct FilesSDK: Sendable {
     public init() {}
 
     /// Result of file counting operation.
-    public struct Result: Sendable {
+    public struct Result: Sendable, Codable {
         public let filetype: String
-        public let files: [URL]
-
-        public var count: Int { files.count }
+        public let files: [String]
 
         public init(filetype: String, files: [URL]) {
             self.filetype = filetype
-            self.files = files
+            self.files = files.map { $0.path }
         }
     }
 

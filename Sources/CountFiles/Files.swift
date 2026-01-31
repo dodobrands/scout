@@ -46,6 +46,9 @@ public struct Files: AsyncParsableCommand {
     )
     public var commits: String?
 
+    @Option(name: [.long, .short], help: "Path to save JSON results")
+    public var output: String?
+
     @Flag(name: [.long, .short])
     public var verbose: Bool = false
 
@@ -79,6 +82,7 @@ public struct Files: AsyncParsableCommand {
 
         let sdk = FilesSDK()
         var filetypeResults: [(filetype: String, count: Int)] = []
+        var allResults: [FilesSDK.Result] = []
 
         for filetype in config.filetypes {
             Self.logger.info("Processing file type: \(filetype)")
@@ -100,7 +104,7 @@ public struct Files: AsyncParsableCommand {
                 )
 
                 Self.logger.notice(
-                    "Found \(lastResult!.count) files of type '\(filetype)' at \(hash)"
+                    "Found \(lastResult!.files.count) files of type '\(filetype)' at \(hash)"
                 )
             }
 
@@ -108,12 +112,17 @@ public struct Files: AsyncParsableCommand {
                 "Summary for '\(filetype)': analyzed \(commitHashes.count) commit(s)"
             )
             if let result = lastResult {
-                filetypeResults.append((filetype, result.count))
+                filetypeResults.append((filetype, result.files.count))
+                allResults.append(result)
             }
         }
 
         let summary = Summary(filetypeResults: filetypeResults)
         logSummary(summary)
+
+        if let output {
+            try saveResults(allResults, to: output)
+        }
     }
 
     private func logSummary(_ summary: Summary) {
@@ -125,5 +134,13 @@ public struct Files: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
+    }
+
+    private func saveResults(_ results: [FilesSDK.Result], to path: String) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(results)
+        try data.write(to: URL(fileURLWithPath: path))
+        Self.logger.info("Results saved to \(path)")
     }
 }

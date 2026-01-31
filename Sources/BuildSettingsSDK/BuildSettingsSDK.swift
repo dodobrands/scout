@@ -28,7 +28,7 @@ public struct ProjectWithTargets: Sendable {
 }
 
 /// Represents a target with its build settings.
-public struct TargetWithBuildSettings: Sendable {
+public struct TargetWithBuildSettings: Sendable, Codable {
     public let target: String
     public let buildSettings: [String: String]
 
@@ -75,14 +75,8 @@ public struct BuildSettingsSDK: Sendable {
         }
     }
 
-    /// Result of build settings extraction.
-    public struct Result: Sendable {
-        public let targetsWithBuildSettings: [TargetWithBuildSettings]
-
-        public init(targetsWithBuildSettings: [TargetWithBuildSettings]) {
-            self.targetsWithBuildSettings = targetsWithBuildSettings
-        }
-    }
+    /// Result of build settings extraction - array of targets with their build settings.
+    public typealias Result = [TargetWithBuildSettings]
 
     /// Extracts build settings from Xcode projects in the repository.
     public func extractBuildSettings(
@@ -105,7 +99,7 @@ public struct BuildSettingsSDK: Sendable {
             configuration: configuration
         )
 
-        return Result(targetsWithBuildSettings: targetsWithBuildSettings)
+        return targetsWithBuildSettings
     }
 
     /// Checks out a commit and extracts build settings.
