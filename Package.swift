@@ -289,5 +289,17 @@ let package = Package(
                 .swiftLanguageMode(.v6),
             ]
         ),
+        .testTarget(
+            name: "PatternSDKTests",
+            dependencies: [
+                "PatternSDK",
+            ],
+            resources: [
+                .copy("Samples")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
     ]
 )
