@@ -1,37 +1,9 @@
 import ArgumentParser
-import CodeReader
 import Common
 import Foundation
+import LOCSDK
 import Logging
-import SourceKittenFramework
-import System
 import SystemPackage
-
-enum ClocError: Error {
-    case notInstalled
-}
-
-extension ClocError: LocalizedError {
-    var errorDescription: String? {
-        switch self {
-        case .notInstalled:
-            return """
-                cloc is not installed. Please install it manually:
-
-                macOS:
-                  brew install cloc
-
-                Linux (Ubuntu/Debian):
-                  sudo apt-get update && sudo apt-get install -y cloc
-
-                Linux (Fedora/RHEL):
-                  sudo dnf install cloc
-
-                Or download from: https://github.com/AlDanial/cloc/releases
-                """
-        }
-    }
-}
 
 public struct LOC: AsyncParsableCommand {
     public init() {}
@@ -82,11 +54,11 @@ public struct LOC: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    private static let logger = Logger(label: "mobile-code-metrics.CountLOC")
+    private static let logger = Logger(label: "scout.CountLOC")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
-        try await checkClocInstalled()
+        try await LOCSDK.checkClocInstalled()
 
         let configFilePath = SystemPackage.FilePath(config ?? "count-loc-config.json")
         let config = try await CountLOCConfig(configFilePath: configFilePath)
@@ -105,9 +77,15 @@ public struct LOC: AsyncParsableCommand {
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
+        let sdk = LOCSDK()
         var locResults: [(metric: String, count: Int)] = []
 
         for locConfig in config.configurations {
+            let sdkConfig = LOCConfiguration(
+                languages: locConfig.languages,
+                include: locConfig.include,
+                exclude: locConfig.exclude
+            )
             let metric = "LOC \(locConfig.languages) \(locConfig.include)"
             Self.logger.info("Processing LOC configuration: \(metric)")
 
@@ -118,47 +96,25 @@ public struct LOC: AsyncParsableCommand {
                 ]
             )
 
-            let codeReader = CodeReader()
-
-            var lastLOCCount = 0
+            var lastResult: LOCSDK.Result?
             for hash in commitHashes {
-                try await Shell.execute(
-                    "git",
-                    arguments: ["checkout", hash],
-                    workingDirectory: System.FilePath(repoPathURL.path(percentEncoded: false))
-                )
-                try await GitFix.fixGitIssues(
-                    in: repoPathURL,
+                lastResult = try await sdk.analyzeCommit(
+                    hash: hash,
+                    repoPath: repoPathURL,
+                    configuration: sdkConfig,
                     initializeSubmodules: initializeSubmodules
                 )
 
-                let foldersToAnalyze = foldersToAnalyze(
-                    in: repoPathURL,
-                    include: locConfig.include,
-                    exclude: locConfig.exclude
-                )
-
-                let loc =
-                    try await locConfig.languages
-                    .asyncFlatMap { language in
-                        try await foldersToAnalyze.asyncMap {
-                            try await codeReader.linesOfCode(at: $0, language: language)
-                        }
-                    }
-                    .compactMap { Int($0) }
-                    .reduce(0, +)
-
                 Self.logger.notice(
-                    "Found \(loc) lines of '\(locConfig.languages)' code at \(hash)"
+                    "Found \(lastResult!.linesOfCode) lines of '\(locConfig.languages)' code at \(hash)"
                 )
-                lastLOCCount = loc
             }
 
             Self.logger.notice(
                 "Summary for '\(metric)': analyzed \(commitHashes.count) commit(s)"
             )
-            if !commitHashes.isEmpty {
-                locResults.append((metric, lastLOCCount))
+            if let result = lastResult {
+                locResults.append((metric, result.linesOfCode))
             }
         }
 
@@ -174,47 +130,6 @@ public struct LOC: AsyncParsableCommand {
             }
         }
 
-        writeJobSummary(summary)
-    }
-
-    private func writeJobSummary(_ summary: Summary) {
         GitHubActionsLogHandler.writeSummary(summary)
     }
-
-    private func foldersToAnalyze(in repoPath: URL, include: [String], exclude: [String]) -> [URL] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(at: repoPath, includingPropertiesForKeys: nil)
-        else { return [] }
-
-        var folders = [URL]()
-
-        for case let url as URL in enumerator {
-            var isDirectory: ObjCBool = false
-            if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
-                isDirectory.boolValue
-            {
-                if include.contains(where: { url.path.hasSuffix($0) }) {
-                    folders.append(url)
-                }
-            }
-        }
-
-        folders = folders.filter { folder in
-            !exclude.contains(where: { folder.path.range(of: $0, options: .caseInsensitive) != nil }
-            )
-        }
-
-        return folders
-    }
-
-    private func checkClocInstalled() async throws {
-        let result = try await Shell.execute("which", arguments: ["cloc"])
-        let isInstalled =
-            !result.isEmpty && !result.contains("not found") && result.contains("cloc")
-
-        guard isInstalled else {
-            throw ClocError.notInstalled
-        }
-    }
-
 }

@@ -1,4 +1,5 @@
 import ArgumentParser
+import BuildSettingsSDK
 import Common
 import Foundation
 import Logging
@@ -54,7 +55,7 @@ public struct BuildSettings: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    static let logger = Logger(label: "mobile-code-metrics.ExtractBuildSettings")
+    static let logger = Logger(label: "scout.ExtractBuildSettings")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
@@ -90,227 +91,35 @@ public struct BuildSettings: AsyncParsableCommand {
             ]
         )
 
+        let sdk = BuildSettingsSDK()
+        let sdkSetupCommands = extractConfig.setupCommands.map {
+            BuildSettingsSDK.SetupCommand(
+                command: $0.command,
+                workingDirectory: $0.workingDirectory
+            )
+        }
+
         for hash in commitHashes {
-            var targetsWithBuildSettings: [TargetWithBuildSettings] = []
-            var analysisFailed = false
-            var analysisError: Error?
+            Self.logger.info(
+                "Starting analysis for commit",
+                metadata: ["hash": "\(hash)"]
+            )
 
+            let result: BuildSettingsSDK.Result
             do {
-                try await Shell.execute(
-                    "git",
-                    arguments: ["checkout", hash],
-                    workingDirectory: System.FilePath(repoPathURL.path(percentEncoded: false))
+                result = try await sdk.analyzeCommit(
+                    hash: hash,
+                    repoPath: repoPathURL,
+                    setupCommands: sdkSetupCommands,
+                    configuration: extractConfig.configuration,
+                    initializeSubmodules: initializeSubmodules
                 )
-                await fixGitIssuesSafely(in: repoPathURL, commitHash: hash)
-
-                do {
-                    try await SetupCommandExecutor.execute(
-                        extractConfig.setupCommands,
-                        in: repoPathURL
-                    )
-                } catch let error as SetupCommandExecutionError {
-                    let errorDescription = error.errorDescription ?? error.localizedDescription
-                    var errorMetadata: Logger.Metadata = [
-                        "hash": "\(hash)",
-                        "failedCommand": "\(error.command.command)",
-                        "workingDirectory": "\(error.command.workingDirectory ?? "repo root")",
-                        "error": "\(errorDescription)",
-                        "errorType": "\(type(of: error.underlyingError))",
-                    ]
-
-                    if let shellError = error.underlyingError as? ShellError {
-                        errorMetadata.merge(from: shellError.errorUserInfo) { _, new in new }
-                    }
-
-                    Self.logger.error(
-                        "Setup command failed, will skip this commit",
-                        metadata: errorMetadata
-                    )
-                    analysisFailed = true
-                    analysisError = error
-                } catch {
-                    let errorDescription =
-                        (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                    let errorMetadata: Logger.Metadata = [
-                        "hash": "\(hash)",
-                        "error": "\(errorDescription)",
-                        "errorType": "\(type(of: error))",
-                    ]
-
-                    Self.logger.error(
-                        "Setup command failed, will skip this commit",
-                        metadata: errorMetadata
-                    )
-                    analysisFailed = true
-                    analysisError = error
-                }
-
-                if !analysisFailed {
-                    Self.logger.info(
-                        "Starting metric collection",
-                        metadata: [
-                            "hash": "\(hash)",
-                            "parameters": .array(
-                                extractConfig.buildSettingsParameters.map {
-                                    Logger.MetadataValue.string($0)
-                                }
-                            ),
-                        ]
-                    )
-                    do {
-                        Self.logger.info(
-                            "Starting project discovery",
-                            metadata: [
-                                "hash": "\(hash)"
-                            ]
-                        )
-                        let projectsDiscoveryStart = Date()
-                        let foundProjectsAndWorkspaces =
-                            try ProjectDiscovery.findAllProjectsAndWorkspaces(
-                                in: repoPathURL
-                            )
-                        let projectsDiscoveryDuration = Date().timeIntervalSince(
-                            projectsDiscoveryStart
-                        )
-                        Self.logger.info(
-                            "Completed project discovery",
-                            metadata: [
-                                "hash": "\(hash)",
-                                "projectsCount": "\(foundProjectsAndWorkspaces.count)",
-                                "durationSeconds": "\(projectsDiscoveryDuration.formatted())",
-                            ]
-                        )
-
-                        Self.logger.info(
-                            "Starting targets collection",
-                            metadata: [
-                                "hash": "\(hash)",
-                                "projectsCount": "\(foundProjectsAndWorkspaces.count)",
-                            ]
-                        )
-                        let targetsCollectionStart = Date()
-                        let projectsWithTargets =
-                            try await ProjectDiscovery.getTargetsForAllProjects(
-                                foundProjectsAndWorkspaces: foundProjectsAndWorkspaces
-                            )
-                        let targetsCollectionDuration = Date().timeIntervalSince(
-                            targetsCollectionStart
-                        )
-                        let totalTargetsCount = projectsWithTargets.reduce(0) {
-                            $0 + $1.targets.count
-                        }
-                        Self.logger.info(
-                            "Completed targets collection",
-                            metadata: [
-                                "hash": "\(hash)",
-                                "totalTargetsCount": "\(totalTargetsCount)",
-                                "durationSeconds": "\(targetsCollectionDuration.formatted())",
-                            ]
-                        )
-
-                        Self.logger.info(
-                            "Starting build settings extraction",
-                            metadata: [
-                                "hash": "\(hash)",
-                                "totalTargetsCount": "\(totalTargetsCount)",
-                                "configuration": "\(extractConfig.configuration)",
-                            ]
-                        )
-                        let buildSettingsStart = Date()
-                        targetsWithBuildSettings =
-                            try await BuildSettingsExtractor
-                            .getBuildSettingsForAllTargets(
-                                projectsWithTargets: projectsWithTargets,
-                                foundProjectsAndWorkspaces: foundProjectsAndWorkspaces,
-                                configuration: extractConfig.configuration
-                            )
-                        let buildSettingsDuration = Date().timeIntervalSince(buildSettingsStart)
-                        Self.logger.info(
-                            "Completed build settings extraction",
-                            metadata: [
-                                "hash": "\(hash)",
-                                "targetsWithSettingsCount": "\(targetsWithBuildSettings.count)",
-                                "durationSeconds": "\(buildSettingsDuration.formatted())",
-                            ]
-                        )
-                    } catch {
-                        let errorDescription =
-                            (error as? LocalizedError)?.errorDescription
-                            ?? error.localizedDescription
-                        var errorMetadata: Logger.Metadata = [
-                            "hash": "\(hash)",
-                            "error": "\(errorDescription)",
-                            "errorType": "\(type(of: error))",
-                        ]
-
-                        if let shellError = error as? ShellError {
-                            switch shellError {
-                            case .executionFailed(
-                                let executable,
-                                let arguments,
-                                let underlyingError
-                            ):
-                                errorMetadata["executable"] = "\(executable)"
-                                errorMetadata["arguments"] = "\(arguments.joined(separator: " "))"
-                                errorMetadata["underlyingError"] = "\(underlyingError)"
-                            case .processFailed(
-                                let executable,
-                                let arguments,
-                                let exitCode,
-                                let errorOutput
-                            ):
-                                let exitCodeString: String
-                                if case .exited(let code) = exitCode {
-                                    exitCodeString = "\(code)"
-                                } else {
-                                    exitCodeString = "\(exitCode)"
-                                }
-                                errorMetadata["executable"] = "\(executable)"
-                                errorMetadata["arguments"] = "\(arguments.joined(separator: " "))"
-                                errorMetadata["exitCode"] = "\(exitCodeString)"
-                                errorMetadata["errorOutput"] = "\(errorOutput)"
-                            }
-                        }
-
-                        Self.logger.error(
-                            "Failed to extract build settings, will skip this commit",
-                            metadata: errorMetadata
-                        )
-                        analysisFailed = true
-                        analysisError = error
-                    }
-                }
-            } catch {
-                let errorDescription = error.errorDescription ?? error.localizedDescription
-                var errorMetadata: Logger.Metadata = [
-                    "hash": "\(hash)",
-                    "error": "\(errorDescription)",
-                    "errorType": "\(type(of: error))",
-                ]
-
-                errorMetadata.merge(from: error.errorUserInfo) { _, new in new }
-
-                Self.logger.error(
-                    "Failed to checkout or analyze commit, will skip this commit",
-                    metadata: errorMetadata
-                )
-                analysisFailed = true
-                analysisError = error
-            }
-
-            await fixGitIssuesSafely(in: repoPathURL, commitHash: hash)
-
-            if analysisFailed {
-                let errorDesc =
-                    analysisError.map {
-                        ($0 as? LocalizedError)?.errorDescription
-                            ?? $0.localizedDescription
-                    } ?? "unknown"
+            } catch let error as BuildSettingsSDK.AnalysisError {
                 Self.logger.warning(
                     "Skipping commit due to analysis failure",
                     metadata: [
                         "hash": "\(hash)",
-                        "error": "\(errorDesc)",
+                        "error": "\(error.localizedDescription)",
                     ]
                 )
                 continue
@@ -318,10 +127,9 @@ public struct BuildSettings: AsyncParsableCommand {
 
             for parameter in extractConfig.buildSettingsParameters {
                 var targetValues: [String: String] = [:]
-                for targetWithSettings in targetsWithBuildSettings {
+                for targetWithSettings in result.targetsWithBuildSettings {
                     if let value = targetWithSettings.buildSettings[parameter] {
-                        let target = targetWithSettings.target
-                        targetValues[target] = value
+                        targetValues[targetWithSettings.target] = value
                     }
                 }
 
@@ -356,33 +164,6 @@ public struct BuildSettings: AsyncParsableCommand {
             }
         }
 
-        writeJobSummary(summary)
-    }
-
-    private func writeJobSummary(_ summary: Summary) {
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func fixGitIssuesSafely(
-        in repoPathURL: URL,
-        commitHash: String? = nil
-    ) async {
-        do {
-            try await GitFix.fixGitIssues(
-                in: repoPathURL,
-                initializeSubmodules: initializeSubmodules
-            )
-        } catch {
-            var metadata: Logger.Metadata = [
-                "error": "\(error.localizedDescription)"
-            ]
-            if let commitHash {
-                metadata["hash"] = "\(commitHash)"
-            }
-            Self.logger.warning(
-                "Failed to fix git issues",
-                metadata: metadata
-            )
-        }
     }
 }

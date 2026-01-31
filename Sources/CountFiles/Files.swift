@@ -1,5 +1,6 @@
 import ArgumentParser
 import Common
+import FilesSDK
 import Foundation
 import Logging
 import System
@@ -54,7 +55,7 @@ public struct Files: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    private static let logger = Logger(label: "mobile-code-metrics.CountFiles")
+    private static let logger = Logger(label: "scout.CountFiles")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
@@ -76,6 +77,7 @@ public struct Files: AsyncParsableCommand {
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
+        let sdk = FilesSDK()
         var filetypeResults: [(filetype: String, count: Int)] = []
 
         for filetype in config.filetypes {
@@ -88,20 +90,25 @@ public struct Files: AsyncParsableCommand {
                 ]
             )
 
-            var lastFiletypeCount = 0
+            var lastResult: FilesSDK.Result?
             for hash in commitHashes {
-                lastFiletypeCount = try await analyzeCommit(
+                lastResult = try await sdk.analyzeCommit(
                     hash: hash,
                     repoPath: repoPathURL,
-                    filetype: filetype
+                    filetype: filetype,
+                    initializeSubmodules: initializeSubmodules
+                )
+
+                Self.logger.notice(
+                    "Found \(lastResult!.count) files of type '\(filetype)' at \(hash)"
                 )
             }
 
             Self.logger.notice(
                 "Summary for '\(filetype)': analyzed \(commitHashes.count) commit(s)"
             )
-            if !commitHashes.isEmpty {
-                filetypeResults.append((filetype, lastFiletypeCount))
+            if let result = lastResult {
+                filetypeResults.append((filetype, result.count))
             }
         }
 
@@ -117,62 +124,6 @@ public struct Files: AsyncParsableCommand {
             }
         }
 
-        writeJobSummary(summary)
-    }
-
-    private func writeJobSummary(_ summary: Summary) {
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func analyzeCommit(
-        hash: String,
-        repoPath: URL,
-        filetype: String
-    ) async throws -> Int {
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", hash],
-            workingDirectory: System.FilePath(repoPath.path(percentEncoded: false))
-        )
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
-
-        let files = findFiles(of: filetype, in: repoPath) ?? []
-
-        Self.logger.notice(
-            "Found \(files.count) files of type '\(filetype)' at \(hash)"
-        )
-
-        return files.count
-    }
-
-    private func findFiles(of type: String, in directory: URL) -> [URL]? {
-        let fileManager = FileManager.default
-
-        guard fileManager.fileExists(atPath: directory.path) else {
-            Self.logger.info("Directory does not exist.")
-            return nil
-        }
-
-        guard
-            let enumerator = fileManager.enumerator(
-                at: directory,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: [.skipsHiddenFiles],
-                errorHandler: nil
-            )
-        else {
-            Self.logger.info("Failed to create enumerator.")
-            return nil
-        }
-
-        var matchingFiles: [URL] = []
-
-        for case let fileURL as URL in enumerator {
-            if fileURL.pathExtension == type {
-                matchingFiles.append(fileURL)
-            }
-        }
-
-        return matchingFiles
     }
 }
