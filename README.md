@@ -41,7 +41,12 @@ scout <subcommand> [options]
 Count Swift types by inheritance. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
 ```bash
-scout types
+scout types --config types.json
+```
+
+```json
+// types.json
+{"types": ["UIView", "UIViewController", "View"]}
 ```
 
 ```json
@@ -55,11 +60,16 @@ scout types
 Count files by extension. Useful for tracking storyboard, xib, swift files count.
 
 ```bash
-scout files
+scout files --config files.json
 ```
 
 ```json
-{"commit":"abc123","date":"2025-01-15","results":{"swift":1250,"storyboard":12,"xib":8}}
+// files.json
+{"filetypes": ["storyboard", "xib"]}
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":{"storyboard":12,"xib":8}}
 ```
 
 📖 [Full documentation](Sources/Files/README.md)
@@ -69,7 +79,12 @@ scout files
 Search for string patterns in source files. Useful for tracking import statements, API usage, etc.
 
 ```bash
-scout pattern
+scout pattern --config pattern.json
+```
+
+```json
+// pattern.json
+{"patterns": ["import UIKit", "import SwiftUI", "// TODO:"]}
 ```
 
 ```json
@@ -83,7 +98,12 @@ scout pattern
 Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
 
 ```bash
-scout loc
+scout loc --config loc.json
+```
+
+```json
+// loc.json
+{"configurations": [{"languages": ["Swift"], "include": ["Sources"], "exclude": ["Vendor"]}]}
 ```
 
 ```json
@@ -97,7 +117,12 @@ scout loc
 Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
 
 ```bash
-scout build-settings
+scout build-settings --config build-settings.json
+```
+
+```json
+// build-settings.json
+{"buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"], "configuration": "Release"}
 ```
 
 ```json
