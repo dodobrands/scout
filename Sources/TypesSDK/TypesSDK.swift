@@ -11,11 +11,9 @@ public struct TypesSDK: Sendable {
     public init() {}
 
     /// Result of type counting operation.
-    public struct Result: Sendable {
+    public struct Result: Sendable, Codable {
         public let typeName: String
         public let types: [String]
-
-        public var count: Int { types.count }
 
         public init(typeName: String, types: [String]) {
             self.typeName = typeName

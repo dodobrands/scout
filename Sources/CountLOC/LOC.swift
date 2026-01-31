@@ -45,6 +45,9 @@ public struct LOC: AsyncParsableCommand {
     )
     public var commits: String?
 
+    @Option(name: [.long, .short], help: "Path to save JSON results")
+    public var output: String?
+
     @Flag(name: [.long, .short])
     public var verbose: Bool = false
 
@@ -79,6 +82,7 @@ public struct LOC: AsyncParsableCommand {
 
         let sdk = LOCSDK()
         var locResults: [(metric: String, count: Int)] = []
+        var allResults: [LOCSDK.Result] = []
 
         for locConfig in config.configurations {
             let sdkConfig = LOCConfiguration(
@@ -115,11 +119,16 @@ public struct LOC: AsyncParsableCommand {
             )
             if let result = lastResult {
                 locResults.append((metric, result.linesOfCode))
+                allResults.append(result)
             }
         }
 
         let summary = Summary(locResults: locResults)
         logSummary(summary)
+
+        if let output {
+            try saveResults(allResults, to: output)
+        }
     }
 
     private func logSummary(_ summary: Summary) {
@@ -131,5 +140,13 @@ public struct LOC: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
+    }
+
+    private func saveResults(_ results: [LOCSDK.Result], to path: String) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(results)
+        try data.write(to: URL(fileURLWithPath: path))
+        Self.logger.info("Results saved to \(path)")
     }
 }

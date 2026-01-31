@@ -46,6 +46,9 @@ public struct Types: AsyncParsableCommand {
     )
     public var commits: String?
 
+    @Option(name: [.long, .short], help: "Path to save JSON results")
+    public var output: String?
+
     @Flag(name: [.long, .short])
     public var verbose: Bool = false
 
@@ -80,6 +83,7 @@ public struct Types: AsyncParsableCommand {
 
         let sdk = TypesSDK()
         var typeResults: [(typeName: String, count: Int)] = []
+        var allResults: [TypesSDK.Result] = []
 
         for typeName in config.types {
             Self.logger.info("Processing type: \(typeName)")
@@ -101,7 +105,7 @@ public struct Types: AsyncParsableCommand {
                 )
 
                 Self.logger.notice(
-                    "Found \(lastResult!.count) types inherited from \(typeName) at \(hash)"
+                    "Found \(lastResult!.types.count) types inherited from \(typeName) at \(hash)"
                 )
             }
 
@@ -109,12 +113,17 @@ public struct Types: AsyncParsableCommand {
                 "Summary for '\(typeName)': analyzed \(commitHashes.count) commit(s)"
             )
             if let result = lastResult {
-                typeResults.append((typeName, result.count))
+                typeResults.append((typeName, result.types.count))
+                allResults.append(result)
             }
         }
 
         let summary = Summary(typeResults: typeResults)
         logSummary(summary)
+
+        if let output {
+            try saveResults(allResults, to: output)
+        }
     }
 
     private func logSummary(_ summary: Summary) {
@@ -126,5 +135,13 @@ public struct Types: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
+    }
+
+    private func saveResults(_ results: [TypesSDK.Result], to path: String) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(results)
+        try data.write(to: URL(fileURLWithPath: path))
+        Self.logger.info("Results saved to \(path)")
     }
 }

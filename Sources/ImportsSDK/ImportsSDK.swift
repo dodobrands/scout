@@ -11,13 +11,13 @@ public struct ImportsSDK: Sendable {
     public init() {}
 
     /// Result of import counting operation.
-    public struct Result: Sendable {
+    public struct Result: Sendable, Codable {
         public let importName: String
-        public let count: Int
+        public let files: [String]
 
-        public init(importName: String, count: Int) {
+        public init(importName: String, files: [String]) {
             self.importName = importName
-            self.count = count
+            self.files = files
         }
     }
 
@@ -26,7 +26,7 @@ public struct ImportsSDK: Sendable {
     ///   - importName: Import name to count
     ///   - repoPath: Path to the repository
     ///   - initializeSubmodules: Whether to initialize git submodules
-    /// - Returns: Result containing count of matching imports
+    /// - Returns: Result containing files with matching imports
     public func countImports(
         of importName: String,
         in repoPath: URL,
@@ -36,14 +36,18 @@ public struct ImportsSDK: Sendable {
 
         let files = findFiles(of: "swift", in: repoPath)
         let codeReader = CodeReader()
-        let imports =
-            try files
-            .flatMap { try codeReader.readImports(from: $0) }
-            .filter { $0 == importName }
+
+        var filesWithImport: [String] = []
+        for file in files {
+            let imports = try codeReader.readImports(from: file)
+            if imports.contains(importName) {
+                filesWithImport.append(file.path)
+            }
+        }
 
         return Result(
             importName: importName,
-            count: imports.count
+            files: filesWithImport
         )
     }
 
