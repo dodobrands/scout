@@ -8,6 +8,16 @@ Code analysis tools for mobile repositories.
 
 ## Installation
 
+### Using mise (recommended)
+
+Install [mise](https://mise.jdx.dev/getting-started.html) if you haven't already, then:
+
+```bash
+mise use github:dodobrands/scout
+```
+
+### Building from source
+
 ```bash
 swift build
 ```
@@ -29,6 +39,38 @@ swift run scout <subcommand> [options]
 | `imports` | Count import statements |
 | `loc` | Count lines of code with cloc |
 | `build-settings` | Extract Xcode build settings |
+
+## Tools
+
+### types
+
+Count Swift types by inheritance across git history. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
+
+📖 [Full documentation](Sources/Types/README.md)
+
+### files
+
+Count files by extension across git history. Useful for tracking storyboard, xib, swift files count over time.
+
+📖 [Full documentation](Sources/Files/README.md)
+
+### imports
+
+Count import statement usage across git history. Extracts base module name and performs exact matching.
+
+📖 [Full documentation](Sources/Pattern/README.md)
+
+### loc
+
+Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
+
+📖 [Full documentation](Sources/LOC/README.md)
+
+### build-settings
+
+Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
+
+📖 [Full documentation](Sources/BuildSettings/README.md)
 
 ### Examples
 
