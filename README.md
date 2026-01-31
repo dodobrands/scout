@@ -37,7 +37,7 @@ scout <subcommand> [options]
 Count Swift types by inheritance across git history. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
 ```bash
-scout types --ios-sources /path/to/repo --config config.json --commits "abc123,def456"
+scout types --repo-path /path/to/repo --config config.json --commits "abc123,def456"
 ```
 
 📖 [Full documentation](Sources/Types/README.md)
@@ -52,12 +52,12 @@ scout files --repo-path /path/to/repo --config config.json --commits "abc123"
 
 📖 [Full documentation](Sources/Files/README.md)
 
-### imports
+### pattern
 
-Count import statement usage across git history. Extracts base module name and performs exact matching.
+Search for string patterns in source files across git history. Useful for tracking import statements, API usage, etc.
 
 ```bash
-scout imports --repo-path /path/to/repo --config config.json --commits "abc123"
+scout pattern --repo-path /path/to/repo --config config.json --commits "abc123"
 ```
 
 📖 [Full documentation](Sources/Pattern/README.md)
