@@ -62,10 +62,11 @@ Checks if a code object inherits from a specific base class. Supports both regul
 **Returns:** `Bool` — `true` if the object inherits from the base class
 
 **Generic Types Support:**
-The method correctly handles generic types. When SourceKitten parses a class inheriting from a generic base class, it returns the full generic type name (e.g., `"JsonAsyncRequest<CancelOrderDTO>"`). The method matches this against the base type name (e.g., `"JsonAsyncRequest"`) by:
-- Checking if the inherited type exactly matches the base type
-- Checking if the inherited type starts with `"BaseType<"` (for generic types)
-- Recursively checking indirect inheritance through parent types
+The method requires explicit wildcard syntax for matching generic types:
+- `"JsonAsyncRequest"` — matches only exact `JsonAsyncRequest` (no generics)
+- `"JsonAsyncRequest<*>"` — matches any generic variant like `JsonAsyncRequest<CancelOrderDTO>`, `JsonAsyncRequest<SomeDTO>`
+
+When SourceKitten parses a class inheriting from a generic base class, it returns the full generic type name (e.g., `"JsonAsyncRequest<CancelOrderDTO>"`). The method also recursively checks indirect inheritance through parent types.
 
 **Examples:**
 ```swift
@@ -76,8 +77,15 @@ let isView = reader.isInherited(
     allObjects: objects
 )
 
-// Generic inheritance - matches "JsonAsyncRequest<SomeDTO>" to "JsonAsyncRequest"
+// Generic inheritance with wildcard - matches "JsonAsyncRequest<SomeDTO>"
 let isJsonRequest = reader.isInherited(
+    objectFromCode: cancelOrderRequest,
+    from: "JsonAsyncRequest<*>",
+    allObjects: objects
+)
+
+// Exact match - does NOT match "JsonAsyncRequest<SomeDTO>"
+let isExactJsonRequest = reader.isInherited(
     objectFromCode: cancelOrderRequest,
     from: "JsonAsyncRequest",
     allObjects: objects

@@ -48,12 +48,7 @@ public class CodeReader {
             // Extract base type name from generic type (e.g., "JsonAsyncRequest<DTO>" -> "JsonAsyncRequest")
             let baseTypeName = extractBaseTypeName(from: className)
 
-            // First check if the base type itself matches (for direct generic inheritance)
-            if matchesBaseType(baseTypeName, baseType: inheritance) {
-                return true
-            }
-
-            // Then check if any parent object matches
+            // Check if any parent object matches
             guard let parentObject = allObjects.first(where: { $0.name == baseTypeName }) else {
                 return false
             }
@@ -67,18 +62,18 @@ public class CodeReader {
         return child != nil
     }
 
-    /// Checks if an inherited type matches the base type, handling generic types.
-    /// For example, "JsonAsyncRequest<SomeDTO>" matches "JsonAsyncRequest"
+    /// Checks if an inherited type matches the base type pattern.
+    /// - `JsonAsyncRequest` matches only exact `JsonAsyncRequest` (no generics)
+    /// - `JsonAsyncRequest<*>` matches `JsonAsyncRequest<T>`, `JsonAsyncRequest<SomeDTO>`, etc.
     private func matchesBaseType(_ inheritedType: String, baseType: String) -> Bool {
-        // Exact match
-        if inheritedType == baseType {
-            return true
+        // Check for wildcard pattern: "JsonAsyncRequest<*>"
+        if baseType.hasSuffix("<*>") {
+            let baseWithoutWildcard = String(baseType.dropLast(3))
+            // Match any generic variant: "JsonAsyncRequest<Something>"
+            return inheritedType.hasPrefix("\(baseWithoutWildcard)<")
         }
-        // Generic type match: "JsonAsyncRequest<Something>" matches "JsonAsyncRequest"
-        if inheritedType.hasPrefix("\(baseType)<") {
-            return true
-        }
-        return false
+        // Exact match only (no implicit generic matching)
+        return inheritedType == baseType
     }
 
     /// Extracts base type name from a generic type string.

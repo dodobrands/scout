@@ -24,14 +24,24 @@ struct CodeReaderTests {
         #expect(types == ["HelloView"])
     }
 
-    @Test("Read JsonAsyncRequest generic types")
-    func readJsonAsyncRequest() throws {
+    @Test("Read JsonAsyncRequest generic types with wildcard")
+    func readJsonAsyncRequestWithWildcard() throws {
+        let sut = CodeReader()
+        let objects = try sut.parseFile(from: CodeFiles.genericTypes)
+        let types = objects.filter {
+            sut.isInherited(objectFromCode: $0, from: "JsonAsyncRequest<*>", allObjects: objects)
+        }.map { $0.name }
+        #expect(types == ["CancelOrderRequest", "OrderListRequest", "ProfileRequest"])
+    }
+
+    @Test("Exact type match without wildcard does not match generics")
+    func exactTypeMatchWithoutWildcard() throws {
         let sut = CodeReader()
         let objects = try sut.parseFile(from: CodeFiles.genericTypes)
         let types = objects.filter {
             sut.isInherited(objectFromCode: $0, from: "JsonAsyncRequest", allObjects: objects)
         }.map { $0.name }
-        #expect(types == ["CancelOrderRequest", "OrderListRequest", "ProfileRequest"])
+        #expect(types == [])
     }
 }
 
