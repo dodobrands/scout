@@ -86,180 +86,180 @@ import System
 /// - Cross-platform compatibility
 /// - Output parsing is explicit and controllable
 public class Shell {
-    private static let logger = Logger(label: "mobile-code-metrics.Shell")
+  private static let logger = Logger(label: "mobile-code-metrics.Shell")
 
-    /// Executes a command directly without shell interpretation.
-    ///
-    /// - Parameters:
-    ///   - executable: The command to execute (e.g., "git", "ls", "cat")
-    ///   - arguments: Command arguments as separate strings
-    ///   - workingDirectory: Optional working directory for command execution
-    /// - Returns: Command output as a string
-    /// - Throws: `ShellError` if the command fails
-    ///
-    /// ## Examples
-    ///
-    /// ```swift
-    /// // Execute git log
-    /// let output = try await Shell.execute(
-    ///     "git",
-    ///     arguments: ["-C", "/path/to/repo", "log", "--oneline"]
-    /// )
-    ///
-    /// // Execute command in specific directory
-    /// let output = try await Shell.execute(
-    ///     "tuist",
-    ///     arguments: ["install"],
-    ///     workingDirectory: FilePath("ios/DodoPizza")
-    /// )
-    ///
-    /// // Parse output programmatically (equivalent to shell pipe)
-    /// let firstLine = output.split(separator: "\n").first.map(String.init) ?? ""
-    /// ```
-    @discardableResult
-    public static func execute(
-        _ executable: String,
-        arguments: [String] = [],
-        workingDirectory: FilePath? = nil
-    ) async throws(ShellError) -> String {
-        var metadata: Logger.Metadata = [
-            "executable": "\(executable)",
-            "arguments": "\(arguments.joined(separator: " "))",
-        ]
-        if let workingDirectory {
-            metadata["workingDirectory"] = "\(workingDirectory.string)"
-        }
-        logger.debug("Executing command", metadata: metadata)
-
-        let result: CollectedResult<StringOutput<Unicode.UTF8>, StringOutput<Unicode.UTF8>>
-        do {
-            var configuration = Subprocess.Configuration(
-                executable: .name(executable),
-                arguments: .init(arguments)
-            )
-            if let workingDirectory {
-                configuration.workingDirectory = workingDirectory
-            }
-            result = try await run(
-                configuration,
-                output: .string(limit: .max),
-                error: .string(limit: .max)
-            )
-        } catch let error {
-            // Convert any error from run() to ShellError with detailed information
-            logger.error(
-                "Command execution failed",
-                metadata: [
-                    "executable": "\(executable)",
-                    "arguments": "\(arguments.joined(separator: " "))",
-                    "error": "\(error.localizedDescription)",
-                    "errorType": "\(type(of: error))",
-                ]
-            )
-            throw ShellError.executionFailed(
-                executable: executable,
-                arguments: arguments,
-                underlyingError: error.localizedDescription
-            )
-        }
-
-        // Check if process exited successfully
-        guard case .exited(let code) = result.terminationStatus, code == 0 else {
-            let errorOutput = result.standardError ?? ""
-            let exitCode: String
-            if case .exited(let exitCodeValue) = result.terminationStatus {
-                exitCode = "\(exitCodeValue)"
-            } else {
-                exitCode = "\(result.terminationStatus)"
-            }
-            let error = ShellError.processFailed(
-                executable: executable,
-                arguments: arguments,
-                exitCode: result.terminationStatus,
-                error: errorOutput
-            )
-            let errorMessage = error.errorDescription ?? "Command failed"
-            logger.error(
-                "Command failed: \(errorMessage)",
-                metadata: [
-                    "executable": "\(executable)",
-                    "arguments": "\(arguments.joined(separator: " "))",
-                    "exitCode": "\(exitCode)",
-                    "error": "\(errorOutput)",
-                ]
-            )
-            throw error
-        }
-
-        let output =
-            result.standardOutput?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            ?? ""
-        logger.debug(
-            "Command completed successfully",
-            metadata: [
-                "executable": "\(executable)",
-                "outputLength": "\(output.count)",
-            ]
-        )
-        return output
+  /// Executes a command directly without shell interpretation.
+  ///
+  /// - Parameters:
+  ///   - executable: The command to execute (e.g., "git", "ls", "cat")
+  ///   - arguments: Command arguments as separate strings
+  ///   - workingDirectory: Optional working directory for command execution
+  /// - Returns: Command output as a string
+  /// - Throws: `ShellError` if the command fails
+  ///
+  /// ## Examples
+  ///
+  /// ```swift
+  /// // Execute git log
+  /// let output = try await Shell.execute(
+  ///     "git",
+  ///     arguments: ["-C", "/path/to/repo", "log", "--oneline"]
+  /// )
+  ///
+  /// // Execute command in specific directory
+  /// let output = try await Shell.execute(
+  ///     "tuist",
+  ///     arguments: ["install"],
+  ///     workingDirectory: FilePath("ios/DodoPizza")
+  /// )
+  ///
+  /// // Parse output programmatically (equivalent to shell pipe)
+  /// let firstLine = output.split(separator: "\n").first.map(String.init) ?? ""
+  /// ```
+  @discardableResult
+  public static func execute(
+    _ executable: String,
+    arguments: [String] = [],
+    workingDirectory: FilePath? = nil
+  ) async throws(ShellError) -> String {
+    var metadata: Logger.Metadata = [
+      "executable": "\(executable)",
+      "arguments": "\(arguments.joined(separator: " "))",
+    ]
+    if let workingDirectory {
+      metadata["workingDirectory"] = "\(workingDirectory.string)"
     }
+    logger.debug("Executing command", metadata: metadata)
+
+    let result: CollectedResult<StringOutput<Unicode.UTF8>, StringOutput<Unicode.UTF8>>
+    do {
+      var configuration = Subprocess.Configuration(
+        executable: .name(executable),
+        arguments: .init(arguments)
+      )
+      if let workingDirectory {
+        configuration.workingDirectory = workingDirectory
+      }
+      result = try await run(
+        configuration,
+        output: .string(limit: .max),
+        error: .string(limit: .max)
+      )
+    } catch let error {
+      // Convert any error from run() to ShellError with detailed information
+      logger.error(
+        "Command execution failed",
+        metadata: [
+          "executable": "\(executable)",
+          "arguments": "\(arguments.joined(separator: " "))",
+          "error": "\(error.localizedDescription)",
+          "errorType": "\(type(of: error))",
+        ]
+      )
+      throw ShellError.executionFailed(
+        executable: executable,
+        arguments: arguments,
+        underlyingError: error.localizedDescription
+      )
+    }
+
+    // Check if process exited successfully
+    guard case .exited(let code) = result.terminationStatus, code == 0 else {
+      let errorOutput = result.standardError ?? ""
+      let exitCode: String
+      if case .exited(let exitCodeValue) = result.terminationStatus {
+        exitCode = "\(exitCodeValue)"
+      } else {
+        exitCode = "\(result.terminationStatus)"
+      }
+      let error = ShellError.processFailed(
+        executable: executable,
+        arguments: arguments,
+        exitCode: result.terminationStatus,
+        error: errorOutput
+      )
+      let errorMessage = error.errorDescription ?? "Command failed"
+      logger.error(
+        "Command failed: \(errorMessage)",
+        metadata: [
+          "executable": "\(executable)",
+          "arguments": "\(arguments.joined(separator: " "))",
+          "exitCode": "\(exitCode)",
+          "error": "\(errorOutput)",
+        ]
+      )
+      throw error
+    }
+
+    let output =
+      result.standardOutput?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+      ?? ""
+    logger.debug(
+      "Command completed successfully",
+      metadata: [
+        "executable": "\(executable)",
+        "outputLength": "\(output.count)",
+      ]
+    )
+    return output
+  }
 }
 
 public enum ShellError: Error {
-    /// Process execution failed (executable not found, permission denied, etc.)
-    case executionFailed(executable: String, arguments: [String], underlyingError: String)
+  /// Process execution failed (executable not found, permission denied, etc.)
+  case executionFailed(executable: String, arguments: [String], underlyingError: String)
 
-    /// Process exited with non-zero exit code
-    case processFailed(
-        executable: String,
-        arguments: [String],
-        exitCode: TerminationStatus,
-        error: String
-    )
+  /// Process exited with non-zero exit code
+  case processFailed(
+    executable: String,
+    arguments: [String],
+    exitCode: TerminationStatus,
+    error: String
+  )
 }
 
 extension ShellError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .executionFailed(let executable, let arguments, let underlyingError):
-            return
-                "Failed to execute command '\(executable)' with arguments [\(arguments.joined(separator: ", "))]: \(underlyingError)"
-        case .processFailed(let executable, let arguments, let exitCode, let error):
-            let exitCodeString: String
-            if case .exited(let code) = exitCode {
-                exitCodeString = "\(code)"
-            } else {
-                exitCodeString = "\(exitCode)"
-            }
-            let command = "\(executable) \(arguments.joined(separator: " "))"
-            return
-                "Command failed: '\(command)' (exit code: \(exitCodeString))\nError output: \(error)"
-        }
+  public var errorDescription: String? {
+    switch self {
+    case .executionFailed(let executable, let arguments, let underlyingError):
+      return
+        "Failed to execute command '\(executable)' with arguments [\(arguments.joined(separator: ", "))]: \(underlyingError)"
+    case .processFailed(let executable, let arguments, let exitCode, let error):
+      let exitCodeString: String
+      if case .exited(let code) = exitCode {
+        exitCodeString = "\(code)"
+      } else {
+        exitCodeString = "\(exitCode)"
+      }
+      let command = "\(executable) \(arguments.joined(separator: " "))"
+      return
+        "Command failed: '\(command)' (exit code: \(exitCodeString))\nError output: \(error)"
     }
+  }
 }
 
 extension ShellError: CustomNSError {
-    public var errorUserInfo: [String: Any] {
-        switch self {
-        case .executionFailed(let executable, let arguments, let underlyingError):
-            return [
-                "executable": executable,
-                "arguments": arguments,
-                "underlyingError": underlyingError,
-            ]
-        case .processFailed(let executable, let arguments, let exitCode, let error):
-            let exitCodeString: String
-            if case .exited(let code) = exitCode {
-                exitCodeString = "\(code)"
-            } else {
-                exitCodeString = "\(exitCode)"
-            }
-            return [
-                "executable": executable,
-                "arguments": arguments,
-                "exitCode": exitCodeString,
-                "errorOutput": error,
-            ]
-        }
+  public var errorUserInfo: [String: Any] {
+    switch self {
+    case .executionFailed(let executable, let arguments, let underlyingError):
+      return [
+        "executable": executable,
+        "arguments": arguments,
+        "underlyingError": underlyingError,
+      ]
+    case .processFailed(let executable, let arguments, let exitCode, let error):
+      let exitCodeString: String
+      if case .exited(let code) = exitCode {
+        exitCodeString = "\(code)"
+      } else {
+        exitCodeString = "\(exitCode)"
+      }
+      return [
+        "executable": executable,
+        "arguments": arguments,
+        "exitCode": exitCodeString,
+        "errorOutput": error,
+      ]
     }
+  }
 }
