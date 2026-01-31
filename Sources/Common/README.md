@@ -198,13 +198,6 @@ public enum ValidationError: Error {
 }
 ```
 
-## Dependencies
-
-- **swift-subprocess** (0.2.1+) — Cross-platform subprocess execution
-- **swift-log** (1.6.0+) — Structured logging
-- **Foundation** — URL, Date, and file system operations
-
 ## See Also
 
 - Used by all modules in the project for common functionality
-- [AGENTS.md](../../AGENTS.md) — General project documentation

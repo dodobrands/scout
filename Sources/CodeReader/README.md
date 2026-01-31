@@ -84,12 +84,6 @@ let isJsonRequest = reader.isInherited(
 )
 ```
 
-## Dependencies
-
-- **SourceKitten** (0.36.0+) — Swift AST parsing
-- **Common** — Shared utilities
-- **Foundation** — File and URL handling
-
 ## See Also
 
 - [Types](../Types/README.md) — Uses CodeReader to count types by inheritance
