@@ -5,9 +5,8 @@ Count Swift types by inheritance across git history.
 ## Usage
 
 ```bash
-swift run scout types \
-  --ios-sources /path/to/ios/repo \
-  --config count-types-config.json \
+scout types \
+  --repo-path /path/to/repo \
   --commits "abc123,def456"
 ```
 
@@ -15,18 +14,25 @@ swift run scout types \
 
 ### Required
 
-- `--ios-sources, -i <path>` — Path to iOS repository
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze
+- `--repo-path, -r <path>` — Path to repository with Swift sources
 
 ### Optional
 
-- `--config <path>` — Path to configuration JSON file (default: `count-types-config.json`)
+- `--config <path>` — Path to configuration JSON file
+- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
 
-## Configuration
+## Configuration (Optional)
 
-Create `count-types-config.json`:
+Configuration file is optional. Pass it via `--config` flag:
+
+```bash
+scout types --repo-path /path/to/repo --config types-config.json
+```
+
+### JSON Format
 
 ```json
 {
@@ -34,7 +40,13 @@ Create `count-types-config.json`:
 }
 ```
 
-## Supported Types
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `types` | `[String]` | Types to count by inheritance |
+
+### Supported Types
 
 - `UIView` — UIKit view classes
 - `UIViewController` — UIKit view controller classes
@@ -43,5 +55,4 @@ Create `count-types-config.json`:
 
 ## See Also
 
-- [AGENTS.md](../../AGENTS.md) — General project documentation
 - [CodeReader](../CodeReader/README.md) — Code parsing library
