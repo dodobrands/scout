@@ -301,5 +301,29 @@ let package = Package(
                 .swiftLanguageMode(.v6),
             ]
         ),
+        .testTarget(
+            name: "LOCSDKTests",
+            dependencies: [
+                "LOCSDK",
+            ],
+            resources: [
+                .copy("Samples")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
+            name: "BuildSettingsSDKTests",
+            dependencies: [
+                "BuildSettingsSDK",
+            ],
+            resources: [
+                .copy("Samples")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
     ]
 )
