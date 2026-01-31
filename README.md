@@ -1,5 +1,7 @@
 # Scout
 
+<img width="1280" height="453" alt="logo_compressed" src="https://github.com/user-attachments/assets/b9ef981b-0f65-4a16-abfb-6391af834d7a" />
+
 Code analysis tools for mobile repositories.
 
 ## Tools
