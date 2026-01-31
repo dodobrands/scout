@@ -1,31 +1,31 @@
 import ArgumentParser
 import Common
 import Foundation
-import ImportsSDK
 import Logging
+import PatternSDK
 import System
 import SystemPackage
 
-public struct Imports: AsyncParsableCommand {
+public struct Pattern: AsyncParsableCommand {
     public init() {}
 
     public static let configuration = CommandConfiguration(
-        commandName: "imports",
-        abstract: "Count import statements"
+        commandName: "pattern",
+        abstract: "Search for string patterns in source files"
     )
 
     struct Summary: JobSummaryFormattable {
-        let importResults: [(importName: String, count: Int)]
+        let patternResults: [(pattern: String, matchCount: Int)]
 
         var markdown: String {
-            var md = "## CountImports Summary\n\n"
+            var md = "## Search Summary\n\n"
 
-            if !importResults.isEmpty {
-                md += "### Import Counts\n\n"
-                md += "| Import | Count |\n"
-                md += "|--------|-------|\n"
-                for result in importResults {
-                    md += "| `\(result.importName)` | \(result.count) |\n"
+            if !patternResults.isEmpty {
+                md += "### Pattern Matches\n\n"
+                md += "| Pattern | Matches |\n"
+                md += "|---------|--------|\n"
+                for result in patternResults {
+                    md += "| `\(result.pattern)` | \(result.matchCount) |\n"
                 }
                 md += "\n"
             }
@@ -34,7 +34,7 @@ public struct Imports: AsyncParsableCommand {
         }
     }
 
-    @Option(name: [.long, .short], help: "Path to iOS repository")
+    @Option(name: [.long, .short], help: "Path to repository")
     public var repoPath: String
 
     @Option(name: .long, help: "Path to configuration JSON file")
@@ -49,6 +49,12 @@ public struct Imports: AsyncParsableCommand {
     @Option(name: [.long, .short], help: "Path to save JSON results")
     public var output: String?
 
+    @Option(
+        name: [.long, .short],
+        help: "Comma-separated file extensions to search (default: swift)"
+    )
+    public var extensions: String?
+
     @Flag(name: [.long, .short])
     public var verbose: Bool = false
 
@@ -58,13 +64,13 @@ public struct Imports: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    private static let logger = Logger(label: "scout.CountImports")
+    private static let logger = Logger(label: "scout.Pattern")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let configFilePath = SystemPackage.FilePath(config ?? "count-imports-config.json")
-        let config = try await CountImportsConfig(configFilePath: configFilePath)
+        let configFilePath = SystemPackage.FilePath(config ?? "search-config.json")
+        let searchConfig = try await SearchConfig(configFilePath: configFilePath)
 
         let repoPathURL =
             try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
@@ -80,44 +86,54 @@ public struct Imports: AsyncParsableCommand {
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
-        let sdk = ImportsSDK()
-        var importResults: [(importName: String, count: Int)] = []
-        var allResults: [ImportsSDK.Result] = []
+        let fileExtensions: [String]
+        if let extensions {
+            fileExtensions = extensions.split(separator: ",").map {
+                String($0.trimmingCharacters(in: .whitespaces))
+            }
+        } else {
+            fileExtensions = searchConfig.extensions
+        }
 
-        for importName in config.imports {
-            Self.logger.info("Processing import: \(importName)")
+        let sdk = PatternSDK()
+        var patternResults: [(pattern: String, matchCount: Int)] = []
+        var allResults: [PatternSDK.Result] = []
+
+        for pattern in searchConfig.patterns {
+            Self.logger.info("Processing pattern: \(pattern)")
 
             Self.logger.info(
-                "Will analyze \(commitHashes.count) commits for import '\(importName)'",
+                "Will analyze \(commitHashes.count) commits for pattern '\(pattern)'",
                 metadata: [
                     "commits": .array(commitHashes.map { .string($0) })
                 ]
             )
 
-            var lastResult: ImportsSDK.Result?
+            var lastResult: PatternSDK.Result?
             for hash in commitHashes {
                 lastResult = try await sdk.analyzeCommit(
                     hash: hash,
                     repoPath: repoPathURL,
-                    importName: importName,
+                    pattern: pattern,
+                    extensions: fileExtensions,
                     initializeSubmodules: initializeSubmodules
                 )
 
                 Self.logger.notice(
-                    "Found \(lastResult!.files.count) imports '\(importName)' at \(hash)"
+                    "Found \(lastResult!.matches.count) matches for '\(pattern)' at \(hash)"
                 )
             }
 
             Self.logger.notice(
-                "Summary for '\(importName)': analyzed \(commitHashes.count) commit(s)"
+                "Summary for '\(pattern)': analyzed \(commitHashes.count) commit(s)"
             )
             if let result = lastResult {
-                importResults.append((importName, result.files.count))
+                patternResults.append((pattern, result.matches.count))
                 allResults.append(result)
             }
         }
 
-        let summary = Summary(importResults: importResults)
+        let summary = Summary(patternResults: patternResults)
         logSummary(summary)
 
         if let output {
@@ -126,17 +142,17 @@ public struct Imports: AsyncParsableCommand {
     }
 
     private func logSummary(_ summary: Summary) {
-        if !summary.importResults.isEmpty {
-            Self.logger.info("Import counts:")
-            for result in summary.importResults {
-                Self.logger.info("  - \(result.importName): \(result.count)")
+        if !summary.patternResults.isEmpty {
+            Self.logger.info("Pattern matches:")
+            for result in summary.patternResults {
+                Self.logger.info("  - \(result.pattern): \(result.matchCount)")
             }
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
     }
 
-    private func saveResults(_ results: [ImportsSDK.Result], to path: String) throws {
+    private func saveResults(_ results: [PatternSDK.Result], to path: String) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(results)
