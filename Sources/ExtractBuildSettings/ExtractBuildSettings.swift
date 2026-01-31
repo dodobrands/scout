@@ -372,19 +372,3 @@ public class ExtractBuildSettings: AsyncParsableCommand {
         }
     }
 }
-
-enum ExtractBuildSettingsError: Error {
-    case projectNotFound(name: String)
-    case jsonEncodingFailed
-}
-
-extension ExtractBuildSettingsError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .projectNotFound(let name):
-            return "Xcode workspace '\(name).xcworkspace' not found in repository"
-        case .jsonEncodingFailed:
-            return "Failed to encode target values to JSON string"
-        }
-    }
-}
