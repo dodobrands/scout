@@ -5,19 +5,18 @@ Search for string patterns in source files across git history.
 ## Usage
 
 ```bash
-scout pattern \
-  --repo-path /path/to/repo \
-  --commits "abc123,def456"
+# Run from within a repository (uses current directory)
+scout pattern --commits "abc123,def456"
+
+# Or specify repository path explicitly
+scout pattern --repo-path /path/to/repo --commits "abc123,def456"
 ```
 
 ## Arguments
 
-### Required
-
-- `--repo-path, -r <path>` — Path to repository
-
 ### Optional
 
+- `--repo-path, -r <path>` — Path to repository (default: current directory)
 - `--config <path>` — Path to configuration JSON file
 - `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
 - `--output, -o <path>` — Path to save JSON results

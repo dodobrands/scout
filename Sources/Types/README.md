@@ -5,19 +5,18 @@ Count Swift types by inheritance across git history.
 ## Usage
 
 ```bash
-scout types \
-  --repo-path /path/to/repo \
-  --commits "abc123,def456"
+# Run from within a repository (uses current directory)
+scout types --commits "abc123,def456"
+
+# Or specify repository path explicitly
+scout types --repo-path /path/to/repo --commits "abc123,def456"
 ```
 
 ## Arguments
 
-### Required
-
-- `--repo-path, -r <path>` — Path to repository with Swift sources
-
 ### Optional
 
+- `--repo-path, -r <path>` — Path to repository with Swift sources (default: current directory)
 - `--config <path>` — Path to configuration JSON file
 - `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
 - `--output, -o <path>` — Path to save JSON results
