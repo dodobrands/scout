@@ -36,7 +36,7 @@ let viewCount = objects.filter { object in
 
 // Read imports from a file
 let imports = try reader.readImports(from: fileURL)
-// Returns: ["UIKit", "SwiftUI", "Foundation"]
+// Returns: Set<String>, e.g. ["UIKit", "SwiftUI", "Foundation"]
 ```
 
 ## API Reference
@@ -112,12 +112,12 @@ Extracts import statements from a Swift file.
 **Parameters:**
 - `from fileURL: URL` — Path to Swift source file
 
-**Returns:** `[String]` — Array of import module names
+**Returns:** `Set<String>` — Set of import module names
 
 **Example:**
 ```swift
 let imports = try reader.readImports(from: fileURL)
-// Returns: ["UIKit", "SwiftUI", "Foundation"]
+// Returns: Set<String>, e.g. ["UIKit", "SwiftUI", "Foundation"]
 ```
 
 ## Dependencies
