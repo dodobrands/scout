@@ -1,0 +1,3 @@
+{
+  "types": ["UIView", "UIViewController", "View", "XCTestCase", "JsonAsyncRequest", "JsonCallbackableRequest", "VoidAsyncRequest", "VoidCallbackableRequest", "AnalyticsEvent", "AnalyticsEventV2"]
+}
