@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "languages": ["Java", "Kotlin"],
+      "include": ["src/main"],
+      "exclude": ["test"]
+    },
+    {
+      "languages": ["Java", "Kotlin"],
+      "include": ["app/src/main"],
+      "exclude": ["test"]
+    },
+    {
+      "languages": ["Java", "Kotlin"],
+      "include": ["domain/src/main"],
+      "exclude": ["test"]
+    },
+    {
+      "languages": ["Java", "Kotlin"],
+      "include": ["domain/base/src/main"],
+      "exclude": ["test"]
+    }
+  ]
+}
