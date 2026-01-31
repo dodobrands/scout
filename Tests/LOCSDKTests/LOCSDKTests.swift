@@ -1,0 +1,84 @@
+import Foundation
+import Testing
+import LOCSDK
+
+struct LOCSDKTests {
+    let sut = LOCSDK()
+
+    @Test
+    func `When counting Swift LOC, should return correct count`() async throws {
+        let samplesURL = try samplesDirectory()
+        let config = LOCConfiguration(
+            languages: ["Swift"],
+            include: ["Sources"],
+            exclude: []
+        )
+
+        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+
+        #expect(result.linesOfCode == 16)
+    }
+
+    @Test
+    func `When exclude path specified, should not count excluded folders`() async throws {
+        let samplesURL = try samplesDirectory()
+        let configWithExclude = LOCConfiguration(
+            languages: ["Swift"],
+            include: ["Sources", "Vendor"],
+            exclude: ["Vendor"]
+        )
+
+        let result = try await sut.countLOC(in: samplesURL, configuration: configWithExclude)
+
+        #expect(result.linesOfCode == 16)
+    }
+
+    @Test
+    func `When multiple folders in include, should count all`() async throws {
+        let samplesURL = try samplesDirectory()
+        let config = LOCConfiguration(
+            languages: ["Swift"],
+            include: ["Sources", "Vendor"],
+            exclude: []
+        )
+
+        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+
+        #expect(result.linesOfCode == 22)
+    }
+
+    @Test
+    func `When include path does not exist, should return zero`() async throws {
+        let samplesURL = try samplesDirectory()
+        let config = LOCConfiguration(
+            languages: ["Swift"],
+            include: ["NonExistentFolder"],
+            exclude: []
+        )
+
+        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+
+        #expect(result.linesOfCode == 0)
+    }
+
+    @Test
+    func `When language has no files, should return zero`() async throws {
+        let samplesURL = try samplesDirectory()
+        let config = LOCConfiguration(
+            languages: ["Rust"],
+            include: ["Sources"],
+            exclude: []
+        )
+
+        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+
+        #expect(result.linesOfCode == 0)
+    }
+}
+
+private func samplesDirectory() throws -> URL {
+    guard let url = Bundle.module.resourceURL?.appendingPathComponent("Samples") else {
+        throw CocoaError(.fileNoSuchFile)
+    }
+    return url
+}
