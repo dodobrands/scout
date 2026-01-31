@@ -52,6 +52,7 @@ Before creating a PR, run all tests and linter:
 ```bash
 sh scripts/lint.sh
 swift test
+periphery scan --skip-build --strict
 ```
 
 ## Documentation Updates
