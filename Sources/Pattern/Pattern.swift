@@ -6,11 +6,11 @@ import PatternSDK
 import System
 import SystemPackage
 
-public struct Search: AsyncParsableCommand {
+public struct Pattern: AsyncParsableCommand {
     public init() {}
 
     public static let configuration = CommandConfiguration(
-        commandName: "search",
+        commandName: "pattern",
         abstract: "Search for string patterns in source files"
     )
 
@@ -64,7 +64,7 @@ public struct Search: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
-    private static let logger = Logger(label: "scout.Search")
+    private static let logger = Logger(label: "scout.Pattern")
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)

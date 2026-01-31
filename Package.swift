@@ -173,7 +173,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "CountTypes",
+            name: "Types",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -192,7 +192,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "CountFiles",
+            name: "Files",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -211,7 +211,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Search",
+            name: "Pattern",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -230,7 +230,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "CountLOC",
+            name: "LOC",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -249,7 +249,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "ExtractBuildSettings",
+            name: "BuildSettings",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -274,11 +274,11 @@ let package = Package(
                     name: "ArgumentParser",
                     package: "swift-argument-parser"
                 ),
-                "CountTypes",
-                "CountFiles",
-                "Search",
-                "CountLOC",
-                "ExtractBuildSettings",
+                "Types",
+                "Files",
+                "Pattern",
+                "LOC",
+                "BuildSettings",
             ]
         ),
         .testTarget(
