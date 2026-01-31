@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 import LOCSDK
+import Testing
 
 struct LOCSDKTests {
     let sut = LOCSDK()

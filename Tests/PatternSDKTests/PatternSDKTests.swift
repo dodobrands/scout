@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 import PatternSDK
+import Testing
 
 struct PatternSDKTests {
     let sut = PatternSDK()
@@ -50,6 +50,17 @@ struct PatternSDKTests {
 
         #expect(result.matches.count == 1)
         #expect(result.matches.first?.line == 4)
+    }
+
+    @Test
+    func `When pattern found multiple times, should return different line numbers`() async throws {
+        let samplesURL = try samplesDirectory()
+
+        let result = try await sut.search(pattern: "// TODO:", in: samplesURL)
+
+        #expect(result.matches.count == 2)
+        let lines = result.matches.map { $0.line }.sorted()
+        #expect(lines == [7, 26])
     }
 }
 

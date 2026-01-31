@@ -59,7 +59,11 @@ struct TypesSDKTests {
 
         let result = try await sut.countTypes(in: samplesURL, typeName: "Coordinator")
 
-        #expect(result.types == ["AppCoordinator", "AuthCoordinator", "FlowCoordinator", "MenuCoordinator"])
+        #expect(
+            result.types == [
+                "AppCoordinator", "AuthCoordinator", "FlowCoordinator", "MenuCoordinator",
+            ]
+        )
     }
 
     @Test
@@ -77,12 +81,14 @@ struct TypesSDKTests {
 
         let result = try await sut.countTypes(in: samplesURL, typeName: "BaseViewModel")
 
-        #expect(result.types == [
-            "ListViewModel",
-            "OrdersListViewModel",
-            "PaginatedListViewModel",
-            "ProductsListViewModel",
-        ])
+        #expect(
+            result.types == [
+                "ListViewModel",
+                "OrdersListViewModel",
+                "PaginatedListViewModel",
+                "ProductsListViewModel",
+            ]
+        )
     }
 
     @Test
@@ -91,11 +97,16 @@ struct TypesSDKTests {
 
         let result = try await sut.countTypes(in: samplesURL, typeName: "ListViewModel")
 
-        #expect(result.types == ["OrdersListViewModel", "PaginatedListViewModel", "ProductsListViewModel"])
+        #expect(
+            result.types == [
+                "OrdersListViewModel", "PaginatedListViewModel", "ProductsListViewModel",
+            ]
+        )
     }
 
     @Test
-    func `When type conforms to multiple protocols, should be found by each protocol`() async throws {
+    func `When type conforms to multiple protocols, should be found by each protocol`() async throws
+    {
         let samplesURL = try samplesDirectory()
 
         let trackableResult = try await sut.countTypes(in: samplesURL, typeName: "Trackable")

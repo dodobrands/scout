@@ -11,11 +11,11 @@ class ViewController {
         setupUI()
         loadData()
     }
-    
+
     func setupUI() {
         // Setup UI components
     }
-    
+
     func loadData() {
         // Load data from server
     }

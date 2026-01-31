@@ -1,6 +1,6 @@
+import FilesSDK
 import Foundation
 import Testing
-import FilesSDK
 
 struct FilesSDKTests {
     let sut = FilesSDK()

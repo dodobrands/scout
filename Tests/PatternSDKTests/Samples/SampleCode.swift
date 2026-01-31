@@ -16,7 +16,7 @@ class SampleViewController: UIViewController {
 class AnalyticsService {
     // periphery:ignore
     func track(_ event: String) {}
-    
+
     // periphery:ignore
     func trackScreen(_ name: String) {}
 }
