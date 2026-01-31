@@ -44,6 +44,10 @@ Count Swift types by inheritance. Tracks UIView, UIViewController, SwiftUI View,
 scout types
 ```
 
+```json
+{"commit":"abc123","date":"2025-01-15","results":{"UIView":42,"UIViewController":18,"View":156}}
+```
+
 📖 [Full documentation](Sources/Types/README.md)
 
 ### files
@@ -52,6 +56,10 @@ Count files by extension. Useful for tracking storyboard, xib, swift files count
 
 ```bash
 scout files
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":{"swift":1250,"storyboard":12,"xib":8}}
 ```
 
 📖 [Full documentation](Sources/Files/README.md)
@@ -64,6 +72,10 @@ Search for string patterns in source files. Useful for tracking import statement
 scout pattern
 ```
 
+```json
+{"commit":"abc123","date":"2025-01-15","results":{"import UIKit":89,"import SwiftUI":45,"// TODO:":23}}
+```
+
 📖 [Full documentation](Sources/Pattern/README.md)
 
 ### loc
@@ -74,6 +86,10 @@ Count lines of code using `cloc`. Supports filtering by languages, include/exclu
 scout loc
 ```
 
+```json
+{"commit":"abc123","date":"2025-01-15","results":[{"languages":["Swift"],"linesOfCode":48500}]}
+```
+
 📖 [Full documentation](Sources/LOC/README.md)
 
 ### build-settings
@@ -82,6 +98,10 @@ Extract build settings from Xcode projects. Supports Tuist-generated projects wi
 
 ```bash
 scout build-settings
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":[{"target":"MyApp","buildSettings":{"SWIFT_VERSION":"5.0","IPHONEOS_DEPLOYMENT_TARGET":"15.0"}}]}
 ```
 
 📖 [Full documentation](Sources/BuildSettings/README.md)
