@@ -4,6 +4,9 @@ import SystemPackage
 
 /// Configuration for ExtractBuildSettings tool loaded from JSON file.
 struct BuildSettingsConfig: Sendable {
+    /// Default configuration file name
+    static let defaultFileName = "build-settings-config.json"
+
     /// Represents a single setup command with optional working directory.
     struct SetupCommand: Sendable, Codable {
         /// Command to execute
@@ -58,10 +61,10 @@ struct BuildSettingsConfig: Sendable {
     /// Returns nil if no config file exists.
     ///
     /// - Parameters:
-    ///   - configPath: Optional path to JSON file. If nil, looks for "build-settings-config.json"
+    ///   - configPath: Optional path to JSON file. If nil, looks for default file
     /// - Throws: `BuildSettingsConfigError` if JSON file is malformed or missing required fields
     init?(configPath: String?) async throws {
-        let path = configPath ?? "build-settings-config.json"
+        let path = configPath ?? Self.defaultFileName
         guard FileManager.default.fileExists(atPath: path) else {
             if configPath != nil {
                 throw BuildSettingsConfigError.missingFile(path: path)

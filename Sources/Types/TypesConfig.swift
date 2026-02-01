@@ -4,6 +4,9 @@ import SystemPackage
 
 /// Configuration for CountTypes tool loaded from JSON file.
 struct TypesConfig: Sendable {
+    /// Default configuration file name
+    static let defaultFileName = "types-config.json"
+
     /// Types to count (e.g., ["UIView", "UIViewController", "View", "XCTestCase"])
     public let types: [String]?
 
@@ -20,10 +23,10 @@ struct TypesConfig: Sendable {
     /// Returns nil if no config file exists.
     ///
     /// - Parameters:
-    ///   - configPath: Optional path to JSON file. If nil, looks for "types-config.json"
+    ///   - configPath: Optional path to JSON file. If nil, looks for default file
     /// - Throws: `TypesConfigError` if JSON file is malformed or missing required fields
     public init?(configPath: String?) async throws {
-        let path = configPath ?? "types-config.json"
+        let path = configPath ?? Self.defaultFileName
         guard FileManager.default.fileExists(atPath: path) else {
             if configPath != nil {
                 throw TypesConfigError.missingFile(path: path)

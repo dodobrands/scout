@@ -4,6 +4,9 @@ import SystemPackage
 
 /// Configuration for CountLOC tool loaded from JSON file.
 struct LOCConfig: Sendable {
+    /// Default configuration file name
+    static let defaultFileName = "loc-config.json"
+
     /// Single LOC configuration entry
     struct LOCConfiguration: Sendable, Codable {
         /// Programming languages to count (array of strings)
@@ -39,10 +42,10 @@ struct LOCConfig: Sendable {
     /// Returns nil if no config file exists.
     ///
     /// - Parameters:
-    ///   - configPath: Optional path to JSON file. If nil, looks for "loc-config.json"
+    ///   - configPath: Optional path to JSON file. If nil, looks for default file
     /// - Throws: `LOCConfigError` if JSON file is malformed or missing required fields
     init?(configPath: String?) async throws {
-        let path = configPath ?? "loc-config.json"
+        let path = configPath ?? Self.defaultFileName
         guard FileManager.default.fileExists(atPath: path) else {
             if configPath != nil {
                 throw LOCConfigError.missingFile(path: path)

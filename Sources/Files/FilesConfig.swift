@@ -4,6 +4,9 @@ import SystemPackage
 
 /// Configuration for CountFiles tool loaded from JSON file.
 struct FilesConfig: Sendable {
+    /// Default configuration file name
+    static let defaultFileName = "files-config.json"
+
     /// File extensions to count (without dot, e.g., ["storyboard", "xib"])
     public let filetypes: [String]?
 
@@ -20,10 +23,10 @@ struct FilesConfig: Sendable {
     /// Returns nil if no config file exists.
     ///
     /// - Parameters:
-    ///   - configPath: Optional path to JSON file. If nil, looks for "files-config.json"
+    ///   - configPath: Optional path to JSON file. If nil, looks for default file
     /// - Throws: `FilesConfigError` if JSON file is malformed or missing required fields
     init?(configPath: String?) async throws {
-        let path = configPath ?? "files-config.json"
+        let path = configPath ?? Self.defaultFileName
         guard FileManager.default.fileExists(atPath: path) else {
             if configPath != nil {
                 throw FilesConfigError.missingFile(path: path)

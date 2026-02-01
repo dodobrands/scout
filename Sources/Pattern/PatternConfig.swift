@@ -4,6 +4,9 @@ import SystemPackage
 
 /// Configuration for Search tool loaded from JSON file.
 struct PatternConfig: Sendable {
+    /// Default configuration file name
+    static let defaultFileName = "pattern-config.json"
+
     /// Patterns to search for (e.g., ["// periphery:ignore", "TODO:"])
     public let patterns: [String]?
 
@@ -28,10 +31,10 @@ struct PatternConfig: Sendable {
     /// Returns nil if no config file exists.
     ///
     /// - Parameters:
-    ///   - configPath: Optional path to JSON file. If nil, looks for "pattern-config.json"
+    ///   - configPath: Optional path to JSON file. If nil, looks for default file
     /// - Throws: `PatternConfigError` if JSON file is malformed or missing required fields
     init?(configPath: String?) async throws {
-        let path = configPath ?? "pattern-config.json"
+        let path = configPath ?? Self.defaultFileName
         guard FileManager.default.fileExists(atPath: path) else {
             if configPath != nil {
                 throw PatternConfigError.missingFile(path: path)
