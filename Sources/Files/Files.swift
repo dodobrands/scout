@@ -72,21 +72,41 @@ public struct Files: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let filetypeList: [String]
-        if !filetypes.isEmpty {
-            filetypeList = filetypes
+        // Load config from file if specified
+        let fileConfig: CountFilesConfig?
+        if let configPath = config {
+            fileConfig = try await CountFilesConfig(
+                configFilePath: SystemPackage.FilePath(configPath)
+            )
+        } else if FileManager.default.fileExists(atPath: "count-files-config.json") {
+            fileConfig = try await CountFilesConfig(
+                configFilePath: SystemPackage.FilePath("count-files-config.json")
+            )
         } else {
-            let configFilePath = SystemPackage.FilePath(config ?? "count-files-config.json")
-            let configData = try await CountFilesConfig(configFilePath: configFilePath)
-            filetypeList = configData.filetypes
+            fileConfig = nil
         }
 
-        let repoPathURL =
-            try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
+        // Build CLI inputs
+        let cliInputs = FilesCLIInputs(
+            filetypes: filetypes.isEmpty ? nil : filetypes,
+            repoPath: repoPath == FileManager.default.currentDirectoryPath ? nil : repoPath,
+            commits: commits.isEmpty ? nil : commits,
+            gitClean: gitClean,
+            fixLfs: fixLfs,
+            initializeSubmodules: initializeSubmodules
+        )
 
+        // Merge CLI > Config > Default
+        let input = FilesInput(cli: cliInputs, config: fileConfig)
+
+        let repoPathURL =
+            try URL(string: input.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
+
+        // Resolve commits - need to fetch HEAD if not specified
         let commitHashes: [String]
-        if !commits.isEmpty {
-            commitHashes = commits
+        if !input.commits.isEmpty && input.commits != ["HEAD"] {
+            commitHashes = input.commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
@@ -97,7 +117,7 @@ public struct Files: AsyncParsableCommand {
         var filetypeResults: [(filetype: String, count: Int)] = []
         var allResults: [FilesSDK.Result] = []
 
-        for filetype in filetypeList {
+        for filetype in input.filetypes {
             Self.logger.info("Processing file type: \(filetype)")
 
             Self.logger.info(
@@ -107,17 +127,13 @@ public struct Files: AsyncParsableCommand {
                 ]
             )
 
-            let gitConfig = GitConfiguration(
-                repoPath: repoPath,
-                clean: gitClean,
-                fixLFS: fixLfs,
-                initializeSubmodules: initializeSubmodules
-            )
-            let input = FilesInput(git: gitConfig, filetype: filetype)
-
             var lastResult: FilesSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
+                lastResult = try await sdk.analyzeCommit(
+                    hash: hash,
+                    filetype: filetype,
+                    input: input
+                )
 
                 Self.logger.notice(
                     "Found \(lastResult!.files.count) files of type '\(filetype)' at \(hash)"

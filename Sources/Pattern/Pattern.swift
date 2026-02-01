@@ -78,45 +78,61 @@ public struct Pattern: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let patternList: [String]
-        if !patterns.isEmpty {
-            patternList = patterns
+        // Load config from file if specified
+        let fileConfig: SearchConfig?
+        if let configPath = config {
+            fileConfig = try await SearchConfig(configFilePath: SystemPackage.FilePath(configPath))
+        } else if FileManager.default.fileExists(atPath: "search-config.json") {
+            fileConfig = try await SearchConfig(
+                configFilePath: SystemPackage.FilePath("search-config.json")
+            )
         } else {
-            let configFilePath = SystemPackage.FilePath(config ?? "search-config.json")
-            let searchConfig = try await SearchConfig(configFilePath: configFilePath)
-            patternList = searchConfig.patterns
+            fileConfig = nil
         }
 
-        let repoPathURL =
-            try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
+        // Parse extensions from CLI (comma-separated string)
+        let cliExtensions: [String]?
+        if let extensions {
+            cliExtensions = extensions.split(separator: ",").map {
+                String($0.trimmingCharacters(in: .whitespaces))
+            }
+        } else {
+            cliExtensions = nil
+        }
 
+        // Build CLI inputs
+        let cliInputs = PatternCLIInputs(
+            patterns: patterns.isEmpty ? nil : patterns,
+            repoPath: repoPath == FileManager.default.currentDirectoryPath ? nil : repoPath,
+            commits: commits.isEmpty ? nil : commits,
+            extensions: cliExtensions,
+            gitClean: gitClean,
+            fixLfs: fixLfs,
+            initializeSubmodules: initializeSubmodules
+        )
+
+        // Merge CLI > Config > Default
+        let input = PatternInput(cli: cliInputs, config: fileConfig)
+
+        let repoPathURL =
+            try URL(string: input.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
+
+        // Resolve commits - need to fetch HEAD if not specified
         let commitHashes: [String]
-        if !commits.isEmpty {
-            commitHashes = commits
+        if !input.commits.isEmpty && input.commits != ["HEAD"] {
+            commitHashes = input.commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
-        let fileExtensions: [String]
-        if let extensions {
-            fileExtensions = extensions.split(separator: ",").map {
-                String($0.trimmingCharacters(in: .whitespaces))
-            }
-        } else if !patterns.isEmpty {
-            fileExtensions = ["swift"]
-        } else {
-            let configFilePath = SystemPackage.FilePath(config ?? "search-config.json")
-            let searchConfig = try await SearchConfig(configFilePath: configFilePath)
-            fileExtensions = searchConfig.extensions
-        }
-
         let sdk = PatternSDK()
         var patternResults: [(pattern: String, matchCount: Int)] = []
         var allResults: [PatternSDK.Result] = []
 
-        for pattern in patternList {
+        for pattern in input.patterns {
             Self.logger.info("Processing pattern: \(pattern)")
 
             Self.logger.info(
@@ -126,21 +142,9 @@ public struct Pattern: AsyncParsableCommand {
                 ]
             )
 
-            let gitConfig = GitConfiguration(
-                repoPath: repoPath,
-                clean: gitClean,
-                fixLFS: fixLfs,
-                initializeSubmodules: initializeSubmodules
-            )
-            let input = PatternInput(
-                git: gitConfig,
-                pattern: pattern,
-                extensions: fileExtensions
-            )
-
             var lastResult: PatternSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
+                lastResult = try await sdk.analyzeCommit(hash: hash, pattern: pattern, input: input)
 
                 Self.logger.notice(
                     "Found \(lastResult!.matches.count) matches for '\(pattern)' at \(hash)"

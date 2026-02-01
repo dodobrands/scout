@@ -15,30 +15,37 @@ public struct ExtractBuildSettingsConfig: Sendable {
 
         /// If true, analysis continues even if this command fails.
         public let optional: Bool?
+
+        /// Initialize setup command
+        public init(command: String, workingDirectory: String?, optional: Bool?) {
+            self.command = command
+            self.workingDirectory = workingDirectory
+            self.optional = optional
+        }
     }
 
     /// Commands to setup project, executed sequentially.
-    public let setupCommands: [SetupCommand]
+    public let setupCommands: [SetupCommand]?
 
     /// Build settings parameters to collect (e.g., ["SWIFT_VERSION"])
-    public let buildSettingsParameters: [String]
+    public let buildSettingsParameters: [String]?
 
     /// Xcode workspace or project name (without extension)
-    public let workspaceName: String
+    public let workspaceName: String?
 
     /// Build configuration name (e.g., "Debug", "Release")
-    public let configuration: String
+    public let configuration: String?
 
     /// Git operations configuration
-    public let git: GitConfiguration
+    public let git: GitConfiguration?
 
     /// Initialize configuration directly (for testing)
     public init(
-        setupCommands: [SetupCommand],
-        buildSettingsParameters: [String],
-        workspaceName: String,
-        configuration: String,
-        git: GitConfiguration = .default
+        setupCommands: [SetupCommand]?,
+        buildSettingsParameters: [String]?,
+        workspaceName: String?,
+        configuration: String?,
+        git: GitConfiguration? = nil
     ) {
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
@@ -65,11 +72,11 @@ public struct ExtractBuildSettingsConfig: Sendable {
             let fileData = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
-            self.setupCommands = variables.setupCommands ?? []
+            self.setupCommands = variables.setupCommands
             self.buildSettingsParameters = variables.buildSettingsParameters
             self.workspaceName = variables.workspaceName
             self.configuration = variables.configuration
-            self.git = variables.git ?? .default
+            self.git = variables.git
         } catch let decodingError as DecodingError {
             throw ExtractBuildSettingsConfigError.invalidJSON(
                 path: configPathString,
@@ -85,9 +92,9 @@ public struct ExtractBuildSettingsConfig: Sendable {
 
     private struct Variables: Codable {
         let setupCommands: [SetupCommand]?
-        let buildSettingsParameters: [String]
-        let workspaceName: String
-        let configuration: String
+        let buildSettingsParameters: [String]?
+        let workspaceName: String?
+        let configuration: String?
         let git: GitConfiguration?
     }
 }

@@ -57,16 +57,22 @@ public struct SetupCommand: Sendable {
 public struct BuildSettingsInput: Sendable {
     public let git: GitConfiguration
     public let setupCommands: [SetupCommand]
+    public let buildSettingsParameters: [String]
     public let configuration: String
+    public let commits: [String]
 
     public init(
         git: GitConfiguration,
         setupCommands: [SetupCommand],
-        configuration: String
+        buildSettingsParameters: [String] = [],
+        configuration: String,
+        commits: [String] = ["HEAD"]
     ) {
         self.git = git
         self.setupCommands = setupCommands
+        self.buildSettingsParameters = buildSettingsParameters
         self.configuration = configuration
+        self.commits = commits
     }
 }
 

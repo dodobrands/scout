@@ -43,14 +43,27 @@ public struct LOCConfiguration: Sendable {
 /// Input parameters for LOCSDK operations.
 public struct LOCInput: Sendable {
     public let git: GitConfiguration
-    public let configuration: LOCConfiguration
+    public let configurations: [LOCConfiguration]
+    public let commits: [String]
 
     public init(
         git: GitConfiguration,
-        configuration: LOCConfiguration
+        configurations: [LOCConfiguration],
+        commits: [String] = ["HEAD"]
     ) {
         self.git = git
-        self.configuration = configuration
+        self.configurations = configurations
+        self.commits = commits
+    }
+
+    public init(
+        git: GitConfiguration,
+        configuration: LOCConfiguration,
+        commits: [String] = ["HEAD"]
+    ) {
+        self.git = git
+        self.configurations = [configuration]
+        self.commits = commits
     }
 }
 
@@ -81,9 +94,11 @@ public struct LOCSDK: Sendable {
     }
 
     /// Counts lines of code in the repository with the specified configuration.
-    /// - Parameter input: Input parameters for the operation
+    /// - Parameters:
+    ///   - configuration: LOC configuration to use
+    ///   - input: Input parameters for the operation
     /// - Returns: Result containing total LOC count
-    public func countLOC(input: LOCInput) async throws -> Result {
+    public func countLOC(configuration: LOCConfiguration, input: LOCInput) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Self.checkClocInstalled()
@@ -92,12 +107,12 @@ public struct LOCSDK: Sendable {
         let clocRunner = ClocRunner()
         let foldersToAnalyze = foldersToAnalyze(
             in: repoPath,
-            include: input.configuration.include,
-            exclude: input.configuration.exclude
+            include: configuration.include,
+            exclude: configuration.exclude
         )
 
         let loc =
-            try await input.configuration.languages
+            try await configuration.languages
             .asyncFlatMap { language in
                 try await foldersToAnalyze.asyncMap {
                     try await clocRunner.linesOfCode(at: $0, language: language)
@@ -106,19 +121,53 @@ public struct LOCSDK: Sendable {
             .compactMap { Int($0) }
             .reduce(0, +)
 
-        let metric = "LOC \(input.configuration.languages) \(input.configuration.include)"
+        let metric = "LOC \(configuration.languages) \(configuration.include)"
         return Result(metric: metric, linesOfCode: loc)
     }
 
-    /// Checks out a commit and counts lines of code.
+    /// Counts lines of code in the repository with all specified configurations.
+    /// - Parameter input: Input parameters including array of configurations
+    /// - Returns: Array of results, one for each configuration
+    public func countLOC(input: LOCInput) async throws -> [Result] {
+        var results: [Result] = []
+        for configuration in input.configurations {
+            let result = try await countLOC(configuration: configuration, input: input)
+            results.append(result)
+        }
+        return results
+    }
+
+    /// Checks out a commit and counts lines of code with the specified configuration.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
+    ///   - configuration: LOC configuration to use
     ///   - input: Input parameters for the operation
     /// - Returns: Result containing total LOC count
     public func analyzeCommit(
         hash: String,
+        configuration: LOCConfiguration,
         input: LOCInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        try await Shell.execute(
+            "git",
+            arguments: ["checkout", hash],
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+        )
+
+        return try await countLOC(configuration: configuration, input: input)
+    }
+
+    /// Checks out a commit and counts lines of code with all specified configurations.
+    /// - Parameters:
+    ///   - hash: Commit hash to checkout
+    ///   - input: Input parameters including array of configurations
+    /// - Returns: Array of results, one for each configuration
+    public func analyzeCommit(
+        hash: String,
+        input: LOCInput
+    ) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(

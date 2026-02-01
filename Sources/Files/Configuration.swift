@@ -5,13 +5,13 @@ import SystemPackage
 /// Configuration for CountFiles tool loaded from JSON file.
 public struct CountFilesConfig: Sendable {
     /// File extensions to count (without dot, e.g., ["storyboard", "xib"])
-    public let filetypes: [String]
+    public let filetypes: [String]?
 
     /// Git operations configuration
-    public let git: GitConfiguration
+    public let git: GitConfiguration?
 
     /// Initialize configuration directly (for testing)
-    public init(filetypes: [String], git: GitConfiguration = .default) {
+    public init(filetypes: [String]?, git: GitConfiguration? = nil) {
         self.filetypes = filetypes
         self.git = git
     }
@@ -35,7 +35,7 @@ public struct CountFilesConfig: Sendable {
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.filetypes = variables.filetypes
-            self.git = variables.git ?? .default
+            self.git = variables.git
         } catch let decodingError as DecodingError {
             throw CountFilesConfigError.invalidJSON(
                 path: configPathString,
@@ -50,7 +50,7 @@ public struct CountFilesConfig: Sendable {
     }
 
     private struct Variables: Codable {
-        let filetypes: [String]
+        let filetypes: [String]?
         let git: GitConfiguration?
     }
 }

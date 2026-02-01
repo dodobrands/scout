@@ -17,7 +17,7 @@ struct LOCSDKTests {
         )
         let input = LOCInput(git: gitConfig, configuration: config)
 
-        let result = try await sut.countLOC(input: input)
+        let result = try await sut.countLOC(configuration: config, input: input)
 
         #expect(result.linesOfCode == 16)
     }
@@ -33,7 +33,7 @@ struct LOCSDKTests {
         )
         let input = LOCInput(git: gitConfig, configuration: configWithExclude)
 
-        let result = try await sut.countLOC(input: input)
+        let result = try await sut.countLOC(configuration: configWithExclude, input: input)
 
         #expect(result.linesOfCode == 16)
     }
@@ -49,7 +49,7 @@ struct LOCSDKTests {
         )
         let input = LOCInput(git: gitConfig, configuration: config)
 
-        let result = try await sut.countLOC(input: input)
+        let result = try await sut.countLOC(configuration: config, input: input)
 
         #expect(result.linesOfCode == 22)
     }
@@ -65,7 +65,7 @@ struct LOCSDKTests {
         )
         let input = LOCInput(git: gitConfig, configuration: config)
 
-        let result = try await sut.countLOC(input: input)
+        let result = try await sut.countLOC(configuration: config, input: input)
 
         #expect(result.linesOfCode == 0)
     }
@@ -81,9 +81,32 @@ struct LOCSDKTests {
         )
         let input = LOCInput(git: gitConfig, configuration: config)
 
-        let result = try await sut.countLOC(input: input)
+        let result = try await sut.countLOC(configuration: config, input: input)
 
         #expect(result.linesOfCode == 0)
+    }
+
+    @Test
+    func `When counting multiple configurations, should return results for each`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let config1 = LOCConfiguration(
+            languages: ["Swift"],
+            include: ["Sources"],
+            exclude: []
+        )
+        let config2 = LOCConfiguration(
+            languages: ["Swift"],
+            include: ["Vendor"],
+            exclude: []
+        )
+        let input = LOCInput(git: gitConfig, configurations: [config1, config2])
+
+        let results = try await sut.countLOC(input: input)
+
+        #expect(results.count == 2)
+        #expect(results[0].linesOfCode == 16)
+        #expect(results[1].linesOfCode == 6)
     }
 }
 

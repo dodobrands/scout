@@ -5,13 +5,13 @@ import SystemPackage
 /// Configuration for CountTypes tool loaded from JSON file.
 public struct CountTypesConfig: Sendable {
     /// Types to count (e.g., ["UIView", "UIViewController", "View", "XCTestCase"])
-    public let types: [String]
+    public let types: [String]?
 
     /// Git operations configuration
-    public let git: GitConfiguration
+    public let git: GitConfiguration?
 
     /// Initialize configuration directly (for testing)
-    public init(types: [String], git: GitConfiguration = .default) {
+    public init(types: [String]?, git: GitConfiguration? = nil) {
         self.types = types
         self.git = git
     }
@@ -35,7 +35,7 @@ public struct CountTypesConfig: Sendable {
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.types = variables.types
-            self.git = variables.git ?? .default
+            self.git = variables.git
         } catch let decodingError as DecodingError {
             throw CountTypesConfigError.invalidJSON(
                 path: configPathString,
@@ -50,7 +50,7 @@ public struct CountTypesConfig: Sendable {
     }
 
     private struct Variables: Codable {
-        let types: [String]
+        let types: [String]?
         let git: GitConfiguration?
     }
 }

@@ -278,12 +278,34 @@ let package = Package(
             ]
         ),
         .testTarget(
+            name: "TypesTests",
+            dependencies: [
+                "Types",
+                "TypesSDK",
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
             name: "FilesSDKTests",
             dependencies: [
                 "FilesSDK",
             ],
             resources: [
                 .copy("Samples")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
+            name: "FilesTests",
+            dependencies: [
+                "Files",
+                "FilesSDK",
+                "Common",
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -302,6 +324,17 @@ let package = Package(
             ]
         ),
         .testTarget(
+            name: "PatternTests",
+            dependencies: [
+                "Pattern",
+                "PatternSDK",
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
             name: "LOCSDKTests",
             dependencies: [
                 "LOCSDK",
@@ -314,12 +347,34 @@ let package = Package(
             ]
         ),
         .testTarget(
+            name: "LOCTests",
+            dependencies: [
+                "LOC",
+                "LOCSDK",
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
             name: "BuildSettingsSDKTests",
             dependencies: [
                 "BuildSettingsSDK",
             ],
             resources: [
                 .copy("Samples")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
+            name: "BuildSettingsTests",
+            dependencies: [
+                "BuildSettings",
+                "BuildSettingsSDK",
+                "Common",
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),

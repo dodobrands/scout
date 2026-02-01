@@ -6,14 +6,17 @@ import System
 /// Input parameters for TypesSDK operations.
 public struct TypesInput: Sendable {
     public let git: GitConfiguration
-    public let typeName: String
+    public let types: [String]
+    public let commits: [String]
 
     public init(
         git: GitConfiguration,
-        typeName: String
+        types: [String],
+        commits: [String] = ["HEAD"]
     ) {
         self.git = git
-        self.typeName = typeName
+        self.types = types
+        self.commits = commits
     }
 }
 
@@ -35,9 +38,11 @@ public struct TypesSDK: Sendable {
     }
 
     /// Counts types inherited from the specified base type in the repository.
-    /// - Parameter input: Input parameters for the operation
+    /// - Parameters:
+    ///   - typeName: Base type name to search for
+    ///   - input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching types
-    public func countTypes(input: TypesInput) async throws -> Result {
+    public func countTypes(typeName: String, input: TypesInput) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
         let parser = SwiftParser()
 
@@ -51,28 +56,62 @@ public struct TypesSDK: Sendable {
         let types = objects.filter {
             parser.isInherited(
                 objectFromCode: $0,
-                from: input.typeName,
+                from: typeName,
                 allObjects: objects
             )
         }.sorted(by: { $0.name < $1.name })
 
-        Self.logger.debug("Types conforming to \(input.typeName): \(types.map { $0.name })")
+        Self.logger.debug("Types conforming to \(typeName): \(types.map { $0.name })")
 
         return Result(
-            typeName: input.typeName,
+            typeName: typeName,
             types: types.map { $0.name }
         )
+    }
+
+    /// Counts types inherited from all specified base types in the repository.
+    /// - Parameter input: Input parameters including array of types to search for
+    /// - Returns: Array of results, one for each type
+    public func countTypes(input: TypesInput) async throws -> [Result] {
+        var results: [Result] = []
+        for typeName in input.types {
+            let result = try await countTypes(typeName: typeName, input: input)
+            results.append(result)
+        }
+        return results
     }
 
     /// Checks out a commit and counts types inherited from the specified base type.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
+    ///   - typeName: Base type name to search for
     ///   - input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching types
     public func analyzeCommit(
         hash: String,
+        typeName: String,
         input: TypesInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        try await Shell.execute(
+            "git",
+            arguments: ["checkout", hash],
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+        )
+
+        return try await countTypes(typeName: typeName, input: input)
+    }
+
+    /// Checks out a commit and counts types inherited from all specified base types.
+    /// - Parameters:
+    ///   - hash: Commit hash to checkout
+    ///   - input: Input parameters including array of types to search for
+    /// - Returns: Array of results, one for each type
+    public func analyzeCommit(
+        hash: String,
+        input: TypesInput
+    ) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(

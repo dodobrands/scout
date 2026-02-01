@@ -5,19 +5,19 @@ import SystemPackage
 /// Configuration for Search tool loaded from JSON file.
 public struct SearchConfig: Sendable {
     /// Patterns to search for (e.g., ["// periphery:ignore", "TODO:"])
-    public let patterns: [String]
+    public let patterns: [String]?
 
     /// File extensions to search in (e.g., ["swift", "m"])
-    public let extensions: [String]
+    public let extensions: [String]?
 
     /// Git operations configuration
-    public let git: GitConfiguration
+    public let git: GitConfiguration?
 
     /// Initialize configuration directly (for testing)
     public init(
-        patterns: [String],
-        extensions: [String] = ["swift"],
-        git: GitConfiguration = .default
+        patterns: [String]?,
+        extensions: [String]? = nil,
+        git: GitConfiguration? = nil
     ) {
         self.patterns = patterns
         self.extensions = extensions
@@ -43,8 +43,8 @@ public struct SearchConfig: Sendable {
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.patterns = variables.patterns
-            self.extensions = variables.extensions ?? ["swift"]
-            self.git = variables.git ?? .default
+            self.extensions = variables.extensions
+            self.git = variables.git
         } catch let decodingError as DecodingError {
             throw SearchConfigError.invalidJSON(
                 path: configPathString,
@@ -59,7 +59,7 @@ public struct SearchConfig: Sendable {
     }
 
     private struct Variables: Codable {
-        let patterns: [String]
+        let patterns: [String]?
         let extensions: [String]?
         let git: GitConfiguration?
     }
