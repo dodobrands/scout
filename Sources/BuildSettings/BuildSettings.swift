@@ -21,26 +21,6 @@ public struct BuildSettings: AsyncParsableCommand {
         abstract: "Extract build settings from Xcode projects"
     )
 
-    struct Summary: JobSummaryFormattable {
-        let parameterResults: [(parameter: String, targetCount: Int)]
-
-        var markdown: String {
-            var md = "## ExtractBuildSettings Summary\n\n"
-
-            if !parameterResults.isEmpty {
-                md += "### Build Settings Parameters\n\n"
-                md += "| Parameter | Target Count |\n"
-                md += "|-----------|--------------|\n"
-                for result in parameterResults {
-                    md += "| `\(result.parameter)` | \(result.targetCount) |\n"
-                }
-                md += "\n"
-            }
-
-            return md
-        }
-    }
-
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
     public var repoPath: String?
 
@@ -105,7 +85,6 @@ public struct BuildSettings: AsyncParsableCommand {
             Self.logger.info("No commits specified, using HEAD: \(head)")
         }
 
-        var parameterResults: [(parameter: String, targetCount: Int)] = []
         var outputResults: [BuildSettingsOutput] = []
 
         Self.logger.info(
@@ -142,40 +121,15 @@ public struct BuildSettings: AsyncParsableCommand {
 
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
-            var resultsDict: [String: [String: String?]] = [:]
-            for targetWithSettings in result {
-                var filteredSettings: [String: String?] = [:]
-                for parameter in input.buildSettingsParameters {
-                    filteredSettings[parameter] = targetWithSettings.buildSettings[parameter]
-                }
-                resultsDict[targetWithSettings.target] = filteredSettings
-            }
-
-            for parameter in input.buildSettingsParameters {
-                var targetCount = 0
-                for targetWithSettings in result {
-                    if targetWithSettings.buildSettings[parameter] != nil {
-                        targetCount += 1
-                    }
-                }
-
-                Self.logger.notice(
-                    "Extracted build settings",
-                    metadata: [
-                        "hash": "\(hash)",
-                        "parameter": "\(parameter)",
-                        "targetsCount": "\(targetCount)",
-                    ]
-                )
-
-                if let existingIndex = parameterResults.firstIndex(where: {
-                    $0.parameter == parameter
-                }) {
-                    parameterResults[existingIndex] = (parameter, targetCount)
-                } else {
-                    parameterResults.append((parameter, targetCount))
+            let resultsDict = result.reduce(into: [String: [String: String?]]()) { dict, target in
+                dict[target.target] = input.buildSettingsParameters.reduce(into: [:]) {
+                    $0[$1] = target.buildSettings[$1]
                 }
             }
+
+            Self.logger.notice(
+                "Extracted build settings for \(result.count) targets at \(hash)"
+            )
 
             let commitOutput = BuildSettingsOutput(commit: hash, date: date, results: resultsDict)
             outputResults.append(commitOutput)
@@ -185,18 +139,9 @@ public struct BuildSettings: AsyncParsableCommand {
             try outputResults.writeJSON(to: outputPath)
         }
 
-        let summary = Summary(parameterResults: parameterResults)
-        logSummary(summary)
-    }
-
-    private func logSummary(_ summary: Summary) {
-        if !summary.parameterResults.isEmpty {
-            Self.logger.info("Build settings parameter counts:")
-            for result in summary.parameterResults {
-                Self.logger.info("  - \(result.parameter): \(result.targetCount) targets")
-            }
-        }
-
+        let summary = BuildSettingsSummary(results: outputResults)
         GitHubActionsLogHandler.writeSummary(summary)
+
+        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
     }
 }
