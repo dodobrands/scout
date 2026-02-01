@@ -12,7 +12,7 @@ struct BuildSettingsConfig: Sendable {
         /// Command to execute
         public let command: String
 
-        /// Optional working directory relative to repo root (e.g., "DodoPizza").
+        /// Optional working directory relative to repo root (e.g., "project").
         /// If not provided, command executes in repo root.
         public let workingDirectory: String?
 

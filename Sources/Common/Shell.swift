@@ -110,7 +110,7 @@ public class Shell {
     /// let output = try await Shell.execute(
     ///     "tuist",
     ///     arguments: ["install"],
-    ///     workingDirectory: FilePath("ios/DodoPizza")
+    ///     workingDirectory: FilePath("path-to-project")
     /// )
     ///
     /// // Parse output programmatically (equivalent to shell pipe)
