@@ -22,7 +22,6 @@ scout build-settings --config build-settings-config.json --commits abc123 def456
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
-- `--ignore-setup-errors` — Continue analysis even if setup commands fail (default: stop on error)
 
 ## Configuration
 
@@ -52,7 +51,7 @@ scout build-settings --config build-settings-config.json
   "configuration": "Debug",
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
   "setupCommands": [
-    { "command": "mise install" },
+    { "command": "mise install", "optional": true },
     { "command": "tuist install", "workingDirectory": "App" },
     { "command": "tuist generate --no-open", "workingDirectory": "App" }
   ]
@@ -66,9 +65,10 @@ scout build-settings --config build-settings-config.json
 | `workspaceName` | `String` | Xcode workspace/project name (without extension) |
 | `configuration` | `String` | Build configuration (Debug, Release, etc.) |
 | `buildSettingsParameters` | `[String]` | Build settings to extract |
-| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional). By default, analysis stops if any command fails. Use `--ignore-setup-errors` to continue. |
+| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional) |
 | `setupCommands[].command` | `String` | Shell command to execute |
 | `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
+| `setupCommands[].optional` | `Bool?` | If `true`, analysis continues even if command fails (default: `false`) |
 
 ## Requirements
 

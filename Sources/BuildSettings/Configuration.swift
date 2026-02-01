@@ -11,6 +11,9 @@ public struct ExtractBuildSettingsConfig: Sendable {
         /// Optional working directory relative to repo root (e.g., "DodoPizza").
         /// If not provided, command executes in repo root.
         public let workingDirectory: String?
+
+        /// If true, analysis continues even if this command fails.
+        public let optional: Bool?
     }
 
     /// Commands to setup project, executed sequentially.

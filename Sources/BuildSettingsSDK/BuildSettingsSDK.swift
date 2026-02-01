@@ -50,10 +50,12 @@ public struct BuildSettingsSDK: Sendable {
     public struct SetupCommand: Sendable {
         public let command: String
         public let workingDirectory: String?
+        public let optional: Bool
 
-        public init(command: String, workingDirectory: String? = nil) {
+        public init(command: String, workingDirectory: String? = nil, optional: Bool = false) {
             self.command = command
             self.workingDirectory = workingDirectory
+            self.optional = optional
         }
     }
 
@@ -83,12 +85,11 @@ public struct BuildSettingsSDK: Sendable {
         in repoPath: URL,
         setupCommands: [SetupCommand],
         configuration: String,
-        initializeSubmodules: Bool = false,
-        ignoreSetupErrors: Bool = false
+        initializeSubmodules: Bool = false
     ) async throws -> Result {
         try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
 
-        try await executeSetupCommands(setupCommands, in: repoPath, ignoreErrors: ignoreSetupErrors)
+        try await executeSetupCommands(setupCommands, in: repoPath)
 
         let foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
         let projectsWithTargets = try await getTargetsForAllProjects(
@@ -109,8 +110,7 @@ public struct BuildSettingsSDK: Sendable {
         repoPath: URL,
         setupCommands: [SetupCommand],
         configuration: String,
-        initializeSubmodules: Bool = false,
-        ignoreSetupErrors: Bool = false
+        initializeSubmodules: Bool = false
     ) async throws -> Result {
         do {
             try await Shell.execute(
@@ -127,8 +127,7 @@ public struct BuildSettingsSDK: Sendable {
                 in: repoPath,
                 setupCommands: setupCommands,
                 configuration: configuration,
-                initializeSubmodules: initializeSubmodules,
-                ignoreSetupErrors: ignoreSetupErrors
+                initializeSubmodules: initializeSubmodules
             )
         } catch let error as AnalysisError {
             throw error
@@ -141,8 +140,7 @@ public struct BuildSettingsSDK: Sendable {
 
     private func executeSetupCommands(
         _ commands: [SetupCommand],
-        in repoPath: URL,
-        ignoreErrors: Bool
+        in repoPath: URL
     ) async throws {
         for setupCommand in commands {
             let workingDirPath: FilePath
@@ -168,9 +166,9 @@ public struct BuildSettingsSDK: Sendable {
                     workingDirectory: workingDirPath
                 )
             } catch {
-                if ignoreErrors {
+                if setupCommand.optional {
                     Self.logger.warning(
-                        "Setup command failed, continuing due to --ignore-setup-errors",
+                        "Optional setup command failed, continuing",
                         metadata: [
                             "command": "\(setupCommand.command)",
                             "error": "\(error.localizedDescription)",
