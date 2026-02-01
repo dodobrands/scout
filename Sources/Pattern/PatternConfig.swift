@@ -5,7 +5,7 @@ import SystemPackage
 /// Configuration for Search tool loaded from JSON file.
 struct PatternConfig: Sendable {
     /// Default configuration file name
-    static let defaultFileName = "pattern-config.json"
+    static let defaultFileName = ".scout-pattern.json"
 
     /// Patterns to search for (e.g., ["// periphery:ignore", "TODO:"])
     public let patterns: [String]?

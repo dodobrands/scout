@@ -5,7 +5,7 @@ import SystemPackage
 /// Configuration for ExtractBuildSettings tool loaded from JSON file.
 struct BuildSettingsConfig: Sendable {
     /// Default configuration file name
-    static let defaultFileName = "build-settings-config.json"
+    static let defaultFileName = ".scout-build-settings.json"
 
     /// Represents a single setup command with optional working directory.
     struct SetupCommand: Sendable, Codable {

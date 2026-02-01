@@ -5,7 +5,7 @@ import SystemPackage
 /// Configuration for CountLOC tool loaded from JSON file.
 struct LOCConfig: Sendable {
     /// Default configuration file name
-    static let defaultFileName = "loc-config.json"
+    static let defaultFileName = ".scout-loc.json"
 
     /// Single LOC configuration entry
     struct LOCConfiguration: Sendable, Codable {

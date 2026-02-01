@@ -5,7 +5,7 @@ import SystemPackage
 /// Configuration for CountFiles tool loaded from JSON file.
 struct FilesConfig: Sendable {
     /// Default configuration file name
-    static let defaultFileName = "files-config.json"
+    static let defaultFileName = ".scout-files.json"
 
     /// File extensions to count (without dot, e.g., ["storyboard", "xib"])
     public let filetypes: [String]?

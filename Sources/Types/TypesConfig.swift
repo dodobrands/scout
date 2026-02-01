@@ -5,7 +5,7 @@ import SystemPackage
 /// Configuration for CountTypes tool loaded from JSON file.
 struct TypesConfig: Sendable {
     /// Default configuration file name
-    static let defaultFileName = "types-config.json"
+    static let defaultFileName = ".scout-types.json"
 
     /// Types to count (e.g., ["UIView", "UIViewController", "View", "XCTestCase"])
     public let types: [String]?
