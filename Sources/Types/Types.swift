@@ -107,7 +107,7 @@ public struct Types: AsyncParsableCommand {
 
         let sdk = TypesSDK()
         var typeResults: [(typeName: String, count: Int)] = []
-        var allResults: [TypesSDK.Result] = []
+        let jsonWriter = output.map { IncrementalJSONWriter<TypesSDK.Result>(path: $0) }
 
         for typeName in input.types {
             Self.logger.info("Processing type: \(typeName)")
@@ -121,15 +121,18 @@ public struct Types: AsyncParsableCommand {
 
             var lastResult: TypesSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
+                let result = try await sdk.analyzeCommit(
                     hash: hash,
                     typeName: typeName,
                     input: input
                 )
+                lastResult = result
 
                 Self.logger.notice(
-                    "Found \(lastResult!.types.count) types inherited from \(typeName) at \(hash)"
+                    "Found \(result.types.count) types inherited from \(typeName) at \(hash)"
                 )
+
+                try jsonWriter?.append(result)
             }
 
             Self.logger.notice(
@@ -137,16 +140,11 @@ public struct Types: AsyncParsableCommand {
             )
             if let result = lastResult {
                 typeResults.append((typeName, result.types.count))
-                allResults.append(result)
             }
         }
 
         let summary = Summary(typeResults: typeResults)
         logSummary(summary)
-
-        if let output {
-            try saveResults(allResults, to: output)
-        }
     }
 
     private func logSummary(_ summary: Summary) {
@@ -158,13 +156,5 @@ public struct Types: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func saveResults(_ results: [TypesSDK.Result], to path: String) throws {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(results)
-        try data.write(to: URL(fileURLWithPath: path))
-        Self.logger.info("Results saved to \(path)")
     }
 }

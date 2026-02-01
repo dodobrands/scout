@@ -100,7 +100,7 @@ public struct LOC: AsyncParsableCommand {
 
         let sdk = LOCSDK()
         var locResults: [(metric: String, count: Int)] = []
-        var allResults: [LOCSDK.Result] = []
+        let jsonWriter = output.map { IncrementalJSONWriter<LOCSDK.Result>(path: $0) }
 
         for locConfig in input.configurations {
             let metric = "LOC \(locConfig.languages) \(locConfig.include)"
@@ -115,15 +115,18 @@ public struct LOC: AsyncParsableCommand {
 
             var lastResult: LOCSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
+                let result = try await sdk.analyzeCommit(
                     hash: hash,
                     configuration: locConfig,
                     input: input
                 )
+                lastResult = result
 
                 Self.logger.notice(
-                    "Found \(lastResult!.linesOfCode) lines of '\(locConfig.languages)' code at \(hash)"
+                    "Found \(result.linesOfCode) lines of '\(locConfig.languages)' code at \(hash)"
                 )
+
+                try jsonWriter?.append(result)
             }
 
             Self.logger.notice(
@@ -131,16 +134,11 @@ public struct LOC: AsyncParsableCommand {
             )
             if let result = lastResult {
                 locResults.append((metric, result.linesOfCode))
-                allResults.append(result)
             }
         }
 
         let summary = Summary(locResults: locResults)
         logSummary(summary)
-
-        if let output {
-            try saveResults(allResults, to: output)
-        }
     }
 
     private func logSummary(_ summary: Summary) {
@@ -152,13 +150,5 @@ public struct LOC: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func saveResults(_ results: [LOCSDK.Result], to path: String) throws {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(results)
-        try data.write(to: URL(fileURLWithPath: path))
-        Self.logger.info("Results saved to \(path)")
     }
 }

@@ -99,6 +99,7 @@ public struct BuildSettings: AsyncParsableCommand {
         }
 
         var parameterResults: [(parameter: String, targetCount: Int)] = []
+        let jsonWriter = output.map { IncrementalJSONWriter<BuildSettingsSDK.Result>(path: $0) }
 
         Self.logger.info(
             "Will analyze \(commitHashes.count) commits for \(input.buildSettingsParameters.count) parameter(s)",
@@ -158,9 +159,7 @@ public struct BuildSettings: AsyncParsableCommand {
                 }
             }
 
-            if let output {
-                try saveResults(result, to: output)
-            }
+            try jsonWriter?.append(result)
         }
 
         let summary = Summary(parameterResults: parameterResults)
@@ -176,13 +175,5 @@ public struct BuildSettings: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func saveResults(_ results: BuildSettingsSDK.Result, to path: String) throws {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(results)
-        try data.write(to: URL(fileURLWithPath: path))
-        Self.logger.info("Results saved to \(path)")
     }
 }
