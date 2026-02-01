@@ -9,7 +9,7 @@ struct TypesSDKTests {
     @Test
     func `When searching for UIView types, should find all UIView subclasses`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["UIView"])
 
         let result = try await sut.countTypes(typeName: "UIView", input: input)
@@ -21,7 +21,7 @@ struct TypesSDKTests {
     @Test
     func `When searching for SwiftUI View types, should find all View conformances`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["View"])
 
         let result = try await sut.countTypes(typeName: "View", input: input)
@@ -33,7 +33,7 @@ struct TypesSDKTests {
     @Test
     func `When searching with wildcard pattern, should match all generic variants`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["JsonAsyncRequest<*>"])
 
         let result = try await sut.countTypes(typeName: "JsonAsyncRequest<*>", input: input)
@@ -45,7 +45,7 @@ struct TypesSDKTests {
     @Test
     func `When searching without wildcard, should not match generic variants`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["JsonAsyncRequest"])
 
         let result = try await sut.countTypes(typeName: "JsonAsyncRequest", input: input)
@@ -56,7 +56,7 @@ struct TypesSDKTests {
     @Test
     func `When searching for non-existent type, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["NonExistentType"])
 
         let result = try await sut.countTypes(typeName: "NonExistentType", input: input)
@@ -67,7 +67,7 @@ struct TypesSDKTests {
     @Test
     func `When searching for protocol, should find all conforming types`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["Coordinator"])
 
         let result = try await sut.countTypes(typeName: "Coordinator", input: input)
@@ -82,7 +82,7 @@ struct TypesSDKTests {
     @Test
     func `When searching for child protocol, should find only direct conformances`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["FlowCoordinator"])
 
         let result = try await sut.countTypes(typeName: "FlowCoordinator", input: input)
@@ -93,7 +93,7 @@ struct TypesSDKTests {
     @Test
     func `When type has deep inheritance chain, should find all descendants`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["BaseViewModel"])
 
         let result = try await sut.countTypes(typeName: "BaseViewModel", input: input)
@@ -111,7 +111,7 @@ struct TypesSDKTests {
     @Test
     func `When searching middle of inheritance chain, should find only descendants`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["ListViewModel"])
 
         let result = try await sut.countTypes(typeName: "ListViewModel", input: input)
@@ -127,7 +127,7 @@ struct TypesSDKTests {
     func `When type conforms to multiple protocols, should be found by each protocol`() async throws
     {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["Trackable", "Loggable"])
 
         let trackableResult = try await sut.countTypes(typeName: "Trackable", input: input)
@@ -140,7 +140,7 @@ struct TypesSDKTests {
     @Test
     func `When searching for multiple types, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesInput(git: gitConfig, types: ["UIView", "View"])
 
         let results = try await sut.countTypes(input: input)
@@ -158,4 +158,15 @@ private func samplesDirectory() throws -> URL {
         throw CocoaError(.fileNoSuchFile)
     }
     return url
+}
+
+extension GitConfiguration {
+    static func test(repoPath: String) -> GitConfiguration {
+        GitConfiguration(
+            repoPath: repoPath,
+            clean: false,
+            fixLFS: false,
+            initializeSubmodules: false
+        )
+    }
 }
