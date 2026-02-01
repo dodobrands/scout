@@ -35,6 +35,10 @@ jobs:
       - name: Resolve dependencies
         run: swift package resolve
 
+      # Required for LOCSDK tests
+      - name: Install cloc
+        run: brew install cloc
+
       - name: Build
         env:
           NSUnbufferedIO: YES
