@@ -56,7 +56,7 @@ public struct ExtractBuildSettingsConfig: Sendable {
             let fileData = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
-            self.setupCommands = variables.setupCommands
+            self.setupCommands = variables.setupCommands ?? []
             self.buildSettingsParameters = variables.buildSettingsParameters
             self.workspaceName = variables.workspaceName
             self.configuration = variables.configuration
@@ -74,7 +74,7 @@ public struct ExtractBuildSettingsConfig: Sendable {
     }
 
     private struct Variables: Codable {
-        let setupCommands: [SetupCommand]
+        let setupCommands: [SetupCommand]?
         let buildSettingsParameters: [String]
         let workspaceName: String
         let configuration: String

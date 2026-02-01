@@ -50,7 +50,7 @@ scout build-settings --config build-settings-config.json
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `setupCommands` | `[SetupCommand]` | Commands to execute before analyzing each commit (e.g., regenerate project files) |
+| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional) |
 | `setupCommands[].command` | `String` | Shell command to execute |
 | `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
 | `buildSettingsParameters` | `[String]` | Build settings to extract |
