@@ -5,11 +5,11 @@ Count lines of code using `cloc`.
 ## Usage
 
 ```bash
-# Run from within a repository (uses current directory)
-scout loc --commits "abc123,def456"
+# Use config file (required for LOC configurations)
+scout loc --config loc-config.json
 
-# Or specify repository path explicitly
-scout loc --repo-path /path/to/repo --commits "abc123,def456"
+# Analyze specific commits
+scout loc --config loc-config.json --commits abc123 def456
 ```
 
 ## Arguments
@@ -18,17 +18,17 @@ scout loc --repo-path /path/to/repo --commits "abc123,def456"
 
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
 
-## Configuration (Optional)
+## Configuration
 
-Configuration file is optional. Pass it via `--config` flag:
+LOC tool requires a config file to specify languages and paths.
 
 ```bash
-scout loc --repo-path /path/to/repo --config loc-config.json
+scout loc --config loc-config.json
 ```
 
 ### JSON Format

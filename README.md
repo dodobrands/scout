@@ -106,6 +106,18 @@ scout build-settings --config build.json
 
 📖 [Full documentation](Sources/BuildSettings/README.md)
 
+## Configuration
+
+All tools support both command-line arguments and JSON configuration files. **Command-line arguments take priority over config file values.**
+
+```bash
+# Config only
+scout types --config types.json
+
+# Arguments override config
+scout types UIView UIViewController --config types.json
+```
+
 ## Analyzing Git History
 
 All tools support `--commits` option to analyze specific commits. This enables tracking metrics over time:

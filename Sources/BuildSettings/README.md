@@ -5,11 +5,11 @@ Extract build settings from Xcode projects.
 ## Usage
 
 ```bash
-# Run from within a repository (uses current directory)
-scout build-settings --commits "abc123,def456"
+# Use config file (required for setup commands and parameters)
+scout build-settings --config build-settings-config.json
 
-# Or specify repository path explicitly
-scout build-settings --repo-path /path/to/repo --commits "abc123,def456"
+# Analyze specific commits
+scout build-settings --config build-settings-config.json --commits abc123 def456
 ```
 
 ## Arguments
@@ -18,17 +18,17 @@ scout build-settings --repo-path /path/to/repo --commits "abc123,def456"
 
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
 
-## Configuration (Optional)
+## Configuration
 
-Configuration file is optional. Pass it via `--config` flag:
+Build settings tool requires a config file to specify setup commands and parameters.
 
 ```bash
-scout build-settings --repo-path /path/to/repo --config build-settings-config.json
+scout build-settings --config build-settings-config.json
 ```
 
 ### JSON Format

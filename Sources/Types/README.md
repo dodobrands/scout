@@ -5,30 +5,41 @@ Count Swift types by inheritance across git history.
 ## Usage
 
 ```bash
-# Run from within a repository (uses current directory)
-scout types --commits "abc123,def456"
+# Specify types directly
+scout types UIView UIViewController View
 
-# Or specify repository path explicitly
-scout types --repo-path /path/to/repo --commits "abc123,def456"
+# Or use config file
+scout types --config types-config.json
+
+# Analyze specific commits
+scout types UIView --commits abc123 def456
 ```
 
 ## Arguments
+
+### Positional
+
+- `<types>` — Type names to count (e.g., UIView UIViewController)
 
 ### Optional
 
 - `--repo-path, -r <path>` — Path to repository with Swift sources (default: current directory)
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
 
 ## Configuration (Optional)
 
-Configuration file is optional. Pass it via `--config` flag:
+Configuration file is optional. **Command-line arguments take priority over config file values.**
 
 ```bash
-scout types --repo-path /path/to/repo --config types-config.json
+# Config only
+scout types --config types-config.json
+
+# Arguments override config
+scout types UIView --config types-config.json
 ```
 
 ### JSON Format

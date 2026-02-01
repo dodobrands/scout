@@ -5,20 +5,27 @@ Search for string patterns in source files across git history.
 ## Usage
 
 ```bash
-# Run from within a repository (uses current directory)
-scout pattern --commits "abc123,def456"
+# Specify patterns directly
+scout pattern "import UIKit" "import SwiftUI"
 
-# Or specify repository path explicitly
-scout pattern --repo-path /path/to/repo --commits "abc123,def456"
+# Or use config file
+scout pattern --config pattern-config.json
+
+# Analyze specific commits
+scout pattern "// TODO:" --commits abc123 def456
 ```
 
 ## Arguments
+
+### Positional
+
+- `<patterns>` — Patterns to search (e.g., "import UIKit" "import SwiftUI")
 
 ### Optional
 
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Comma-separated list of commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
 - `--output, -o <path>` — Path to save JSON results
 - `--extensions, -e <extensions>` — Comma-separated file extensions to search (default: swift)
 - `--verbose, -v` — Enable verbose logging
@@ -26,10 +33,14 @@ scout pattern --repo-path /path/to/repo --commits "abc123,def456"
 
 ## Configuration (Optional)
 
-Configuration file is optional. Pass it via `--config` flag:
+Configuration file is optional. **Command-line arguments take priority over config file values.**
 
 ```bash
-scout pattern --repo-path /path/to/repo --config pattern-config.json
+# Config only
+scout pattern --config pattern-config.json
+
+# Arguments override config
+scout pattern "import UIKit" --config pattern-config.json
 ```
 
 ### JSON Format
@@ -55,7 +66,3 @@ Performs exact string matching. Useful for:
 - Counting import statements: `"import Testing"`, `"@testable import Quick"`
 - Finding TODOs: `"// TODO:"`, `"// FIXME:"`
 - Tracking API usage: `"periphery:ignore"`, `"@available"`
-
-## See Also
-
-- [CodeReader](../CodeReader/README.md) — Code parsing library
