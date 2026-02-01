@@ -4,18 +4,18 @@ import Foundation
 /// Used as first layer in three-layer input architecture.
 package struct GitCLIInputs: Sendable {
     /// Path to repository with sources
-    public let repoPath: String?
+    package let repoPath: String?
 
     /// Run `git clean -ffdx && git reset --hard HEAD` before analysis
-    public let clean: Bool?
+    package let clean: Bool?
 
     /// Fix broken LFS pointers by committing modified files after checkout
-    public let fixLFS: Bool?
+    package let fixLFS: Bool?
 
     /// Initialize and update git submodules
-    public let initializeSubmodules: Bool?
+    package let initializeSubmodules: Bool?
 
-    public init(
+    package init(
         repoPath: String? = nil,
         clean: Bool? = nil,
         fixLFS: Bool? = nil,

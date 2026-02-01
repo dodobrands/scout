@@ -1,6 +1,6 @@
 import Foundation
 
-public enum ParseError: Error {
+package enum ParseError: Error {
     case invalidJSON(data: Data, underlyingError: Error?, responseString: String?)
     case invalidDateFormat(string: String, format: String)
     case missingKey(key: String, in: [String: Sendable])
@@ -9,7 +9,7 @@ public enum ParseError: Error {
 }
 
 extension ParseError: LocalizedError {
-    public var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .invalidJSON(let data, let underlyingError, let responseString):
             var description = "Invalid JSON data (size: \(data.count) bytes)"

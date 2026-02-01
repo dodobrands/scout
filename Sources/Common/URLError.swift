@@ -1,13 +1,10 @@
 import Foundation
 
-public enum URLError: Swift.Error {
-    case emptyURL(parameter: String)
+package enum URLError: Swift.Error, LocalizedError {
     case invalidURL(parameter: String, value: String)
 
-    public var localizedDescription: String {
+    package var errorDescription: String? {
         switch self {
-        case .emptyURL(let parameter):
-            return "URL parameter '\(parameter)' cannot be empty"
         case .invalidURL(let parameter, let value):
             return "Invalid URL for parameter '\(parameter)': '\(value)'"
         }

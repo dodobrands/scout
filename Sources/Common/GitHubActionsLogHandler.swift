@@ -1,33 +1,33 @@
 import Foundation
 import Logging
 
-public protocol JobSummaryFormattable {
+package protocol JobSummaryFormattable {
     var markdown: String { get }
 }
 
-public struct GitHubActionsLogHandler: LogHandler {
-    public var logLevel: Logger.Level = .info
+package struct GitHubActionsLogHandler: LogHandler {
+    package var logLevel: Logger.Level = .info
 
     /// Metadata property required by LogHandler protocol.
     /// Intentionally does not store any data - only metadata from individual log() calls
     /// should be included in GitHub Actions annotations.
-    public var metadata: Logger.Metadata {
+    package var metadata: Logger.Metadata {
         get { [:] }
         set {}
     }
 
     private let label: String
 
-    public init(label: String) {
+    package init(label: String) {
         self.label = label
     }
 
-    public subscript(metadataKey key: String) -> Logger.Metadata.Value? {
+    package subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { nil }
         set {}
     }
 
-    public func log(
+    package func log(
         level: Logger.Level,
         message: Logger.Message,
         metadata: Logger.Metadata?,
@@ -168,11 +168,11 @@ public struct GitHubActionsLogHandler: LogHandler {
 
     // MARK: - Job Summary
 
-    public static func writeSummary(_ formattable: JobSummaryFormattable) {
+    package static func writeSummary(_ formattable: JobSummaryFormattable) {
         writeSummary(formattable.markdown)
     }
 
-    public static func writeSummary(_ markdown: String) {
+    package static func writeSummary(_ markdown: String) {
         guard let summaryFile = ProcessInfo.processInfo.environment["GITHUB_STEP_SUMMARY"] else {
             return
         }

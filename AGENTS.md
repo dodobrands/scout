@@ -70,3 +70,7 @@ When creating issues, use the issue template in `.github/ISSUE_TEMPLATE.md`.
 Each issue must be solved in a separate PR. Never combine multiple issues in one PR unless explicitly told otherwise.
 
 When creating PRs, use the PR template in `.github/pull_request_template.md`.
+
+## Language
+
+All PR titles, PR descriptions, and commit messages must be written in English.
