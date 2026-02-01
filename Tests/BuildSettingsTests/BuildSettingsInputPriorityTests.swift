@@ -18,12 +18,12 @@ struct BuildSettingsInputPriorityTests {
             fixLfs: false,
             initializeSubmodules: false
         )
-        let config = ExtractBuildSettingsConfig(
+        let config = BuildSettingsConfig(
             setupCommands: nil,
             buildSettingsParameters: nil,
             workspaceName: nil,
             configuration: nil,
-            git: GitConfiguration(repoPath: "/config/path")
+            git: GitFileConfig(repoPath: "/config/path")
         )
 
         let input = BuildSettingsInput(cli: cli, config: config)
@@ -39,12 +39,12 @@ struct BuildSettingsInputPriorityTests {
             fixLfs: false,
             initializeSubmodules: false
         )
-        let config = ExtractBuildSettingsConfig(
+        let config = BuildSettingsConfig(
             setupCommands: nil,
             buildSettingsParameters: nil,
             workspaceName: nil,
             configuration: nil,
-            git: GitConfiguration(repoPath: "/config/path")
+            git: GitFileConfig(repoPath: "/config/path")
         )
 
         let input = BuildSettingsInput(cli: cli, config: config)
@@ -106,7 +106,7 @@ struct BuildSettingsInputPriorityTests {
             fixLfs: false,
             initializeSubmodules: false
         )
-        let config = ExtractBuildSettingsConfig(
+        let config = BuildSettingsConfig(
             setupCommands: nil,
             buildSettingsParameters: nil,
             workspaceName: nil,
@@ -143,12 +143,12 @@ struct BuildSettingsInputPriorityTests {
             fixLfs: false,
             initializeSubmodules: false
         )
-        let setupCommand = ExtractBuildSettingsConfig.SetupCommand(
+        let setupCommand = BuildSettingsConfig.SetupCommand(
             command: "bundle install",
             workingDirectory: "ios",
             optional: true
         )
-        let config = ExtractBuildSettingsConfig(
+        let config = BuildSettingsConfig(
             setupCommands: [setupCommand],
             buildSettingsParameters: nil,
             workspaceName: nil,
@@ -188,7 +188,7 @@ struct BuildSettingsInputPriorityTests {
             fixLfs: false,
             initializeSubmodules: false
         )
-        let config = ExtractBuildSettingsConfig(
+        let config = BuildSettingsConfig(
             setupCommands: nil,
             buildSettingsParameters: ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"],
             workspaceName: nil,

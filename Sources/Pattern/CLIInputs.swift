@@ -1,3 +1,4 @@
+import Common
 import Foundation
 
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
@@ -5,39 +6,44 @@ public struct PatternCLIInputs: Sendable {
     /// Patterns to search for
     public let patterns: [String]?
 
-    /// Path to repository with sources
-    public let repoPath: String?
-
     /// Commit hashes to analyze
     public let commits: [String]?
 
     /// File extensions to search (comma-separated string from CLI)
     public let extensions: [String]?
 
-    /// Clean working directory before analysis
-    public let gitClean: Bool
-
-    /// Fix broken LFS pointers
-    public let fixLfs: Bool
-
-    /// Initialize submodules
-    public let initializeSubmodules: Bool
+    /// Git configuration from CLI flags
+    public let git: GitCLIInputs
 
     public init(
         patterns: [String]?,
         repoPath: String?,
         commits: [String]?,
         extensions: [String]?,
-        gitClean: Bool = false,
-        fixLfs: Bool = false,
-        initializeSubmodules: Bool = false
+        gitClean: Bool? = nil,
+        fixLfs: Bool? = nil,
+        initializeSubmodules: Bool? = nil
     ) {
         self.patterns = patterns
-        self.repoPath = repoPath
         self.commits = commits
         self.extensions = extensions
-        self.gitClean = gitClean
-        self.fixLfs = fixLfs
-        self.initializeSubmodules = initializeSubmodules
+        self.git = GitCLIInputs(
+            repoPath: repoPath,
+            clean: gitClean,
+            fixLFS: fixLfs,
+            initializeSubmodules: initializeSubmodules
+        )
+    }
+
+    public init(
+        patterns: [String]?,
+        commits: [String]?,
+        extensions: [String]?,
+        git: GitCLIInputs
+    ) {
+        self.patterns = patterns
+        self.commits = commits
+        self.extensions = extensions
+        self.git = git
     }
 }

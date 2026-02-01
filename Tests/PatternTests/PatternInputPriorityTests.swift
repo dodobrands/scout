@@ -16,7 +16,7 @@ struct PatternInputPriorityTests {
             commits: nil,
             extensions: nil
         )
-        let config = SearchConfig(patterns: ["FIXME:"], extensions: nil, git: nil)
+        let config = PatternConfig(patterns: ["FIXME:"], extensions: nil, git: nil)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -26,7 +26,7 @@ struct PatternInputPriorityTests {
     @Test
     func `falls back to config patterns when CLI patterns is nil`() {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
-        let config = SearchConfig(patterns: ["FIXME:"], extensions: nil, git: nil)
+        let config = PatternConfig(patterns: ["FIXME:"], extensions: nil, git: nil)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -36,7 +36,7 @@ struct PatternInputPriorityTests {
     @Test
     func `falls back to empty array when both CLI and config patterns are nil`() {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
-        let config = SearchConfig(patterns: nil, extensions: nil, git: nil)
+        let config = PatternConfig(patterns: nil, extensions: nil, git: nil)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -53,7 +53,7 @@ struct PatternInputPriorityTests {
             commits: nil,
             extensions: ["m", "h"]
         )
-        let config = SearchConfig(patterns: nil, extensions: ["swift"], git: nil)
+        let config = PatternConfig(patterns: nil, extensions: ["swift"], git: nil)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -63,7 +63,7 @@ struct PatternInputPriorityTests {
     @Test
     func `falls back to config extensions when CLI extensions is nil`() {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
-        let config = SearchConfig(patterns: nil, extensions: ["m", "h"], git: nil)
+        let config = PatternConfig(patterns: nil, extensions: ["m", "h"], git: nil)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -73,7 +73,7 @@ struct PatternInputPriorityTests {
     @Test
     func `falls back to swift when both CLI and config extensions are nil`() {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
-        let config = SearchConfig(patterns: nil, extensions: nil, git: nil)
+        let config = PatternConfig(patterns: nil, extensions: nil, git: nil)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -90,8 +90,8 @@ struct PatternInputPriorityTests {
             commits: nil,
             extensions: nil
         )
-        let gitConfig = GitConfiguration(repoPath: "/config/path")
-        let config = SearchConfig(patterns: nil, extensions: nil, git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/config/path")
+        let config = PatternConfig(patterns: nil, extensions: nil, git: gitConfig)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -101,8 +101,8 @@ struct PatternInputPriorityTests {
     @Test
     func `falls back to config repoPath when CLI repoPath is nil`() {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
-        let gitConfig = GitConfiguration(repoPath: "/config/path")
-        let config = SearchConfig(patterns: nil, extensions: nil, git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/config/path")
+        let config = PatternConfig(patterns: nil, extensions: nil, git: gitConfig)
 
         let input = PatternInput(cli: cli, config: config)
 
@@ -165,8 +165,8 @@ struct PatternInputPriorityTests {
             commits: nil,
             extensions: nil
         )
-        let gitConfig = GitConfiguration(repoPath: "/from/config")
-        let config = SearchConfig(patterns: ["Ignored"], extensions: ["m"], git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/from/config")
+        let config = PatternConfig(patterns: ["Ignored"], extensions: ["m"], git: gitConfig)
 
         let input = PatternInput(cli: cli, config: config)
 

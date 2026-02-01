@@ -11,7 +11,7 @@ struct FilesInputPriorityTests {
     @Test
     func `CLI filetypes override config filetypes`() {
         let cli = FilesCLIInputs(filetypes: ["swift"], repoPath: nil, commits: nil)
-        let config = CountFilesConfig(filetypes: ["storyboard"], git: nil)
+        let config = FilesConfig(filetypes: ["storyboard"], git: nil)
 
         let input = FilesInput(cli: cli, config: config)
 
@@ -21,7 +21,7 @@ struct FilesInputPriorityTests {
     @Test
     func `falls back to config filetypes when CLI filetypes is nil`() {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
-        let config = CountFilesConfig(filetypes: ["storyboard"], git: nil)
+        let config = FilesConfig(filetypes: ["storyboard"], git: nil)
 
         let input = FilesInput(cli: cli, config: config)
 
@@ -31,7 +31,7 @@ struct FilesInputPriorityTests {
     @Test
     func `falls back to empty array when both CLI and config filetypes are nil`() {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
-        let config = CountFilesConfig(filetypes: nil, git: nil)
+        let config = FilesConfig(filetypes: nil, git: nil)
 
         let input = FilesInput(cli: cli, config: config)
 
@@ -52,8 +52,8 @@ struct FilesInputPriorityTests {
     @Test
     func `CLI repoPath overrides config repoPath`() {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: "/cli/path", commits: nil)
-        let gitConfig = GitConfiguration(repoPath: "/config/path")
-        let config = CountFilesConfig(filetypes: nil, git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/config/path")
+        let config = FilesConfig(filetypes: nil, git: gitConfig)
 
         let input = FilesInput(cli: cli, config: config)
 
@@ -63,8 +63,8 @@ struct FilesInputPriorityTests {
     @Test
     func `falls back to config repoPath when CLI repoPath is nil`() {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
-        let gitConfig = GitConfiguration(repoPath: "/config/path")
-        let config = CountFilesConfig(filetypes: nil, git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/config/path")
+        let config = FilesConfig(filetypes: nil, git: gitConfig)
 
         let input = FilesInput(cli: cli, config: config)
 
@@ -74,7 +74,7 @@ struct FilesInputPriorityTests {
     @Test
     func `falls back to current directory when both CLI and config repoPath are nil`() {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
-        let config = CountFilesConfig(filetypes: nil, git: nil)
+        let config = FilesConfig(filetypes: nil, git: nil)
 
         let input = FilesInput(cli: cli, config: config)
 
@@ -126,8 +126,8 @@ struct FilesInputPriorityTests {
     @Test
     func `full priority chain CLI then Config then Default`() {
         let cli = FilesCLIInputs(filetypes: ["swift", "xib"], repoPath: nil, commits: nil)
-        let gitConfig = GitConfiguration(repoPath: "/from/config")
-        let config = CountFilesConfig(filetypes: ["Ignored"], git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/from/config")
+        let config = FilesConfig(filetypes: ["Ignored"], git: gitConfig)
 
         let input = FilesInput(cli: cli, config: config)
 

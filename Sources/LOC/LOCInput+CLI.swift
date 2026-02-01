@@ -8,9 +8,7 @@ extension LOCInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: LOCCLIInputs, config: CountLOCConfig?) {
-        let repoPath =
-            cli.repoPath ?? config?.git?.repoPath ?? FileManager.default.currentDirectoryPath
+    public init(cli: LOCCLIInputs, config: LOCConfig?) {
         let configurations =
             config?.configurations?.map {
                 LOCConfiguration(
@@ -21,12 +19,8 @@ extension LOCInput {
             } ?? []
         let commits = cli.commits ?? ["HEAD"]
 
-        let gitConfig = GitConfiguration(
-            repoPath: repoPath,
-            clean: cli.gitClean,
-            fixLFS: cli.fixLfs,
-            initializeSubmodules: cli.initializeSubmodules
-        )
+        // Git configuration merges CLI > FileConfig > Default
+        let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         self.init(git: gitConfig, configurations: configurations, commits: commits)
     }

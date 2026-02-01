@@ -3,7 +3,7 @@ import Foundation
 import SystemPackage
 
 /// Configuration for CountLOC tool loaded from JSON file.
-public struct CountLOCConfig: Sendable {
+public struct LOCConfig: Sendable {
     /// Single LOC configuration entry
     public struct LOCConfiguration: Sendable, Codable {
         /// Programming languages to count (array of strings)
@@ -26,11 +26,11 @@ public struct CountLOCConfig: Sendable {
     /// LOC configurations to process
     public let configurations: [LOCConfiguration]?
 
-    /// Git operations configuration
-    public let git: GitConfiguration?
+    /// Git operations configuration (file layer - all fields optional)
+    public let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(configurations: [LOCConfiguration]?, git: GitConfiguration? = nil) {
+    public init(configurations: [LOCConfiguration]?, git: GitFileConfig? = nil) {
         self.configurations = configurations
         self.git = git
     }
@@ -39,13 +39,13 @@ public struct CountLOCConfig: Sendable {
     ///
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with CountLOC configuration (required)
-    /// - Throws: `CountLOCConfigError` if JSON file is malformed or missing required fields
+    /// - Throws: `LOCConfigError` if JSON file is malformed or missing required fields
     public init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
         guard configFileManager.fileExists(atPath: configPathString) else {
-            throw CountLOCConfigError.missingFile(path: configPathString)
+            throw LOCConfigError.missingFile(path: configPathString)
         }
 
         do {
@@ -56,12 +56,12 @@ public struct CountLOCConfig: Sendable {
             self.configurations = variables.configurations
             self.git = variables.git
         } catch let decodingError as DecodingError {
-            throw CountLOCConfigError.invalidJSON(
+            throw LOCConfigError.invalidJSON(
                 path: configPathString,
                 reason: decodingError.localizedDescription
             )
         } catch {
-            throw CountLOCConfigError.readFailed(
+            throw LOCConfigError.readFailed(
                 path: configPathString,
                 reason: error.localizedDescription
             )
@@ -70,18 +70,18 @@ public struct CountLOCConfig: Sendable {
 
     private struct Variables: Codable {
         let configurations: [LOCConfiguration]?
-        let git: GitConfiguration?
+        let git: GitFileConfig?
     }
 }
 
 /// Errors related to CountLOC configuration.
-public enum CountLOCConfigError: Error {
+public enum LOCConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
-extension CountLOCConfigError: LocalizedError {
+extension LOCConfigError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .missingFile(let path):

@@ -3,15 +3,15 @@ import Foundation
 import SystemPackage
 
 /// Configuration for CountFiles tool loaded from JSON file.
-public struct CountFilesConfig: Sendable {
+public struct FilesConfig: Sendable {
     /// File extensions to count (without dot, e.g., ["storyboard", "xib"])
     public let filetypes: [String]?
 
-    /// Git operations configuration
-    public let git: GitConfiguration?
+    /// Git operations configuration (file layer - all fields optional)
+    public let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(filetypes: [String]?, git: GitConfiguration? = nil) {
+    public init(filetypes: [String]?, git: GitFileConfig? = nil) {
         self.filetypes = filetypes
         self.git = git
     }
@@ -20,13 +20,13 @@ public struct CountFilesConfig: Sendable {
     ///
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with CountFiles configuration (required)
-    /// - Throws: `CountFilesConfigError` if JSON file is malformed or missing required fields
+    /// - Throws: `FilesConfigError` if JSON file is malformed or missing required fields
     public init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
         guard configFileManager.fileExists(atPath: configPathString) else {
-            throw CountFilesConfigError.missingFile(path: configPathString)
+            throw FilesConfigError.missingFile(path: configPathString)
         }
 
         do {
@@ -37,12 +37,12 @@ public struct CountFilesConfig: Sendable {
             self.filetypes = variables.filetypes
             self.git = variables.git
         } catch let decodingError as DecodingError {
-            throw CountFilesConfigError.invalidJSON(
+            throw FilesConfigError.invalidJSON(
                 path: configPathString,
                 reason: decodingError.localizedDescription
             )
         } catch {
-            throw CountFilesConfigError.readFailed(
+            throw FilesConfigError.readFailed(
                 path: configPathString,
                 reason: error.localizedDescription
             )
@@ -51,18 +51,18 @@ public struct CountFilesConfig: Sendable {
 
     private struct Variables: Codable {
         let filetypes: [String]?
-        let git: GitConfiguration?
+        let git: GitFileConfig?
     }
 }
 
 /// Errors related to CountFiles configuration.
-public enum CountFilesConfigError: Error {
+public enum FilesConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
-extension CountFilesConfigError: LocalizedError {
+extension FilesConfigError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .missingFile(let path):

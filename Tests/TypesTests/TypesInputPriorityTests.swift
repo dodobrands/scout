@@ -11,7 +11,7 @@ struct TypesInputPriorityTests {
     @Test
     func `CLI types override config types`() {
         let cli = TypesCLIInputs(types: ["UIView"], repoPath: nil, commits: nil)
-        let config = CountTypesConfig(types: ["UIViewController"], git: nil)
+        let config = TypesConfig(types: ["UIViewController"], git: nil)
 
         let input = TypesInput(cli: cli, config: config)
 
@@ -21,7 +21,7 @@ struct TypesInputPriorityTests {
     @Test
     func `falls back to config types when CLI types is nil`() {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
-        let config = CountTypesConfig(types: ["UIViewController"], git: nil)
+        let config = TypesConfig(types: ["UIViewController"], git: nil)
 
         let input = TypesInput(cli: cli, config: config)
 
@@ -31,7 +31,7 @@ struct TypesInputPriorityTests {
     @Test
     func `falls back to empty array when both CLI and config types are nil`() {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
-        let config = CountTypesConfig(types: nil, git: nil)
+        let config = TypesConfig(types: nil, git: nil)
 
         let input = TypesInput(cli: cli, config: config)
 
@@ -52,8 +52,8 @@ struct TypesInputPriorityTests {
     @Test
     func `CLI repoPath overrides config repoPath`() {
         let cli = TypesCLIInputs(types: nil, repoPath: "/cli/path", commits: nil)
-        let gitConfig = GitConfiguration(repoPath: "/config/path")
-        let config = CountTypesConfig(types: nil, git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/config/path")
+        let config = TypesConfig(types: nil, git: gitConfig)
 
         let input = TypesInput(cli: cli, config: config)
 
@@ -63,8 +63,8 @@ struct TypesInputPriorityTests {
     @Test
     func `falls back to config repoPath when CLI repoPath is nil`() {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
-        let gitConfig = GitConfiguration(repoPath: "/config/path")
-        let config = CountTypesConfig(types: nil, git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/config/path")
+        let config = TypesConfig(types: nil, git: gitConfig)
 
         let input = TypesInput(cli: cli, config: config)
 
@@ -74,7 +74,7 @@ struct TypesInputPriorityTests {
     @Test
     func `falls back to current directory when both CLI and config repoPath are nil`() {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
-        let config = CountTypesConfig(types: nil, git: nil)
+        let config = TypesConfig(types: nil, git: nil)
 
         let input = TypesInput(cli: cli, config: config)
 
@@ -101,28 +101,60 @@ struct TypesInputPriorityTests {
         #expect(input.commits == ["HEAD"])
     }
 
-    // MARK: - Git Flags Tests
+    // MARK: - Git Flags Priority Tests
 
     @Test
-    func `git flags from CLI are applied`() {
+    func `CLI git flags override config git flags`() {
         let cli = TypesCLIInputs(
             types: nil,
             repoPath: nil,
             commits: nil,
             gitClean: true,
-            fixLfs: true,
+            fixLfs: false,
             initializeSubmodules: true
         )
+        let gitConfig = GitFileConfig(
+            repoPath: "/config/path",
+            clean: false,
+            fixLFS: true,
+            initializeSubmodules: false
+        )
+        let config = TypesConfig(types: nil, git: gitConfig)
 
-        let input = TypesInput(cli: cli, config: nil)
+        let input = TypesInput(cli: cli, config: config)
 
-        #expect(input.git.clean == true)
-        #expect(input.git.fixLFS == true)
-        #expect(input.git.initializeSubmodules == true)
+        #expect(input.git.clean == true)  // CLI
+        #expect(input.git.fixLFS == false)  // CLI
+        #expect(input.git.initializeSubmodules == true)  // CLI
     }
 
     @Test
-    func `git flags default to false`() {
+    func `falls back to config git flags when CLI is nil`() {
+        let cli = TypesCLIInputs(
+            types: nil,
+            repoPath: nil,
+            commits: nil,
+            gitClean: nil,
+            fixLfs: nil,
+            initializeSubmodules: nil
+        )
+        let gitConfig = GitFileConfig(
+            repoPath: "/config/path",
+            clean: true,
+            fixLFS: true,
+            initializeSubmodules: true
+        )
+        let config = TypesConfig(types: nil, git: gitConfig)
+
+        let input = TypesInput(cli: cli, config: config)
+
+        #expect(input.git.clean == true)  // from config
+        #expect(input.git.fixLFS == true)  // from config
+        #expect(input.git.initializeSubmodules == true)  // from config
+    }
+
+    @Test
+    func `git flags default to false when both CLI and config are nil`() {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
 
         let input = TypesInput(cli: cli, config: nil)
@@ -138,8 +170,8 @@ struct TypesInputPriorityTests {
     func `full priority chain CLI then Config then Default`() {
         // CLI has types, config has repoPath, commits use default
         let cli = TypesCLIInputs(types: ["UIView", "View"], repoPath: nil, commits: nil)
-        let gitConfig = GitConfiguration(repoPath: "/from/config")
-        let config = CountTypesConfig(types: ["Ignored"], git: gitConfig)
+        let gitConfig = GitFileConfig(repoPath: "/from/config")
+        let config = TypesConfig(types: ["Ignored"], git: gitConfig)
 
         let input = TypesInput(cli: cli, config: config)
 

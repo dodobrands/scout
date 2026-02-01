@@ -3,7 +3,7 @@ import Foundation
 import SystemPackage
 
 /// Configuration for ExtractBuildSettings tool loaded from JSON file.
-public struct ExtractBuildSettingsConfig: Sendable {
+public struct BuildSettingsConfig: Sendable {
     /// Represents a single setup command with optional working directory.
     public struct SetupCommand: Sendable, Codable {
         /// Command to execute
@@ -36,8 +36,8 @@ public struct ExtractBuildSettingsConfig: Sendable {
     /// Build configuration name (e.g., "Debug", "Release")
     public let configuration: String?
 
-    /// Git operations configuration
-    public let git: GitConfiguration?
+    /// Git operations configuration (file layer - all fields optional)
+    public let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
     public init(
@@ -45,7 +45,7 @@ public struct ExtractBuildSettingsConfig: Sendable {
         buildSettingsParameters: [String]?,
         workspaceName: String?,
         configuration: String?,
-        git: GitConfiguration? = nil
+        git: GitFileConfig? = nil
     ) {
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
@@ -58,13 +58,13 @@ public struct ExtractBuildSettingsConfig: Sendable {
     ///
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with ExtractBuildSettings configuration (required)
-    /// - Throws: `ExtractBuildSettingsConfigError` if JSON file is malformed or missing required fields
+    /// - Throws: `BuildSettingsConfigError` if JSON file is malformed or missing required fields
     public init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
         guard configFileManager.fileExists(atPath: configPathString) else {
-            throw ExtractBuildSettingsConfigError.missingFile(path: configPathString)
+            throw BuildSettingsConfigError.missingFile(path: configPathString)
         }
 
         do {
@@ -78,12 +78,12 @@ public struct ExtractBuildSettingsConfig: Sendable {
             self.configuration = variables.configuration
             self.git = variables.git
         } catch let decodingError as DecodingError {
-            throw ExtractBuildSettingsConfigError.invalidJSON(
+            throw BuildSettingsConfigError.invalidJSON(
                 path: configPathString,
                 reason: decodingError.localizedDescription
             )
         } catch {
-            throw ExtractBuildSettingsConfigError.readFailed(
+            throw BuildSettingsConfigError.readFailed(
                 path: configPathString,
                 reason: error.localizedDescription
             )
@@ -95,18 +95,18 @@ public struct ExtractBuildSettingsConfig: Sendable {
         let buildSettingsParameters: [String]?
         let workspaceName: String?
         let configuration: String?
-        let git: GitConfiguration?
+        let git: GitFileConfig?
     }
 }
 
 /// Errors related to ExtractBuildSettings configuration.
-public enum ExtractBuildSettingsConfigError: Error {
+public enum BuildSettingsConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
-extension ExtractBuildSettingsConfigError: LocalizedError {
+extension BuildSettingsConfigError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .missingFile(let path):

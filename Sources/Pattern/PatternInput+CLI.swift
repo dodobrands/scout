@@ -8,19 +8,13 @@ extension PatternInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: PatternCLIInputs, config: SearchConfig?) {
-        let repoPath =
-            cli.repoPath ?? config?.git?.repoPath ?? FileManager.default.currentDirectoryPath
+    public init(cli: PatternCLIInputs, config: PatternConfig?) {
         let patterns = cli.patterns ?? config?.patterns ?? []
         let extensions = cli.extensions ?? config?.extensions ?? ["swift"]
         let commits = cli.commits ?? ["HEAD"]
 
-        let gitConfig = GitConfiguration(
-            repoPath: repoPath,
-            clean: cli.gitClean,
-            fixLFS: cli.fixLfs,
-            initializeSubmodules: cli.initializeSubmodules
-        )
+        // Git configuration merges CLI > FileConfig > Default
+        let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         self.init(git: gitConfig, patterns: patterns, extensions: extensions, commits: commits)
     }

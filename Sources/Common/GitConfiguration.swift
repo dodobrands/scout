@@ -1,8 +1,9 @@
 import Foundation
 
 /// Git operations configuration shared across all tools.
-public struct GitConfiguration: Sendable, Codable {
-    /// Path to repository with sources (default: current directory)
+/// This is the resolved configuration with all values set (no optionals).
+public struct GitConfiguration: Sendable {
+    /// Path to repository with sources
     public let repoPath: String
 
     /// Run `git clean -ffdx && git reset --hard HEAD` before analysis
@@ -14,11 +15,12 @@ public struct GitConfiguration: Sendable, Codable {
     /// Initialize and update git submodules
     public let initializeSubmodules: Bool
 
+    /// Direct initializer - all fields required
     public init(
-        repoPath: String = FileManager.default.currentDirectoryPath,
-        clean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        repoPath: String,
+        clean: Bool,
+        fixLFS: Bool,
+        initializeSubmodules: Bool
     ) {
         self.repoPath = repoPath
         self.clean = clean
@@ -26,24 +28,18 @@ public struct GitConfiguration: Sendable, Codable {
         self.initializeSubmodules = initializeSubmodules
     }
 
-    /// Default configuration with all options disabled
-    public static let `default` = GitConfiguration()
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
+    /// Merge initializer: CLI > FileConfig > Default
+    /// This is the single place where defaults are applied.
+    public init(cli: GitCLIInputs, fileConfig: GitFileConfig?) {
         self.repoPath =
-            try container.decodeIfPresent(String.self, forKey: .repoPath)
+            cli.repoPath
+            ?? fileConfig?.repoPath
             ?? FileManager.default.currentDirectoryPath
-        self.clean = try container.decodeIfPresent(Bool.self, forKey: .clean) ?? false
-        self.fixLFS = try container.decodeIfPresent(Bool.self, forKey: .fixLFS) ?? false
+        self.clean = cli.clean ?? fileConfig?.clean ?? false
+        self.fixLFS = cli.fixLFS ?? fileConfig?.fixLFS ?? false
         self.initializeSubmodules =
-            try container.decodeIfPresent(
-                Bool.self,
-                forKey: .initializeSubmodules
-            ) ?? false
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case repoPath, clean, fixLFS, initializeSubmodules
+            cli.initializeSubmodules
+            ?? fileConfig?.initializeSubmodules
+            ?? false
     }
 }

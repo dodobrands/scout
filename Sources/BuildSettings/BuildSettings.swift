@@ -35,7 +35,7 @@ public struct BuildSettings: AsyncParsableCommand {
     }
 
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
-    public var repoPath: String = FileManager.default.currentDirectoryPath
+    public var repoPath: String?
 
     @Option(help: "Path to configuration JSON file")
     public var config: String?
@@ -70,28 +70,28 @@ public struct BuildSettings: AsyncParsableCommand {
         LoggingSetup.setup(verbose: verbose)
 
         // Load config from file if specified
-        let fileConfig: ExtractBuildSettingsConfig?
+        let fileConfig: BuildSettingsConfig?
         if let configPath = config {
-            fileConfig = try await ExtractBuildSettingsConfig(
+            fileConfig = try await BuildSettingsConfig(
                 configFilePath: SystemPackage.FilePath(configPath)
             )
         } else if FileManager.default.fileExists(
             atPath: "extract-build-settings-extractConfig.json"
         ) {
-            fileConfig = try await ExtractBuildSettingsConfig(
+            fileConfig = try await BuildSettingsConfig(
                 configFilePath: SystemPackage.FilePath("extract-build-settings-extractConfig.json")
             )
         } else {
             fileConfig = nil
         }
 
-        // Build CLI inputs
+        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = BuildSettingsCLIInputs(
-            repoPath: repoPath == FileManager.default.currentDirectoryPath ? nil : repoPath,
-            commits: commits.isEmpty ? nil : commits,
-            gitClean: gitClean,
-            fixLfs: fixLfs,
-            initializeSubmodules: initializeSubmodules
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
         )
 
         // Merge CLI > Config > Default

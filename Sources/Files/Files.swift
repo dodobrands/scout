@@ -35,7 +35,7 @@ public struct Files: AsyncParsableCommand {
     }
 
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
-    public var repoPath: String = FileManager.default.currentDirectoryPath
+    public var repoPath: String?
 
     @Option(help: "Path to configuration JSON file")
     public var config: String?
@@ -73,27 +73,27 @@ public struct Files: AsyncParsableCommand {
         LoggingSetup.setup(verbose: verbose)
 
         // Load config from file if specified
-        let fileConfig: CountFilesConfig?
+        let fileConfig: FilesConfig?
         if let configPath = config {
-            fileConfig = try await CountFilesConfig(
+            fileConfig = try await FilesConfig(
                 configFilePath: SystemPackage.FilePath(configPath)
             )
         } else if FileManager.default.fileExists(atPath: "count-files-config.json") {
-            fileConfig = try await CountFilesConfig(
+            fileConfig = try await FilesConfig(
                 configFilePath: SystemPackage.FilePath("count-files-config.json")
             )
         } else {
             fileConfig = nil
         }
 
-        // Build CLI inputs
+        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = FilesCLIInputs(
-            filetypes: filetypes.isEmpty ? nil : filetypes,
-            repoPath: repoPath == FileManager.default.currentDirectoryPath ? nil : repoPath,
-            commits: commits.isEmpty ? nil : commits,
-            gitClean: gitClean,
-            fixLfs: fixLfs,
-            initializeSubmodules: initializeSubmodules
+            filetypes: filetypes.nilIfEmpty,
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
         )
 
         // Merge CLI > Config > Default

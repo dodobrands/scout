@@ -8,18 +8,12 @@ extension TypesInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: TypesCLIInputs, config: CountTypesConfig?) {
-        let repoPath =
-            cli.repoPath ?? config?.git?.repoPath ?? FileManager.default.currentDirectoryPath
+    public init(cli: TypesCLIInputs, config: TypesConfig?) {
         let types = cli.types ?? config?.types ?? []
         let commits = cli.commits ?? ["HEAD"]
 
-        let gitConfig = GitConfiguration(
-            repoPath: repoPath,
-            clean: cli.gitClean,
-            fixLFS: cli.fixLfs,
-            initializeSubmodules: cli.initializeSubmodules
-        )
+        // Git configuration merges CLI > FileConfig > Default
+        let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         self.init(git: gitConfig, types: types, commits: commits)
     }

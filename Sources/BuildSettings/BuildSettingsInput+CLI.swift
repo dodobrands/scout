@@ -8,9 +8,7 @@ extension BuildSettingsInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: BuildSettingsCLIInputs, config: ExtractBuildSettingsConfig?) {
-        let repoPath =
-            cli.repoPath ?? config?.git?.repoPath ?? FileManager.default.currentDirectoryPath
+    public init(cli: BuildSettingsCLIInputs, config: BuildSettingsConfig?) {
         let setupCommands =
             config?.setupCommands?.map {
                 SetupCommand(
@@ -23,12 +21,8 @@ extension BuildSettingsInput {
         let configuration = config?.configuration ?? "Debug"
         let commits = cli.commits ?? ["HEAD"]
 
-        let gitConfig = GitConfiguration(
-            repoPath: repoPath,
-            clean: cli.gitClean,
-            fixLFS: cli.fixLfs,
-            initializeSubmodules: cli.initializeSubmodules
-        )
+        // Git configuration merges CLI > FileConfig > Default
+        let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         self.init(
             git: gitConfig,

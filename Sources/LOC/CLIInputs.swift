@@ -1,33 +1,32 @@
+import Common
 import Foundation
 
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
 public struct LOCCLIInputs: Sendable {
-    /// Path to repository with sources
-    public let repoPath: String?
-
     /// Commit hashes to analyze
     public let commits: [String]?
 
-    /// Clean working directory before analysis
-    public let gitClean: Bool
-
-    /// Fix broken LFS pointers
-    public let fixLfs: Bool
-
-    /// Initialize submodules
-    public let initializeSubmodules: Bool
+    /// Git configuration from CLI flags
+    public let git: GitCLIInputs
 
     public init(
         repoPath: String?,
         commits: [String]?,
-        gitClean: Bool = false,
-        fixLfs: Bool = false,
-        initializeSubmodules: Bool = false
+        gitClean: Bool? = nil,
+        fixLfs: Bool? = nil,
+        initializeSubmodules: Bool? = nil
     ) {
-        self.repoPath = repoPath
         self.commits = commits
-        self.gitClean = gitClean
-        self.fixLfs = fixLfs
-        self.initializeSubmodules = initializeSubmodules
+        self.git = GitCLIInputs(
+            repoPath: repoPath,
+            clean: gitClean,
+            fixLFS: fixLfs,
+            initializeSubmodules: initializeSubmodules
+        )
+    }
+
+    public init(commits: [String]?, git: GitCLIInputs) {
+        self.commits = commits
+        self.git = git
     }
 }

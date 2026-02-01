@@ -35,7 +35,7 @@ public struct Pattern: AsyncParsableCommand {
     }
 
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
-    public var repoPath: String = FileManager.default.currentDirectoryPath
+    public var repoPath: String?
 
     @Option(help: "Path to configuration JSON file")
     public var config: String?
@@ -79,11 +79,11 @@ public struct Pattern: AsyncParsableCommand {
         LoggingSetup.setup(verbose: verbose)
 
         // Load config from file if specified
-        let fileConfig: SearchConfig?
+        let fileConfig: PatternConfig?
         if let configPath = config {
-            fileConfig = try await SearchConfig(configFilePath: SystemPackage.FilePath(configPath))
+            fileConfig = try await PatternConfig(configFilePath: SystemPackage.FilePath(configPath))
         } else if FileManager.default.fileExists(atPath: "search-config.json") {
-            fileConfig = try await SearchConfig(
+            fileConfig = try await PatternConfig(
                 configFilePath: SystemPackage.FilePath("search-config.json")
             )
         } else {
@@ -100,15 +100,15 @@ public struct Pattern: AsyncParsableCommand {
             cliExtensions = nil
         }
 
-        // Build CLI inputs
+        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = PatternCLIInputs(
-            patterns: patterns.isEmpty ? nil : patterns,
-            repoPath: repoPath == FileManager.default.currentDirectoryPath ? nil : repoPath,
-            commits: commits.isEmpty ? nil : commits,
+            patterns: patterns.nilIfEmpty,
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
             extensions: cliExtensions,
-            gitClean: gitClean,
-            fixLfs: fixLfs,
-            initializeSubmodules: initializeSubmodules
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
         )
 
         // Merge CLI > Config > Default

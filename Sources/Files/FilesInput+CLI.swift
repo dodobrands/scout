@@ -8,18 +8,12 @@ extension FilesInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: FilesCLIInputs, config: CountFilesConfig?) {
-        let repoPath =
-            cli.repoPath ?? config?.git?.repoPath ?? FileManager.default.currentDirectoryPath
+    public init(cli: FilesCLIInputs, config: FilesConfig?) {
         let filetypes = cli.filetypes ?? config?.filetypes ?? []
         let commits = cli.commits ?? ["HEAD"]
 
-        let gitConfig = GitConfiguration(
-            repoPath: repoPath,
-            clean: cli.gitClean,
-            fixLFS: cli.fixLfs,
-            initializeSubmodules: cli.initializeSubmodules
-        )
+        // Git configuration merges CLI > FileConfig > Default
+        let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         self.init(git: gitConfig, filetypes: filetypes, commits: commits)
     }
