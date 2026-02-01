@@ -1,6 +1,6 @@
 import Foundation
 
-public enum CommandParserError: Error {
+enum CommandParserError: Error {
     case invalidCommand(String)
 }
 
@@ -13,7 +13,7 @@ extension CommandParserError: LocalizedError {
     }
 }
 
-public struct ParsedCommand {
+struct ParsedCommand {
     public let executable: String
     public let arguments: [String]
 
@@ -23,7 +23,7 @@ public struct ParsedCommand {
     }
 }
 
-public struct CommandParser {
+struct CommandParser {
     /// Parses a command string into executable and arguments.
     ///
     /// Handles single quotes: content inside single quotes is treated as a single argument.

@@ -6,17 +6,32 @@ import System
 /// Input parameters for PatternSDK operations.
 public struct PatternInput: Sendable {
     public let git: GitConfiguration
-    public let pattern: String
+    public let patterns: [String]
     public let extensions: [String]
+    public let commits: [String]
+
+    public init(
+        git: GitConfiguration,
+        patterns: [String],
+        extensions: [String] = ["swift"],
+        commits: [String] = ["HEAD"]
+    ) {
+        self.git = git
+        self.patterns = patterns
+        self.extensions = extensions
+        self.commits = commits
+    }
 
     public init(
         git: GitConfiguration,
         pattern: String,
-        extensions: [String] = ["swift"]
+        extensions: [String] = ["swift"],
+        commits: [String] = ["HEAD"]
     ) {
         self.git = git
-        self.pattern = pattern
+        self.patterns = [pattern]
         self.extensions = extensions
+        self.commits = commits
     }
 }
 
@@ -49,9 +64,11 @@ public struct PatternSDK: Sendable {
     }
 
     /// Searches for occurrences of the specified pattern in the repository.
-    /// - Parameter input: Input parameters for the operation
+    /// - Parameters:
+    ///   - pattern: Pattern to search for
+    ///   - input: Input parameters for the operation
     /// - Returns: Result containing all matches with file and line number
-    public func search(input: PatternInput) async throws -> Result {
+    public func search(pattern: String, input: PatternInput) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await GitFix.prepareRepository(git: input.git)
@@ -62,7 +79,7 @@ public struct PatternSDK: Sendable {
             let files = findFiles(of: ext, in: repoPath)
             for file in files {
                 let fileMatches = try searchInFile(
-                    pattern: input.pattern,
+                    pattern: pattern,
                     file: file,
                     repoPath: repoPath
                 )
@@ -70,18 +87,52 @@ public struct PatternSDK: Sendable {
             }
         }
 
-        return Result(pattern: input.pattern, matches: allMatches)
+        return Result(pattern: pattern, matches: allMatches)
+    }
+
+    /// Searches for occurrences of all specified patterns in the repository.
+    /// - Parameter input: Input parameters including array of patterns
+    /// - Returns: Array of results, one for each pattern
+    public func search(input: PatternInput) async throws -> [Result] {
+        var results: [Result] = []
+        for pattern in input.patterns {
+            let result = try await search(pattern: pattern, input: input)
+            results.append(result)
+        }
+        return results
     }
 
     /// Checks out a commit and searches for pattern occurrences.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
+    ///   - pattern: Pattern to search for
     ///   - input: Input parameters for the operation
     /// - Returns: Result containing all matches
     public func analyzeCommit(
         hash: String,
+        pattern: String,
         input: PatternInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        try await Shell.execute(
+            "git",
+            arguments: ["checkout", hash],
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+        )
+
+        return try await search(pattern: pattern, input: input)
+    }
+
+    /// Checks out a commit and searches for all pattern occurrences.
+    /// - Parameters:
+    ///   - hash: Commit hash to checkout
+    ///   - input: Input parameters including array of patterns
+    /// - Returns: Array of results, one for each pattern
+    public func analyzeCommit(
+        hash: String,
+        input: PatternInput
+    ) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(

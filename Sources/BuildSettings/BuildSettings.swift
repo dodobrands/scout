@@ -35,7 +35,7 @@ public struct BuildSettings: AsyncParsableCommand {
     }
 
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
-    public var repoPath: String = FileManager.default.currentDirectoryPath
+    public var repoPath: String?
 
     @Option(help: "Path to configuration JSON file")
     public var config: String?
@@ -69,17 +69,29 @@ public struct BuildSettings: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let configFilePath = SystemPackage.FilePath(
-            config ?? "extract-build-settings-extractConfig.json"
+        // Load config from file (one-liner convenience init)
+        let fileConfig = try await BuildSettingsConfig(configPath: config)
+
+        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
+        let cliInputs = BuildSettingsCLIInputs(
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
         )
-        let extractConfig = try await ExtractBuildSettingsConfig(configFilePath: configFilePath)
+
+        // Merge CLI > Config > Default
+        let input = BuildSettingsInput(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
+            try URL(string: input.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
+        // Resolve commits - need to fetch HEAD if not specified
         let commitHashes: [String]
-        if !commits.isEmpty {
-            commitHashes = commits
+        if !input.commits.isEmpty && input.commits != ["HEAD"] {
+            commitHashes = input.commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
@@ -89,36 +101,16 @@ public struct BuildSettings: AsyncParsableCommand {
         var parameterResults: [(parameter: String, targetCount: Int)] = []
 
         Self.logger.info(
-            "Will analyze \(commitHashes.count) commits for \(extractConfig.buildSettingsParameters.count) parameter(s)",
+            "Will analyze \(commitHashes.count) commits for \(input.buildSettingsParameters.count) parameter(s)",
             metadata: [
                 "commits": .array(commitHashes.map { Logger.MetadataValue.string($0) }),
                 "parameters": .array(
-                    extractConfig.buildSettingsParameters.map { Logger.MetadataValue.string($0) }
+                    input.buildSettingsParameters.map { Logger.MetadataValue.string($0) }
                 ),
             ]
         )
 
         let sdk = BuildSettingsSDK()
-        let sdkSetupCommands = extractConfig.setupCommands.map {
-            SetupCommand(
-                command: $0.command,
-                workingDirectory: $0.workingDirectory,
-                optional: $0.optional ?? false
-            )
-        }
-
-        let gitConfig = GitConfiguration(
-            repoPath: repoPath,
-            clean: gitClean,
-            fixLFS: fixLfs,
-            initializeSubmodules: initializeSubmodules
-        )
-
-        let input = BuildSettingsInput(
-            git: gitConfig,
-            setupCommands: sdkSetupCommands,
-            configuration: extractConfig.configuration
-        )
 
         for hash in commitHashes {
             Self.logger.info(
@@ -140,7 +132,7 @@ public struct BuildSettings: AsyncParsableCommand {
                 continue
             }
 
-            for parameter in extractConfig.buildSettingsParameters {
+            for parameter in input.buildSettingsParameters {
                 var targetValues: [String: String] = [:]
                 for targetWithSettings in result {
                     if let value = targetWithSettings.buildSettings[parameter] {

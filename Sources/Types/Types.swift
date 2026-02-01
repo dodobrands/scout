@@ -38,7 +38,7 @@ public struct Types: AsyncParsableCommand {
         name: [.long, .short],
         help: "Path to repository with Swift sources (default: current directory)"
     )
-    public var repoPath: String = FileManager.default.currentDirectoryPath
+    public var repoPath: String?
 
     @Option(help: "Path to configuration JSON file")
     public var config: String?
@@ -75,22 +75,30 @@ public struct Types: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let typeNames: [String]
-        if !types.isEmpty {
-            typeNames = types
-        } else {
-            let configFilePath = SystemPackage.FilePath(config ?? "count-types-config.json")
-            let configData = try await CountTypesConfig(configFilePath: configFilePath)
-            typeNames = configData.types
-        }
+        // Load config from file (one-liner convenience init)
+        let fileConfig = try await TypesConfig(configPath: config)
+
+        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
+        let cliInputs = TypesCLIInputs(
+            types: types.nilIfEmpty,
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
+        )
+
+        // Merge CLI > Config > Default
+        let input = TypesInput(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
+            try URL(string: input.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
+        // Resolve commits - need to fetch HEAD if not specified
         let commitHashes: [String]
-        if !commits.isEmpty {
-            commitHashes = commits
+        if !input.commits.isEmpty && input.commits != ["HEAD"] {
+            commitHashes = input.commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
@@ -101,7 +109,7 @@ public struct Types: AsyncParsableCommand {
         var typeResults: [(typeName: String, count: Int)] = []
         var allResults: [TypesSDK.Result] = []
 
-        for typeName in typeNames {
+        for typeName in input.types {
             Self.logger.info("Processing type: \(typeName)")
 
             Self.logger.info(
@@ -111,17 +119,13 @@ public struct Types: AsyncParsableCommand {
                 ]
             )
 
-            let gitConfig = GitConfiguration(
-                repoPath: repoPath,
-                clean: gitClean,
-                fixLFS: fixLfs,
-                initializeSubmodules: initializeSubmodules
-            )
-            let input = TypesInput(git: gitConfig, typeName: typeName)
-
             var lastResult: TypesSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
+                lastResult = try await sdk.analyzeCommit(
+                    hash: hash,
+                    typeName: typeName,
+                    input: input
+                )
 
                 Self.logger.notice(
                     "Found \(lastResult!.types.count) types inherited from \(typeName) at \(hash)"

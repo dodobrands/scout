@@ -86,7 +86,7 @@ import System
 /// - Cross-platform compatibility
 /// - Output parsing is explicit and controllable
 public class Shell {
-    private static let logger = Logger(label: "mobile-code-metrics.Shell")
+    private static let logger = Logger(label: "scout.Shell")
 
     /// Executes a command directly without shell interpretation.
     ///
@@ -110,7 +110,7 @@ public class Shell {
     /// let output = try await Shell.execute(
     ///     "tuist",
     ///     arguments: ["install"],
-    ///     workingDirectory: FilePath("ios/DodoPizza")
+    ///     workingDirectory: FilePath("path-to-project")
     /// )
     ///
     /// // Parse output programmatically (equivalent to shell pipe)

@@ -3,30 +3,50 @@ import Foundation
 import SystemPackage
 
 /// Configuration for CountTypes tool loaded from JSON file.
-public struct CountTypesConfig: Sendable {
-    /// Types to count (e.g., ["UIView", "UIViewController", "View", "XCTestCase"])
-    public let types: [String]
+struct TypesConfig: Sendable {
+    /// Default configuration file name
+    static let defaultFileName = ".scout-types.json"
 
-    /// Git operations configuration
-    public let git: GitConfiguration
+    /// Types to count (e.g., ["UIView", "UIViewController", "View", "XCTestCase"])
+    public let types: [String]?
+
+    /// Git operations configuration (file layer - all fields optional)
+    public let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(types: [String], git: GitConfiguration = .default) {
+    init(types: [String]?, git: GitFileConfig? = nil) {
         self.types = types
         self.git = git
+    }
+
+    /// Initialize configuration from JSON file at given path, or default path if nil.
+    /// Returns nil if no config file exists.
+    ///
+    /// - Parameters:
+    ///   - configPath: Optional path to JSON file. If nil, looks for default file
+    /// - Throws: `TypesConfigError` if JSON file is malformed or missing required fields
+    public init?(configPath: String?) async throws {
+        let path = configPath ?? Self.defaultFileName
+        guard FileManager.default.fileExists(atPath: path) else {
+            if configPath != nil {
+                throw TypesConfigError.missingFile(path: path)
+            }
+            return nil
+        }
+        try await self.init(configFilePath: FilePath(path))
     }
 
     /// Initialize configuration from JSON file.
     ///
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with CountTypes configuration (required)
-    /// - Throws: `CountTypesConfigError` if JSON file is malformed or missing required fields
+    /// - Throws: `TypesConfigError` if JSON file is malformed or missing required fields
     public init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
         guard configFileManager.fileExists(atPath: configPathString) else {
-            throw CountTypesConfigError.missingFile(path: configPathString)
+            throw TypesConfigError.missingFile(path: configPathString)
         }
 
         do {
@@ -35,14 +55,14 @@ public struct CountTypesConfig: Sendable {
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.types = variables.types
-            self.git = variables.git ?? .default
+            self.git = variables.git
         } catch let decodingError as DecodingError {
-            throw CountTypesConfigError.invalidJSON(
+            throw TypesConfigError.invalidJSON(
                 path: configPathString,
                 reason: decodingError.localizedDescription
             )
         } catch {
-            throw CountTypesConfigError.readFailed(
+            throw TypesConfigError.readFailed(
                 path: configPathString,
                 reason: error.localizedDescription
             )
@@ -50,19 +70,19 @@ public struct CountTypesConfig: Sendable {
     }
 
     private struct Variables: Codable {
-        let types: [String]
-        let git: GitConfiguration?
+        let types: [String]?
+        let git: GitFileConfig?
     }
 }
 
 /// Errors related to CountTypes configuration.
-public enum CountTypesConfigError: Error {
+public enum TypesConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
-extension CountTypesConfigError: LocalizedError {
+extension TypesConfigError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .missingFile(let path):

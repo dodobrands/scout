@@ -34,7 +34,7 @@ public struct LOC: AsyncParsableCommand {
     }
 
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
-    public var repoPath: String = FileManager.default.currentDirectoryPath
+    public var repoPath: String?
 
     @Option(help: "Path to configuration JSON file")
     public var config: String?
@@ -69,15 +69,29 @@ public struct LOC: AsyncParsableCommand {
         LoggingSetup.setup(verbose: verbose)
         try await LOCSDK.checkClocInstalled()
 
-        let configFilePath = SystemPackage.FilePath(config ?? "count-loc-config.json")
-        let config = try await CountLOCConfig(configFilePath: configFilePath)
+        // Load config from file (one-liner convenience init)
+        let fileConfig = try await LOCConfig(configPath: config)
+
+        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
+        let cliInputs = LOCCLIInputs(
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
+        )
+
+        // Merge CLI > Config > Default
+        let input = LOCInput(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
+            try URL(string: input.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
+        // Resolve commits - need to fetch HEAD if not specified
         let commitHashes: [String]
-        if !commits.isEmpty {
-            commitHashes = commits
+        if !input.commits.isEmpty && input.commits != ["HEAD"] {
+            commitHashes = input.commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
@@ -88,12 +102,7 @@ public struct LOC: AsyncParsableCommand {
         var locResults: [(metric: String, count: Int)] = []
         var allResults: [LOCSDK.Result] = []
 
-        for locConfig in config.configurations {
-            let sdkConfig = LOCConfiguration(
-                languages: locConfig.languages,
-                include: locConfig.include,
-                exclude: locConfig.exclude
-            )
+        for locConfig in input.configurations {
             let metric = "LOC \(locConfig.languages) \(locConfig.include)"
             Self.logger.info("Processing LOC configuration: \(metric)")
 
@@ -104,17 +113,13 @@ public struct LOC: AsyncParsableCommand {
                 ]
             )
 
-            let gitConfig = GitConfiguration(
-                repoPath: repoPath,
-                clean: gitClean,
-                fixLFS: fixLfs,
-                initializeSubmodules: initializeSubmodules
-            )
-            let input = LOCInput(git: gitConfig, configuration: sdkConfig)
-
             var lastResult: LOCSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
+                lastResult = try await sdk.analyzeCommit(
+                    hash: hash,
+                    configuration: locConfig,
+                    input: input
+                )
 
                 Self.logger.notice(
                     "Found \(lastResult!.linesOfCode) lines of '\(locConfig.languages)' code at \(hash)"

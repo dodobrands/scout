@@ -3,7 +3,7 @@ import Logging
 import System
 
 public class GitFix {
-    private static let logger = Logger(label: "mobile-code-metrics.GitFix")
+    private static let logger = Logger(label: "scout.GitFix")
 
     /// Performs git operations before analysis based on GitConfiguration.
     /// - Parameter git: Git configuration with repository path and operation flags
