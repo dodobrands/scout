@@ -60,4 +60,3 @@ scout build-settings --config build-settings-config.json
 ## Requirements
 
 - `xcodebuild` command-line tool
-- For Tuist projects: `tuist` CLI
