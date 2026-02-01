@@ -107,15 +107,16 @@ public struct Files: AsyncParsableCommand {
                 ]
             )
 
+            let input = FilesInput(
+                repoPath: repoPathURL,
+                filetype: filetype,
+                gitClean: gitClean,
+                fixLFS: fixLfs,
+                initializeSubmodules: initializeSubmodules
+            )
+
             var lastResult: FilesSDK.Result?
             for hash in commitHashes {
-                let input = FilesInput(
-                    repoPath: repoPathURL,
-                    filetype: filetype,
-                    gitClean: gitClean,
-                    fixLFS: fixLfs,
-                    initializeSubmodules: initializeSubmodules
-                )
                 lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(

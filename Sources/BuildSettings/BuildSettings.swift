@@ -107,19 +107,19 @@ public struct BuildSettings: AsyncParsableCommand {
             )
         }
 
+        let input = BuildSettingsInput(
+            repoPath: repoPathURL,
+            setupCommands: sdkSetupCommands,
+            configuration: extractConfig.configuration,
+            gitClean: gitClean,
+            fixLFS: fixLfs,
+            initializeSubmodules: initializeSubmodules
+        )
+
         for hash in commitHashes {
             Self.logger.info(
                 "Starting analysis for commit",
                 metadata: ["hash": "\(hash)"]
-            )
-
-            let input = BuildSettingsInput(
-                repoPath: repoPathURL,
-                setupCommands: sdkSetupCommands,
-                configuration: extractConfig.configuration,
-                gitClean: gitClean,
-                fixLFS: fixLfs,
-                initializeSubmodules: initializeSubmodules
             )
 
             let result: BuildSettingsSDK.Result

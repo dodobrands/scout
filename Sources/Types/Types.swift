@@ -111,15 +111,16 @@ public struct Types: AsyncParsableCommand {
                 ]
             )
 
+            let input = TypesInput(
+                repoPath: repoPathURL,
+                typeName: typeName,
+                gitClean: gitClean,
+                fixLFS: fixLfs,
+                initializeSubmodules: initializeSubmodules
+            )
+
             var lastResult: TypesSDK.Result?
             for hash in commitHashes {
-                let input = TypesInput(
-                    repoPath: repoPathURL,
-                    typeName: typeName,
-                    gitClean: gitClean,
-                    fixLFS: fixLfs,
-                    initializeSubmodules: initializeSubmodules
-                )
                 lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(

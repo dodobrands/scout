@@ -126,16 +126,17 @@ public struct Pattern: AsyncParsableCommand {
                 ]
             )
 
+            let input = PatternInput(
+                repoPath: repoPathURL,
+                pattern: pattern,
+                extensions: fileExtensions,
+                gitClean: gitClean,
+                fixLFS: fixLfs,
+                initializeSubmodules: initializeSubmodules
+            )
+
             var lastResult: PatternSDK.Result?
             for hash in commitHashes {
-                let input = PatternInput(
-                    repoPath: repoPathURL,
-                    pattern: pattern,
-                    extensions: fileExtensions,
-                    gitClean: gitClean,
-                    fixLFS: fixLfs,
-                    initializeSubmodules: initializeSubmodules
-                )
                 lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(
