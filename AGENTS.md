@@ -83,4 +83,4 @@ When creating PRs, use the PR template in `.github/pull_request_template.md`.
 
 ## Language
 
-All PR titles, PR descriptions, and commit messages must be written in English.
+All work in this repository must be in English: PR titles, PR descriptions, commit messages, issue titles, issue descriptions, comments, code comments, and documentation.
