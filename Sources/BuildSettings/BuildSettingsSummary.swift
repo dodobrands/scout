@@ -11,7 +11,8 @@ struct BuildSettingsSummary: JobSummaryFormattable {
             md += "| Target | Settings |\n"
             md += "|--------|----------|\n"
             for (target, settings) in output.results.sorted(by: { $0.key < $1.key }) {
-                let settingsStr = settings
+                let settingsStr =
+                    settings
                     .sorted(by: { $0.key < $1.key })
                     .map { "\($0.key): \($0.value ?? "null")" }
                     .joined(separator: ", ")
