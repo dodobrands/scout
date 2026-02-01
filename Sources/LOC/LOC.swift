@@ -36,7 +36,7 @@ public struct LOC: AsyncParsableCommand {
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
     public var repoPath: String = FileManager.default.currentDirectoryPath
 
-    @Option(name: .long, help: "Path to configuration JSON file")
+    @Option(help: "Path to configuration JSON file")
     public var config: String?
 
     @Option(
@@ -53,9 +53,14 @@ public struct LOC: AsyncParsableCommand {
     public var verbose: Bool = false
 
     @Flag(
-        name: [.long, .customShort("I")],
-        help: "Initialize submodules (reset and update to correct commits)"
+        help: "Clean working directory before analysis (git clean -ffdx && git reset --hard HEAD)"
     )
+    public var gitClean: Bool = false
+
+    @Flag(help: "Fix broken LFS pointers by committing modified files after checkout")
+    public var fixLfs: Bool = false
+
+    @Flag(help: "Initialize submodules (reset and update to correct commits)")
     public var initializeSubmodules: Bool = false
 
     private static let logger = Logger(label: "scout.CountLOC")
@@ -105,6 +110,8 @@ public struct LOC: AsyncParsableCommand {
                     hash: hash,
                     repoPath: repoPathURL,
                     configuration: sdkConfig,
+                    gitClean: gitClean,
+                    fixLFS: fixLfs,
                     initializeSubmodules: initializeSubmodules
                 )
 

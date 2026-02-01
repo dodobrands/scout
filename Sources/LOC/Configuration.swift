@@ -1,3 +1,4 @@
+import Common
 import Foundation
 import SystemPackage
 
@@ -18,9 +19,13 @@ public struct CountLOCConfig: Sendable {
     /// LOC configurations to process
     public let configurations: [LOCConfiguration]
 
+    /// Git operations configuration
+    public let git: GitConfiguration
+
     /// Initialize configuration directly (for testing)
-    public init(configurations: [LOCConfiguration]) {
+    public init(configurations: [LOCConfiguration], git: GitConfiguration = .default) {
         self.configurations = configurations
+        self.git = git
     }
 
     /// Initialize configuration from JSON file.
@@ -42,6 +47,7 @@ public struct CountLOCConfig: Sendable {
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.configurations = variables.configurations
+            self.git = variables.git ?? .default
         } catch let decodingError as DecodingError {
             throw CountLOCConfigError.invalidJSON(
                 path: configPathString,
@@ -57,6 +63,7 @@ public struct CountLOCConfig: Sendable {
 
     private struct Variables: Codable {
         let configurations: [LOCConfiguration]
+        let git: GitConfiguration?
     }
 }
 

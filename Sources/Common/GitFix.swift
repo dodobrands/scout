@@ -5,10 +5,24 @@ import System
 public class GitFix {
     private static let logger = Logger(label: "mobile-code-metrics.GitFix")
 
-    public static func fixGitIssues(in repoPath: URL, initializeSubmodules: Bool = false)
-        async throws
-    {
-        try await fixBrokenLFS(in: repoPath)
+    /// Performs git operations before analysis based on provided flags.
+    /// - Parameters:
+    ///   - repoPath: Path to the repository
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` to clean working directory
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
+    ///   - initializeSubmodules: Initialize and update git submodules
+    public static func prepareRepository(
+        in repoPath: URL,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
+        initializeSubmodules: Bool = false
+    ) async throws {
+        if gitClean {
+            try await cleanAndReset(in: repoPath)
+        }
+        if fixLFS {
+            try await fixBrokenLFS(in: repoPath)
+        }
         if initializeSubmodules {
             try await fixSubmodules(in: repoPath)
         }
@@ -17,20 +31,16 @@ public class GitFix {
     /// Cleans untracked files and resets working directory to HEAD.
     /// Executes: `git clean -ffdx && git reset --hard HEAD`
     public static func cleanAndReset(in repoPath: URL) async throws {
-        let repoPathString = repoPath.path(percentEncoded: false)
+        let repoPathFilePath = FilePath(repoPath.path(percentEncoded: false))
 
         logger.debug("Cleaning untracked files and resetting working directory")
 
-        let repoPathFilePath = FilePath(repoPathString)
-
-        // Clean untracked files and directories (force, force, directories, exclude .gitignore)
         try await Shell.execute(
             "git",
             arguments: ["clean", "-ffdx"],
             workingDirectory: repoPathFilePath
         )
 
-        // Reset working directory to HEAD
         try await Shell.execute(
             "git",
             arguments: ["reset", "--hard", "HEAD"],
@@ -40,16 +50,22 @@ public class GitFix {
         logger.debug("Working directory cleaned and reset")
     }
 
+    /// Fixes broken Git LFS pointers by committing modified files.
+    ///
+    /// Some repositories have broken LFS commits where files are marked as LFS-tracked
+    /// but the actual content wasn't uploaded to LFS storage. After checkout, these files
+    /// appear as modified (containing LFS pointer text instead of actual content).
+    /// This method commits those changes to allow analysis to proceed.
     private static func fixBrokenLFS(in repoPath: URL) async throws {
         let repoPathFilePath = FilePath(repoPath.path(percentEncoded: false))
-        let gitDiff = try await Shell.execute(
+        let modifiedFiles = try await Shell.execute(
             "git",
             arguments: ["ls-files", "-m"],
             workingDirectory: repoPathFilePath
         )
-        // there may be broken git-lfs commits in pizza
-        // file types marked as stored under lfs, but files aren't there actually
-        if !gitDiff.isEmpty {
+
+        if !modifiedFiles.isEmpty {
+            logger.debug("Found modified files (possibly broken LFS), committing fix")
             try await Shell.execute(
                 "git",
                 arguments: ["add", "-A"],
@@ -60,6 +76,7 @@ public class GitFix {
                 arguments: ["commit", "-m", "LFS Fix"],
                 workingDirectory: repoPathFilePath
             )
+            logger.debug("LFS fix committed")
         }
     }
 
