@@ -69,19 +69,8 @@ public struct LOC: AsyncParsableCommand {
         LoggingSetup.setup(verbose: verbose)
         try await LOCSDK.checkClocInstalled()
 
-        // Load config from file if specified
-        let fileConfig: LOCConfig?
-        if let configPath = config {
-            fileConfig = try await LOCConfig(
-                configFilePath: SystemPackage.FilePath(configPath)
-            )
-        } else if FileManager.default.fileExists(atPath: "loc-config.json") {
-            fileConfig = try await LOCConfig(
-                configFilePath: SystemPackage.FilePath("loc-config.json")
-            )
-        } else {
-            fileConfig = nil
-        }
+        // Load config from file (one-liner convenience init)
+        let fileConfig = try await LOCConfig(configPath: config)
 
         // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = LOCCLIInputs(

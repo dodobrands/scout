@@ -35,6 +35,23 @@ struct LOCConfig: Sendable {
         self.git = git
     }
 
+    /// Initialize configuration from JSON file at given path, or default path if nil.
+    /// Returns nil if no config file exists.
+    ///
+    /// - Parameters:
+    ///   - configPath: Optional path to JSON file. If nil, looks for "loc-config.json"
+    /// - Throws: `LOCConfigError` if JSON file is malformed or missing required fields
+    init?(configPath: String?) async throws {
+        let path = configPath ?? "loc-config.json"
+        guard FileManager.default.fileExists(atPath: path) else {
+            if configPath != nil {
+                throw LOCConfigError.missingFile(path: path)
+            }
+            return nil
+        }
+        try await self.init(configFilePath: FilePath(path))
+    }
+
     /// Initialize configuration from JSON file.
     ///
     /// - Parameters:

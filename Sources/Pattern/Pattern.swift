@@ -78,17 +78,8 @@ public struct Pattern: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file if specified
-        let fileConfig: PatternConfig?
-        if let configPath = config {
-            fileConfig = try await PatternConfig(configFilePath: SystemPackage.FilePath(configPath))
-        } else if FileManager.default.fileExists(atPath: "pattern-config.json") {
-            fileConfig = try await PatternConfig(
-                configFilePath: SystemPackage.FilePath("pattern-config.json")
-            )
-        } else {
-            fileConfig = nil
-        }
+        // Load config from file (one-liner convenience init)
+        let fileConfig = try await PatternConfig(configPath: config)
 
         // Parse extensions from CLI (comma-separated string)
         let cliExtensions: [String]?

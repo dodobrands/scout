@@ -72,19 +72,8 @@ public struct Files: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file if specified
-        let fileConfig: FilesConfig?
-        if let configPath = config {
-            fileConfig = try await FilesConfig(
-                configFilePath: SystemPackage.FilePath(configPath)
-            )
-        } else if FileManager.default.fileExists(atPath: "files-config.json") {
-            fileConfig = try await FilesConfig(
-                configFilePath: SystemPackage.FilePath("files-config.json")
-            )
-        } else {
-            fileConfig = nil
-        }
+        // Load config from file (one-liner convenience init)
+        let fileConfig = try await FilesConfig(configPath: config)
 
         // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = FilesCLIInputs(

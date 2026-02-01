@@ -69,21 +69,8 @@ public struct BuildSettings: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file if specified
-        let fileConfig: BuildSettingsConfig?
-        if let configPath = config {
-            fileConfig = try await BuildSettingsConfig(
-                configFilePath: SystemPackage.FilePath(configPath)
-            )
-        } else if FileManager.default.fileExists(
-            atPath: "build-settings-config.json"
-        ) {
-            fileConfig = try await BuildSettingsConfig(
-                configFilePath: SystemPackage.FilePath("build-settings-config.json")
-            )
-        } else {
-            fileConfig = nil
-        }
+        // Load config from file (one-liner convenience init)
+        let fileConfig = try await BuildSettingsConfig(configPath: config)
 
         // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = BuildSettingsCLIInputs(
