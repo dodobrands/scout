@@ -40,12 +40,24 @@ scout <subcommand> [options]
 
 Count Swift types by inheritance. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
+**Command:**
 ```bash
-scout types UIView UIViewController View
+scout types UIView UIViewController View --output results.json
 ```
 
+**Output:**
 ```json
-{"commit":"abc123","date":"2025-01-15","results":{"UIView":42,"UIViewController":18,"View":156}}
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": {
+      "UIView": ["CustomButton", "HeaderView", "CardView"],
+      "UIViewController": ["HomeViewController", "SettingsViewController"],
+      "View": ["ContentView", "ProfileView"]
+    }
+  }
+]
 ```
 
 📖 [Full documentation](Sources/Types/README.md)
@@ -54,12 +66,24 @@ scout types UIView UIViewController View
 
 Count files by extension. Useful for tracking storyboard, xib, swift files count.
 
+**Command:**
 ```bash
-scout files swift storyboard xib
+scout files swift storyboard xib --output results.json
 ```
 
+**Output:**
 ```json
-{"commit":"abc123","date":"2025-01-15","results":{"swift":1250,"storyboard":12,"xib":8}}
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": {
+      "swift": ["Sources/App.swift", "Sources/Model.swift"],
+      "storyboard": ["Main.storyboard"],
+      "xib": ["CustomCell.xib"]
+    }
+  }
+]
 ```
 
 📖 [Full documentation](Sources/Files/README.md)
@@ -68,12 +92,27 @@ scout files swift storyboard xib
 
 Search for string patterns in source files. Useful for tracking import statements, API usage, etc.
 
+**Command:**
 ```bash
-scout pattern "import UIKit" "import SwiftUI"
+scout pattern "import UIKit" "import SwiftUI" --output results.json
 ```
 
+**Output:**
 ```json
-{"commit":"abc123","date":"2025-01-15","results":{"import UIKit":89,"import SwiftUI":45}}
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": {
+      "import UIKit": [
+        { "file": "Sources/App.swift", "line": 1 }
+      ],
+      "import SwiftUI": [
+        { "file": "Sources/ContentView.swift", "line": 1 }
+      ]
+    }
+  }
+]
 ```
 
 📖 [Full documentation](Sources/Pattern/README.md)
@@ -82,12 +121,22 @@ scout pattern "import UIKit" "import SwiftUI"
 
 Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
 
+**Command:**
 ```bash
-scout loc --config loc.json
+scout loc --config loc.json --output results.json
 ```
 
+**Output:**
 ```json
-{"commit":"abc123","date":"2025-01-15","results":[{"languages":["Swift"],"linesOfCode":48500}]}
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": {
+      "LOC [Swift] [Sources]": 48500
+    }
+  }
+]
 ```
 
 📖 [Full documentation](Sources/LOC/README.md)
@@ -96,12 +145,25 @@ scout loc --config loc.json
 
 Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
 
+**Command:**
 ```bash
-scout build-settings --config build.json
+scout build-settings --config build.json --output results.json
 ```
 
+**Output:**
 ```json
-{"commit":"abc123","date":"2025-01-15","results":[{"target":"MyApp","buildSettings":{"SWIFT_VERSION":"5.0"}}]}
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": {
+      "MyApp": {
+        "SWIFT_VERSION": "5.0",
+        "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+      }
+    }
+  }
+]
 ```
 
 📖 [Full documentation](Sources/BuildSettings/README.md)
@@ -123,7 +185,24 @@ scout types UIView UIViewController --config types.json
 All tools support `--commits` option to analyze specific commits. This enables tracking metrics over time:
 
 ```bash
-scout types UIView --commits abc123 def456 ghi789
+scout types UIView --commits abc123 def456 ghi789 --output results.json
+```
+
+When analyzing multiple commits, the output is an array:
+
+```json
+[
+  {
+    "commit": "abc123",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": { "UIView": ["Button", "Card"] }
+  },
+  {
+    "commit": "def456",
+    "date": "2025-02-15T14:45:00+03:00",
+    "results": { "UIView": ["Button", "Card", "Header"] }
+  }
+]
 ```
 
 Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.

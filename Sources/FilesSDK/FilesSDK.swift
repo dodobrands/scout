@@ -27,7 +27,7 @@ public struct FilesSDK: Sendable {
     public init() {}
 
     /// Result of file counting operation.
-    public struct Result: Sendable, Codable {
+    public struct Result: Sendable, Encodable {
         public let commit: String
         public let filetype: String
         public let files: [String]

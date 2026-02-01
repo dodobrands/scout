@@ -27,7 +27,7 @@ public struct TypesSDK: Sendable {
     public init() {}
 
     /// Result of type counting operation.
-    public struct Result: Sendable, Codable {
+    public struct Result: Sendable, Encodable {
         public let commit: String
         public let typeName: String
         public let types: [String]

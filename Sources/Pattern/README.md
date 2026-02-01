@@ -84,3 +84,50 @@ Performs exact string matching. Useful for:
 - Counting import statements: `"import Testing"`, `"@testable import Quick"`
 - Finding TODOs: `"// TODO:"`, `"// FIXME:"`
 - Tracking API usage: `"periphery:ignore"`, `"@available"`
+
+## Output Format
+
+When using `--output`, results are saved as JSON array:
+
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": {
+      "import UIKit": [
+        { "file": "Sources/App.swift", "line": 1 },
+        { "file": "Sources/View.swift", "line": 1 }
+      ],
+      "import SwiftUI": [
+        { "file": "Sources/ContentView.swift", "line": 1 }
+      ]
+    }
+  }
+]
+```
+
+**Multiple commits:**
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15T10:30:00+03:00",
+    "results": {
+      "import UIKit": [
+        { "file": "Sources/App.swift", "line": 1 }
+      ]
+    }
+  },
+  {
+    "commit": "def5678abc1234",
+    "date": "2025-02-15T14:45:00+03:00",
+    "results": {
+      "import UIKit": [
+        { "file": "Sources/App.swift", "line": 1 },
+        { "file": "Sources/NewView.swift", "line": 1 }
+      ]
+    }
+  }
+]
+```

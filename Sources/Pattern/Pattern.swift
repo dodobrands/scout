@@ -6,6 +6,13 @@ import PatternSDK
 import System
 import SystemPackage
 
+/// JSON output structure for pattern command.
+struct PatternOutput: Encodable {
+    let commit: String
+    let date: String
+    let results: [String: [PatternSDK.Match]]
+}
+
 public struct Pattern: AsyncParsableCommand {
     public init() {}
 
@@ -121,37 +128,49 @@ public struct Pattern: AsyncParsableCommand {
 
         let sdk = PatternSDK()
         var patternResults: [(pattern: String, matchCount: Int)] = []
-        let jsonWriter = output.map { IncrementalJSONWriter<PatternSDK.Result>(path: $0) }
+        var outputResults: [PatternOutput] = []
 
-        for pattern in input.patterns {
-            Self.logger.info("Processing pattern: \(pattern)")
+        Self.logger.info(
+            "Will analyze \(commitHashes.count) commits for \(input.patterns.count) pattern(s)",
+            metadata: [
+                "commits": .array(commitHashes.map { .string($0) }),
+                "patterns": .array(input.patterns.map { .string($0) }),
+            ]
+        )
 
-            Self.logger.info(
-                "Will analyze \(commitHashes.count) commits for pattern '\(pattern)'",
-                metadata: [
-                    "commits": .array(commitHashes.map { .string($0) })
-                ]
-            )
+        for hash in commitHashes {
+            Self.logger.info("Processing commit: \(hash)")
 
-            var lastResult: PatternSDK.Result?
-            for hash in commitHashes {
-                let result = try await sdk.analyzeCommit(hash: hash, pattern: pattern, input: input)
-                lastResult = result
+            let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
+            var resultsDict: [String: [PatternSDK.Match]] = [:]
+            for result in results {
                 Self.logger.notice(
-                    "Found \(result.matches.count) matches for '\(pattern)' at \(hash)"
+                    "Found \(result.matches.count) matches for '\(result.pattern)' at \(hash)"
                 )
+                resultsDict[result.pattern] = result.matches
 
-                try jsonWriter?.append(result)
+                if let existingIndex = patternResults.firstIndex(where: {
+                    $0.pattern == result.pattern
+                }) {
+                    patternResults[existingIndex] = (result.pattern, result.matches.count)
+                } else {
+                    patternResults.append((result.pattern, result.matches.count))
+                }
             }
 
-            Self.logger.notice(
-                "Summary for '\(pattern)': analyzed \(commitHashes.count) commit(s)"
-            )
-            if let result = lastResult {
-                patternResults.append((pattern, result.matches.count))
-            }
+            let commitOutput = PatternOutput(commit: hash, date: date, results: resultsDict)
+            outputResults.append(commitOutput)
         }
+
+        if let outputPath = output {
+            try outputResults.writeJSON(to: outputPath)
+        }
+
+        Self.logger.notice(
+            "Summary: analyzed \(commitHashes.count) commit(s) for \(input.patterns.count) pattern(s)"
+        )
 
         let summary = Summary(patternResults: patternResults)
         logSummary(summary)

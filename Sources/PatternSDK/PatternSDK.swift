@@ -42,7 +42,7 @@ public struct PatternSDK: Sendable {
     public init() {}
 
     /// A single match of a pattern in a file.
-    public struct Match: Sendable, Codable {
+    public struct Match: Sendable, Encodable {
         public let file: String
         public let line: Int
 
@@ -53,7 +53,7 @@ public struct PatternSDK: Sendable {
     }
 
     /// Result of pattern search operation.
-    public struct Result: Sendable, Codable {
+    public struct Result: Sendable, Encodable {
         public let pattern: String
         public let matches: [Match]
 

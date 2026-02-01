@@ -57,6 +57,16 @@ periphery scan --skip-build --strict
 
 **Never force push (`git push --force` or `--force-with-lease`) without explicit user request.**
 
+## Coding Conventions
+
+### Protocol Conformance
+
+Use specific protocols instead of `Codable`:
+- `Encodable` — for output structs that are only serialized to JSON
+- `Decodable` — for config/input structs that are only read from JSON
+
+Only use `Codable` when both encoding and decoding are actually needed.
+
 ## Documentation Updates
 
 When changing public APIs of any tool, update all relevant READMEs in `Sources/*/README.md`.
@@ -73,4 +83,4 @@ When creating PRs, use the PR template in `.github/pull_request_template.md`.
 
 ## Language
 
-All PR titles, PR descriptions, and commit messages must be written in English.
+All work in this repository must be in English: PR titles, PR descriptions, commit messages, issue titles, issue descriptions, comments, code comments, and documentation.

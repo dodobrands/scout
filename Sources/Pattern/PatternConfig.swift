@@ -78,7 +78,7 @@ struct PatternConfig: Sendable {
         }
     }
 
-    private struct Variables: Codable {
+    private struct Variables: Decodable {
         let patterns: [String]?
         let extensions: [String]?
         let git: GitFileConfig?

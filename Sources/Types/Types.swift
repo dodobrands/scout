@@ -6,6 +6,13 @@ import System
 import SystemPackage
 import TypesSDK
 
+/// JSON output structure for types command.
+struct TypesOutput: Encodable {
+    let commit: String
+    let date: String
+    let results: [String: [String]]
+}
+
 public struct Types: AsyncParsableCommand {
     public init() {}
 
@@ -87,6 +94,7 @@ public struct Types: AsyncParsableCommand {
 
         let sdk = TypesSDK()
         var allResults: [TypesSDK.Result] = []
+        var outputResults: [TypesOutput] = []
 
         Self.logger.info(
             "Will analyze \(commitHashes.count) commits for \(input.types.count) type(s)",
@@ -100,16 +108,23 @@ public struct Types: AsyncParsableCommand {
             Self.logger.info("Processing commit: \(hash)")
 
             let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
+            var resultsDict: [String: [String]] = [:]
             for result in results {
                 Self.logger.notice(
                     "Found \(result.types.count) types inherited from \(result.typeName) at \(hash)"
                 )
                 allResults.append(result)
-                if let outputPath = output {
-                    try allResults.writeJSON(to: outputPath)
-                }
+                resultsDict[result.typeName] = result.types
             }
+
+            let commitOutput = TypesOutput(commit: hash, date: date, results: resultsDict)
+            outputResults.append(commitOutput)
+        }
+
+        if let outputPath = output {
+            try outputResults.writeJSON(to: outputPath)
         }
 
         Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
