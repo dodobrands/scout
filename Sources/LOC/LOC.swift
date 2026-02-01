@@ -6,7 +6,7 @@ import Logging
 import SystemPackage
 
 /// JSON output structure for loc command.
-struct LOCOutput: Codable {
+struct LOCOutput: Encodable {
     let commit: String
     let date: String
     let results: [String: Int]

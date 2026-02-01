@@ -7,7 +7,7 @@ import SystemPackage
 import TypesSDK
 
 /// JSON output structure for types command.
-struct TypesOutput: Codable {
+struct TypesOutput: Encodable {
     let commit: String
     let date: String
     let results: [String: [String]]

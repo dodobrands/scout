@@ -8,7 +8,7 @@ struct BuildSettingsConfig: Sendable {
     static let defaultFileName = ".scout-build-settings.json"
 
     /// Represents a single setup command with optional working directory.
-    struct SetupCommand: Sendable, Codable {
+    struct SetupCommand: Sendable, Decodable {
         /// Command to execute
         public let command: String
 
@@ -110,7 +110,7 @@ struct BuildSettingsConfig: Sendable {
         }
     }
 
-    private struct Variables: Codable {
+    private struct Variables: Decodable {
         let setupCommands: [SetupCommand]?
         let buildSettingsParameters: [String]?
         let workspaceName: String?

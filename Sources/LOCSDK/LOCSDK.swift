@@ -72,7 +72,7 @@ public struct LOCSDK: Sendable {
     public init() {}
 
     /// Result of LOC counting operation.
-    public struct Result: Sendable, Codable {
+    public struct Result: Sendable, Encodable {
         public let commit: String
         public let metric: String
         public let linesOfCode: Int

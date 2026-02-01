@@ -7,7 +7,7 @@ import System
 import SystemPackage
 
 /// JSON output structure for files command.
-struct FilesOutput: Codable {
+struct FilesOutput: Encodable {
     let commit: String
     let date: String
     let results: [String: [String]]

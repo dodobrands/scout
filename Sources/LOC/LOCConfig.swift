@@ -8,7 +8,7 @@ struct LOCConfig: Sendable {
     static let defaultFileName = ".scout-loc.json"
 
     /// Single LOC configuration entry
-    struct LOCConfiguration: Sendable, Codable {
+    struct LOCConfiguration: Sendable, Decodable {
         /// Programming languages to count (array of strings)
         public let languages: [String]
 
@@ -88,7 +88,7 @@ struct LOCConfig: Sendable {
         }
     }
 
-    private struct Variables: Codable {
+    private struct Variables: Decodable {
         let configurations: [LOCConfiguration]?
         let git: GitFileConfig?
     }

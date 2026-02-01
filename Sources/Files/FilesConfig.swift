@@ -69,7 +69,7 @@ struct FilesConfig: Sendable {
         }
     }
 
-    private struct Variables: Codable {
+    private struct Variables: Decodable {
         let filetypes: [String]?
         let git: GitFileConfig?
     }

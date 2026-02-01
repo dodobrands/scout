@@ -28,7 +28,7 @@ public struct ProjectWithTargets: Sendable {
 }
 
 /// Represents a target with its build settings.
-public struct TargetWithBuildSettings: Sendable, Codable {
+public struct TargetWithBuildSettings: Sendable, Encodable {
     public let target: String
     public let buildSettings: [String: String]
 

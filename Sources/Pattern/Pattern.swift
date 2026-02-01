@@ -7,7 +7,7 @@ import System
 import SystemPackage
 
 /// JSON output structure for pattern command.
-struct PatternOutput: Codable {
+struct PatternOutput: Encodable {
     let commit: String
     let date: String
     let results: [String: [PatternSDK.Match]]

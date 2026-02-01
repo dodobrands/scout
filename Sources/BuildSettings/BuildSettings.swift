@@ -7,7 +7,7 @@ import System
 import SystemPackage
 
 /// JSON output structure for build-settings command.
-struct BuildSettingsOutput: Codable {
+struct BuildSettingsOutput: Encodable {
     let commit: String
     let date: String
     let results: [String: [String: String?]]
