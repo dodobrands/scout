@@ -37,9 +37,9 @@ scout build-settings --config build-settings-config.json
 
 ```json
 {
-  "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
   "workspaceName": "MyApp",
-  "configuration": "Debug"
+  "configuration": "Debug",
+  "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"]
 }
 ```
 
@@ -47,14 +47,14 @@ scout build-settings --config build-settings-config.json
 
 ```json
 {
+  "workspaceName": "MyApp",
+  "configuration": "Debug",
+  "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
   "setupCommands": [
     { "command": "mise install" },
     { "command": "tuist install", "workingDirectory": "App" },
     { "command": "tuist generate --no-open", "workingDirectory": "App" }
-  ],
-  "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
-  "workspaceName": "MyApp",
-  "configuration": "Debug"
+  ]
 }
 ```
 
@@ -62,12 +62,12 @@ scout build-settings --config build-settings-config.json
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `workspaceName` | `String` | Xcode workspace/project name (without extension) |
+| `configuration` | `String` | Build configuration (Debug, Release, etc.) |
+| `buildSettingsParameters` | `[String]` | Build settings to extract |
 | `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional) |
 | `setupCommands[].command` | `String` | Shell command to execute |
 | `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
-| `buildSettingsParameters` | `[String]` | Build settings to extract |
-| `workspaceName` | `String` | Xcode workspace/project name (without extension) |
-| `configuration` | `String` | Build configuration (Debug, Release, etc.) |
 
 ## Requirements
 
