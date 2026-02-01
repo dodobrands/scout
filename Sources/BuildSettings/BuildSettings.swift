@@ -6,6 +6,13 @@ import Logging
 import System
 import SystemPackage
 
+/// JSON output structure for build-settings command.
+struct BuildSettingsOutput: Codable {
+    let commit: String
+    let date: String
+    let results: [String: [String: String]]
+}
+
 public struct BuildSettings: AsyncParsableCommand {
     public init() {}
 
@@ -99,7 +106,7 @@ public struct BuildSettings: AsyncParsableCommand {
         }
 
         var parameterResults: [(parameter: String, targetCount: Int)] = []
-        let jsonWriter = output.map { IncrementalJSONWriter<BuildSettingsSDK.Result>(path: $0) }
+        var outputResults: [BuildSettingsOutput] = []
 
         Self.logger.info(
             "Will analyze \(commitHashes.count) commits for \(input.buildSettingsParameters.count) parameter(s)",
@@ -133,11 +140,24 @@ public struct BuildSettings: AsyncParsableCommand {
                 continue
             }
 
-            for parameter in input.buildSettingsParameters {
-                var targetValues: [String: String] = [:]
-                for targetWithSettings in result {
+            let date = try await Git.commitDate(for: hash, in: repoPathURL)
+
+            var resultsDict: [String: [String: String]] = [:]
+            for targetWithSettings in result {
+                var filteredSettings: [String: String] = [:]
+                for parameter in input.buildSettingsParameters {
                     if let value = targetWithSettings.buildSettings[parameter] {
-                        targetValues[targetWithSettings.target] = value
+                        filteredSettings[parameter] = value
+                    }
+                }
+                resultsDict[targetWithSettings.target] = filteredSettings
+            }
+
+            for parameter in input.buildSettingsParameters {
+                var targetCount = 0
+                for targetWithSettings in result {
+                    if targetWithSettings.buildSettings[parameter] != nil {
+                        targetCount += 1
                     }
                 }
 
@@ -146,20 +166,25 @@ public struct BuildSettings: AsyncParsableCommand {
                     metadata: [
                         "hash": "\(hash)",
                         "parameter": "\(parameter)",
-                        "targetsCount": "\(targetValues.count)",
+                        "targetsCount": "\(targetCount)",
                     ]
                 )
 
                 if let existingIndex = parameterResults.firstIndex(where: {
                     $0.parameter == parameter
                 }) {
-                    parameterResults[existingIndex] = (parameter, targetValues.count)
+                    parameterResults[existingIndex] = (parameter, targetCount)
                 } else {
-                    parameterResults.append((parameter, targetValues.count))
+                    parameterResults.append((parameter, targetCount))
                 }
             }
 
-            try jsonWriter?.append(result)
+            let commitOutput = BuildSettingsOutput(commit: hash, date: date, results: resultsDict)
+            outputResults.append(commitOutput)
+        }
+
+        if let outputPath = output {
+            try outputResults.writeJSON(to: outputPath)
         }
 
         let summary = Summary(parameterResults: parameterResults)

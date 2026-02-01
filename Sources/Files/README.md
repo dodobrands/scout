@@ -73,3 +73,42 @@ scout files swift --config files-config.json
 |-------|------|-------------|
 | `filetypes` | `[String]` | File extensions to count (without dot) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
+
+## Output Format
+
+When using `--output`, results are saved as JSON array:
+
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15",
+    "results": {
+      "swift": ["Sources/App.swift", "Sources/Model.swift"],
+      "storyboard": ["Main.storyboard", "Launch.storyboard"]
+    }
+  }
+]
+```
+
+**Multiple commits:**
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15",
+    "results": {
+      "swift": ["Sources/App.swift"],
+      "storyboard": ["Main.storyboard"]
+    }
+  },
+  {
+    "commit": "def5678abc1234",
+    "date": "2025-02-15",
+    "results": {
+      "swift": ["Sources/App.swift", "Sources/NewFeature.swift"],
+      "storyboard": ["Main.storyboard"]
+    }
+  }
+]
+```

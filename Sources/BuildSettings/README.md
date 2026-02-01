@@ -90,6 +90,53 @@ scout build-settings --config build-settings-config.json
 | `setupCommands[].optional` | `Bool` | If `true`, analysis continues even if command fails (default: `false`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
 
+## Output Format
+
+When using `--output`, results are saved as JSON array:
+
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15",
+    "results": {
+      "MyApp": {
+        "SWIFT_VERSION": "5.0",
+        "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+      },
+      "MyAppTests": {
+        "SWIFT_VERSION": "5.0",
+        "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+      }
+    }
+  }
+]
+```
+
+**Multiple commits:**
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15",
+    "results": {
+      "MyApp": {
+        "SWIFT_VERSION": "5.0"
+      }
+    }
+  },
+  {
+    "commit": "def5678abc1234",
+    "date": "2025-02-15",
+    "results": {
+      "MyApp": {
+        "SWIFT_VERSION": "5.9"
+      }
+    }
+  }
+]
+```
+
 ## Requirements
 
 - `xcodebuild` command-line tool

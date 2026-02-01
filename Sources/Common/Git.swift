@@ -13,4 +13,18 @@ package enum Git {
         )
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    /// Returns the commit date in ISO 8601 format (YYYY-MM-DD).
+    /// - Parameters:
+    ///   - hash: Commit hash
+    ///   - repoPath: Path to the repository
+    /// - Returns: The commit date string
+    package static func commitDate(for hash: String, in repoPath: URL) async throws -> String {
+        let result = try await Shell.execute(
+            "git",
+            arguments: ["show", "-s", "--format=%cs", hash],
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+        )
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }

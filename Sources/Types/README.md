@@ -100,6 +100,45 @@ Use `<*>` wildcard to match any generic variant (e.g., `BaseCoordinator<*>` matc
 { "types": ["BaseViewModel", "BaseService", "FeatureModule"] }
 ```
 
+## Output Format
+
+When using `--output`, results are saved as JSON array:
+
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15",
+    "results": {
+      "UIView": ["CustomButton", "HeaderView", "CardView"],
+      "UIViewController": ["HomeViewController", "SettingsViewController"]
+    }
+  }
+]
+```
+
+**Multiple commits:**
+```json
+[
+  {
+    "commit": "abc1234def5678",
+    "date": "2025-01-15",
+    "results": {
+      "UIView": ["CustomButton", "HeaderView"],
+      "UIViewController": ["HomeViewController"]
+    }
+  },
+  {
+    "commit": "def5678abc1234",
+    "date": "2025-02-15",
+    "results": {
+      "UIView": ["CustomButton", "HeaderView", "NewView"],
+      "UIViewController": ["HomeViewController", "SettingsViewController"]
+    }
+  }
+]
+```
+
 ## See Also
 
 - [CodeReader](../CodeReader/README.md) — Code parsing library

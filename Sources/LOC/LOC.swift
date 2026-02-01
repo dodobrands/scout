@@ -5,6 +5,13 @@ import LOCSDK
 import Logging
 import SystemPackage
 
+/// JSON output structure for loc command.
+struct LOCOutput: Codable {
+    let commit: String
+    let date: String
+    let results: [String: Int]
+}
+
 public struct LOC: AsyncParsableCommand {
     public init() {}
 
@@ -80,6 +87,7 @@ public struct LOC: AsyncParsableCommand {
 
         let sdk = LOCSDK()
         var allResults: [LOCSDK.Result] = []
+        var outputResults: [LOCOutput] = []
 
         Self.logger.info(
             "Will analyze \(commitHashes.count) commits for \(input.configurations.count) configuration(s)",
@@ -92,16 +100,23 @@ public struct LOC: AsyncParsableCommand {
             Self.logger.info("Processing commit: \(hash)")
 
             let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
+            var resultsDict: [String: Int] = [:]
             for result in results {
                 Self.logger.notice(
                     "Found \(result.linesOfCode) lines of code for '\(result.metric)' at \(hash)"
                 )
                 allResults.append(result)
-                if let outputPath = output {
-                    try allResults.writeJSON(to: outputPath)
-                }
+                resultsDict[result.metric] = result.linesOfCode
             }
+
+            let commitOutput = LOCOutput(commit: hash, date: date, results: resultsDict)
+            outputResults.append(commitOutput)
+        }
+
+        if let outputPath = output {
+            try outputResults.writeJSON(to: outputPath)
         }
 
         Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
