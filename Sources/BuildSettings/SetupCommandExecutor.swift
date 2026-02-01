@@ -33,7 +33,7 @@ extension SetupCommandExecutionError: LocalizedError {
 
 /// Executes setup commands in a repository.
 public struct SetupCommandExecutor {
-    private static let logger = Logger(label: "mobile-code-metrics.SetupCommandExecutor")
+    private static let logger = Logger(label: "scout.SetupCommandExecutor")
 
     /// Executes setup commands sequentially in the specified repository.
     ///
