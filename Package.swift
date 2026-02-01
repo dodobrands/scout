@@ -371,6 +371,10 @@ let package = Package(
                 "BuildSettings",
                 "BuildSettingsSDK",
                 "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
