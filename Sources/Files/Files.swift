@@ -40,11 +40,15 @@ public struct Files: AsyncParsableCommand {
     @Option(name: .long, help: "Path to configuration JSON file")
     public var config: String?
 
+    @Argument(help: "File extensions to count (e.g., swift storyboard xib)")
+    public var filetypes: [String] = []
+
     @Option(
         name: [.long, .short],
-        help: "Comma-separated list of commit hashes to analyze. If not provided, uses HEAD."
+        parsing: .upToNextOption,
+        help: "Commit hashes to analyze (default: HEAD)"
     )
-    public var commits: String?
+    public var commits: [String] = []
 
     @Option(name: [.long, .short], help: "Path to save JSON results")
     public var output: String?
@@ -63,17 +67,21 @@ public struct Files: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let configFilePath = SystemPackage.FilePath(config ?? "count-files-config.json")
-        let config = try await CountFilesConfig(configFilePath: configFilePath)
+        let filetypeList: [String]
+        if !filetypes.isEmpty {
+            filetypeList = filetypes
+        } else {
+            let configFilePath = SystemPackage.FilePath(config ?? "count-files-config.json")
+            let configData = try await CountFilesConfig(configFilePath: configFilePath)
+            filetypeList = configData.filetypes
+        }
 
         let repoPathURL =
             try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
 
         let commitHashes: [String]
-        if let commits {
-            commitHashes = commits.split(separator: ",").map {
-                String($0.trimmingCharacters(in: .whitespaces))
-            }
+        if !commits.isEmpty {
+            commitHashes = commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
@@ -84,7 +92,7 @@ public struct Files: AsyncParsableCommand {
         var filetypeResults: [(filetype: String, count: Int)] = []
         var allResults: [FilesSDK.Result] = []
 
-        for filetype in config.filetypes {
+        for filetype in filetypeList {
             Self.logger.info("Processing file type: \(filetype)")
 
             Self.logger.info(

@@ -40,11 +40,15 @@ public struct Pattern: AsyncParsableCommand {
     @Option(name: .long, help: "Path to configuration JSON file")
     public var config: String?
 
+    @Argument(help: "Patterns to search (e.g., \"import UIKit\" \"import SwiftUI\")")
+    public var patterns: [String] = []
+
     @Option(
         name: [.long, .short],
-        help: "Comma-separated list of commit hashes to analyze. If not provided, uses HEAD."
+        parsing: .upToNextOption,
+        help: "Commit hashes to analyze (default: HEAD)"
     )
-    public var commits: String?
+    public var commits: [String] = []
 
     @Option(name: [.long, .short], help: "Path to save JSON results")
     public var output: String?
@@ -69,17 +73,21 @@ public struct Pattern: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        let configFilePath = SystemPackage.FilePath(config ?? "search-config.json")
-        let searchConfig = try await SearchConfig(configFilePath: configFilePath)
+        let patternList: [String]
+        if !patterns.isEmpty {
+            patternList = patterns
+        } else {
+            let configFilePath = SystemPackage.FilePath(config ?? "search-config.json")
+            let searchConfig = try await SearchConfig(configFilePath: configFilePath)
+            patternList = searchConfig.patterns
+        }
 
         let repoPathURL =
             try URL(string: repoPath) ?! URLError.invalidURL(parameter: "repoPath", value: repoPath)
 
         let commitHashes: [String]
-        if let commits {
-            commitHashes = commits.split(separator: ",").map {
-                String($0.trimmingCharacters(in: .whitespaces))
-            }
+        if !commits.isEmpty {
+            commitHashes = commits
         } else {
             let head = try await Git.headCommit(in: repoPathURL)
             commitHashes = [head]
@@ -91,7 +99,11 @@ public struct Pattern: AsyncParsableCommand {
             fileExtensions = extensions.split(separator: ",").map {
                 String($0.trimmingCharacters(in: .whitespaces))
             }
+        } else if !patterns.isEmpty {
+            fileExtensions = ["swift"]
         } else {
+            let configFilePath = SystemPackage.FilePath(config ?? "search-config.json")
+            let searchConfig = try await SearchConfig(configFilePath: configFilePath)
             fileExtensions = searchConfig.extensions
         }
 
@@ -99,7 +111,7 @@ public struct Pattern: AsyncParsableCommand {
         var patternResults: [(pattern: String, matchCount: Int)] = []
         var allResults: [PatternSDK.Result] = []
 
-        for pattern in searchConfig.patterns {
+        for pattern in patternList {
             Self.logger.info("Processing pattern: \(pattern)")
 
             Self.logger.info(

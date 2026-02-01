@@ -11,6 +11,9 @@ public struct ExtractBuildSettingsConfig: Sendable {
         /// Optional working directory relative to repo root (e.g., "DodoPizza").
         /// If not provided, command executes in repo root.
         public let workingDirectory: String?
+
+        /// If true, analysis continues even if this command fails.
+        public let optional: Bool?
     }
 
     /// Commands to setup project, executed sequentially.
@@ -56,7 +59,7 @@ public struct ExtractBuildSettingsConfig: Sendable {
             let fileData = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
-            self.setupCommands = variables.setupCommands
+            self.setupCommands = variables.setupCommands ?? []
             self.buildSettingsParameters = variables.buildSettingsParameters
             self.workspaceName = variables.workspaceName
             self.configuration = variables.configuration
@@ -74,7 +77,7 @@ public struct ExtractBuildSettingsConfig: Sendable {
     }
 
     private struct Variables: Codable {
-        let setupCommands: [SetupCommand]
+        let setupCommands: [SetupCommand]?
         let buildSettingsParameters: [String]
         let workspaceName: String
         let configuration: String

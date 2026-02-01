@@ -8,7 +8,7 @@
   <img width="128" height="128" alt="Scout Logo" src="https://github.com/user-attachments/assets/b9ef981b-0f65-4a16-abfb-6391af834d7a" />
 </p>
 
-Code analysis tools for mobile repositories.
+Code analysis toolkit for iOS/macOS repositories. Analyze any commit in your git history to track metrics over time — from the first commit to the latest. Build dashboards showing how your codebase evolves: type counts, file distributions, lines of code, and more.
 
 ## Installation
 
@@ -38,30 +38,42 @@ scout <subcommand> [options]
 
 ### types
 
-Count Swift types by inheritance across git history. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
+Count Swift types by inheritance. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
 ```bash
-scout types --repo-path /path/to/repo --commits "abc123,def456"
+scout types UIView UIViewController View
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":{"UIView":42,"UIViewController":18,"View":156}}
 ```
 
 📖 [Full documentation](Sources/Types/README.md)
 
 ### files
 
-Count files by extension across git history. Useful for tracking storyboard, xib, swift files count over time.
+Count files by extension. Useful for tracking storyboard, xib, swift files count.
 
 ```bash
-scout files --repo-path /path/to/repo --commits "abc123"
+scout files swift storyboard xib
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":{"swift":1250,"storyboard":12,"xib":8}}
 ```
 
 📖 [Full documentation](Sources/Files/README.md)
 
 ### pattern
 
-Search for string patterns in source files across git history. Useful for tracking import statements, API usage, etc.
+Search for string patterns in source files. Useful for tracking import statements, API usage, etc.
 
 ```bash
-scout pattern --repo-path /path/to/repo --commits "abc123"
+scout pattern "import UIKit" "import SwiftUI"
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":{"import UIKit":89,"import SwiftUI":45}}
 ```
 
 📖 [Full documentation](Sources/Pattern/README.md)
@@ -71,7 +83,11 @@ scout pattern --repo-path /path/to/repo --commits "abc123"
 Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
 
 ```bash
-scout loc --repo-path /path/to/repo --commits "abc123"
+scout loc --config loc.json
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":[{"languages":["Swift"],"linesOfCode":48500}]}
 ```
 
 📖 [Full documentation](Sources/LOC/README.md)
@@ -81,10 +97,36 @@ scout loc --repo-path /path/to/repo --commits "abc123"
 Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
 
 ```bash
-scout build-settings --repo-path /path/to/repo --commits "abc123"
+scout build-settings --config build.json
+```
+
+```json
+{"commit":"abc123","date":"2025-01-15","results":[{"target":"MyApp","buildSettings":{"SWIFT_VERSION":"5.0"}}]}
 ```
 
 📖 [Full documentation](Sources/BuildSettings/README.md)
+
+## Configuration
+
+All tools support both command-line arguments and JSON configuration files. **Command-line arguments take priority over config file values.**
+
+```bash
+# Config only
+scout types --config types.json
+
+# Arguments override config
+scout types UIView UIViewController --config types.json
+```
+
+## Analyzing Git History
+
+All tools support `--commits` option to analyze specific commits. This enables tracking metrics over time:
+
+```bash
+scout types UIView --commits abc123 def456 ghi789
+```
+
+Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.
 
 ## Requirements
 

@@ -50,10 +50,12 @@ public struct BuildSettingsSDK: Sendable {
     public struct SetupCommand: Sendable {
         public let command: String
         public let workingDirectory: String?
+        public let optional: Bool
 
-        public init(command: String, workingDirectory: String? = nil) {
+        public init(command: String, workingDirectory: String? = nil, optional: Bool = false) {
             self.command = command
             self.workingDirectory = workingDirectory
+            self.optional = optional
         }
     }
 
@@ -164,10 +166,20 @@ public struct BuildSettingsSDK: Sendable {
                     workingDirectory: workingDirPath
                 )
             } catch {
-                throw AnalysisError.setupCommandFailed(
-                    command: setupCommand.command,
-                    error: error.localizedDescription
-                )
+                if setupCommand.optional {
+                    Self.logger.warning(
+                        "Optional setup command failed, continuing",
+                        metadata: [
+                            "command": "\(setupCommand.command)",
+                            "error": "\(error.localizedDescription)",
+                        ]
+                    )
+                } else {
+                    throw AnalysisError.setupCommandFailed(
+                        command: setupCommand.command,
+                        error: error.localizedDescription
+                    )
+                }
             }
         }
     }
