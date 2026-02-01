@@ -121,7 +121,7 @@ public struct Pattern: AsyncParsableCommand {
 
         let sdk = PatternSDK()
         var patternResults: [(pattern: String, matchCount: Int)] = []
-        var allResults: [PatternSDK.Result] = []
+        let jsonWriter = output.map { IncrementalJSONWriter<PatternSDK.Result>(path: $0) }
 
         for pattern in input.patterns {
             Self.logger.info("Processing pattern: \(pattern)")
@@ -135,11 +135,14 @@ public struct Pattern: AsyncParsableCommand {
 
             var lastResult: PatternSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(hash: hash, pattern: pattern, input: input)
+                let result = try await sdk.analyzeCommit(hash: hash, pattern: pattern, input: input)
+                lastResult = result
 
                 Self.logger.notice(
-                    "Found \(lastResult!.matches.count) matches for '\(pattern)' at \(hash)"
+                    "Found \(result.matches.count) matches for '\(pattern)' at \(hash)"
                 )
+
+                try jsonWriter?.append(result)
             }
 
             Self.logger.notice(
@@ -147,16 +150,11 @@ public struct Pattern: AsyncParsableCommand {
             )
             if let result = lastResult {
                 patternResults.append((pattern, result.matches.count))
-                allResults.append(result)
             }
         }
 
         let summary = Summary(patternResults: patternResults)
         logSummary(summary)
-
-        if let output {
-            try saveResults(allResults, to: output)
-        }
     }
 
     private func logSummary(_ summary: Summary) {
@@ -168,13 +166,5 @@ public struct Pattern: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func saveResults(_ results: [PatternSDK.Result], to path: String) throws {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(results)
-        try data.write(to: URL(fileURLWithPath: path))
-        Self.logger.info("Results saved to \(path)")
     }
 }

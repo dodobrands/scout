@@ -104,7 +104,7 @@ public struct Files: AsyncParsableCommand {
 
         let sdk = FilesSDK()
         var filetypeResults: [(filetype: String, count: Int)] = []
-        var allResults: [FilesSDK.Result] = []
+        let jsonWriter = output.map { IncrementalJSONWriter<FilesSDK.Result>(path: $0) }
 
         for filetype in input.filetypes {
             Self.logger.info("Processing file type: \(filetype)")
@@ -118,15 +118,18 @@ public struct Files: AsyncParsableCommand {
 
             var lastResult: FilesSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
+                let result = try await sdk.analyzeCommit(
                     hash: hash,
                     filetype: filetype,
                     input: input
                 )
+                lastResult = result
 
                 Self.logger.notice(
-                    "Found \(lastResult!.files.count) files of type '\(filetype)' at \(hash)"
+                    "Found \(result.files.count) files of type '\(filetype)' at \(hash)"
                 )
+
+                try jsonWriter?.append(result)
             }
 
             Self.logger.notice(
@@ -134,16 +137,11 @@ public struct Files: AsyncParsableCommand {
             )
             if let result = lastResult {
                 filetypeResults.append((filetype, result.files.count))
-                allResults.append(result)
             }
         }
 
         let summary = Summary(filetypeResults: filetypeResults)
         logSummary(summary)
-
-        if let output {
-            try saveResults(allResults, to: output)
-        }
     }
 
     private func logSummary(_ summary: Summary) {
@@ -155,13 +153,5 @@ public struct Files: AsyncParsableCommand {
         }
 
         GitHubActionsLogHandler.writeSummary(summary)
-    }
-
-    private func saveResults(_ results: [FilesSDK.Result], to path: String) throws {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(results)
-        try data.write(to: URL(fileURLWithPath: path))
-        Self.logger.info("Results saved to \(path)")
     }
 }
