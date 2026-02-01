@@ -10,7 +10,7 @@ import SystemPackage
 struct BuildSettingsOutput: Codable {
     let commit: String
     let date: String
-    let results: [String: [String: String]]
+    let results: [String: [String: String?]]
 }
 
 public struct BuildSettings: AsyncParsableCommand {
@@ -142,13 +142,11 @@ public struct BuildSettings: AsyncParsableCommand {
 
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
-            var resultsDict: [String: [String: String]] = [:]
+            var resultsDict: [String: [String: String?]] = [:]
             for targetWithSettings in result {
-                var filteredSettings: [String: String] = [:]
+                var filteredSettings: [String: String?] = [:]
                 for parameter in input.buildSettingsParameters {
-                    if let value = targetWithSettings.buildSettings[parameter] {
-                        filteredSettings[parameter] = value
-                    }
+                    filteredSettings[parameter] = targetWithSettings.buildSettings[parameter]
                 }
                 resultsDict[targetWithSettings.target] = filteredSettings
             }
