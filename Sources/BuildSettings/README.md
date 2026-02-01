@@ -48,7 +48,8 @@ scout build-settings --config build-settings-config.json
 ```json
 {
   "setupCommands": [
-    { "command": "bundle exec pod install" },
+    { "command": "mise install" },
+    { "command": "tuist install", "workingDirectory": "App" },
     { "command": "tuist generate --no-open", "workingDirectory": "App" }
   ],
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
