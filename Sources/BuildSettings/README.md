@@ -65,7 +65,7 @@ scout build-settings --config build-settings-config.json
 | `workspaceName` | `String` | Xcode workspace/project name (without extension) |
 | `configuration` | `String` | Build configuration (Debug, Release, etc.) |
 | `buildSettingsParameters` | `[String]` | Build settings to extract |
-| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional) |
+| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional). If any command fails, analysis stops with an error. |
 | `setupCommands[].command` | `String` | Shell command to execute |
 | `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
 
