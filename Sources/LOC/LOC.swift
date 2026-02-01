@@ -13,26 +13,6 @@ public struct LOC: AsyncParsableCommand {
         abstract: "Count lines of code"
     )
 
-    struct Summary: JobSummaryFormattable {
-        let locResults: [(metric: String, count: Int)]
-
-        var markdown: String {
-            var md = "## CountLOC Summary\n\n"
-
-            if !locResults.isEmpty {
-                md += "### Lines of Code Counts\n\n"
-                md += "| Configuration | LOC |\n"
-                md += "|---------------|-----|\n"
-                for result in locResults {
-                    md += "| \(result.metric) | \(result.count) |\n"
-                }
-                md += "\n"
-            }
-
-            return md
-        }
-    }
-
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
     public var repoPath: String?
 
@@ -99,53 +79,43 @@ public struct LOC: AsyncParsableCommand {
         }
 
         let sdk = LOCSDK()
-        var locResults: [(metric: String, count: Int)] = []
-        let jsonWriter = output.map { IncrementalJSONWriter<LOCSDK.Result>(path: $0) }
+        var allResults: [LOCSDK.Result] = []
 
-        for locConfig in input.configurations {
-            let metric = "LOC \(locConfig.languages) \(locConfig.include)"
-            Self.logger.info("Processing LOC configuration: \(metric)")
+        Self.logger.info(
+            "Will analyze \(commitHashes.count) commits for \(input.configurations.count) configuration(s)",
+            metadata: [
+                "commits": .array(commitHashes.map { .string($0) })
+            ]
+        )
 
-            Self.logger.info(
-                "Will analyze \(commitHashes.count) commits for configuration '\(metric)'",
-                metadata: [
-                    "commits": .array(commitHashes.map { .string($0) })
-                ]
-            )
+        for hash in commitHashes {
+            Self.logger.info("Processing commit: \(hash)")
 
-            var lastResult: LOCSDK.Result?
-            for hash in commitHashes {
-                let result = try await sdk.analyzeCommit(
-                    hash: hash,
-                    configuration: locConfig,
-                    input: input
-                )
-                lastResult = result
+            let results = try await sdk.analyzeCommit(hash: hash, input: input)
 
+            for result in results {
                 Self.logger.notice(
-                    "Found \(result.linesOfCode) lines of '\(locConfig.languages)' code at \(hash)"
+                    "Found \(result.linesOfCode) lines of code for '\(result.metric)' at \(hash)"
                 )
-
-                try jsonWriter?.append(result)
-            }
-
-            Self.logger.notice(
-                "Summary for '\(metric)': analyzed \(commitHashes.count) commit(s)"
-            )
-            if let result = lastResult {
-                locResults.append((metric, result.linesOfCode))
+                allResults.append(result)
+                if let outputPath = output {
+                    try allResults.writeJSON(to: outputPath)
+                }
             }
         }
 
-        let summary = Summary(locResults: locResults)
+        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+
+        let summary = LOCSummary(results: allResults)
         logSummary(summary)
     }
 
-    private func logSummary(_ summary: Summary) {
-        if !summary.locResults.isEmpty {
+    private func logSummary(_ summary: LOCSummary) {
+        if !summary.results.isEmpty {
             Self.logger.info("Lines of code counts:")
-            for result in summary.locResults {
-                Self.logger.info("  - \(result.metric): \(result.count)")
+            for result in summary.results {
+                let commit = result.commit.prefix(7)
+                Self.logger.info("  - \(commit): \(result.metric): \(result.linesOfCode)")
             }
         }
 

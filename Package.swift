@@ -74,7 +74,7 @@ let package = Package(
                     package: "swift-log-oslog"
                 ),
             ],
-            exclude: ["README.md"],
+            exclude: ["README.md", "GitConfiguration.md"],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]

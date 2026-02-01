@@ -28,10 +28,12 @@ public struct TypesSDK: Sendable {
 
     /// Result of type counting operation.
     public struct Result: Sendable, Codable {
+        public let commit: String
         public let typeName: String
         public let types: [String]
 
-        public init(typeName: String, types: [String]) {
+        public init(commit: String = "", typeName: String, types: [String]) {
+            self.commit = commit
             self.typeName = typeName
             self.types = types
         }
@@ -120,7 +122,9 @@ public struct TypesSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countTypes(input: input)
+        return try await countTypes(input: input).map {
+            Result(commit: hash, typeName: $0.typeName, types: $0.types)
+        }
     }
 
     private func findSwiftFiles(in directory: URL) -> [URL] {

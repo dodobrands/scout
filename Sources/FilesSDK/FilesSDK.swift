@@ -28,12 +28,20 @@ public struct FilesSDK: Sendable {
 
     /// Result of file counting operation.
     public struct Result: Sendable, Codable {
+        public let commit: String
         public let filetype: String
         public let files: [String]
 
-        public init(filetype: String, files: [URL]) {
+        public init(commit: String = "", filetype: String, files: [URL]) {
+            self.commit = commit
             self.filetype = filetype
             self.files = files.map { $0.path }
+        }
+
+        public init(commit: String, filetype: String, files: [String]) {
+            self.commit = commit
+            self.filetype = filetype
+            self.files = files
         }
     }
 
@@ -106,7 +114,9 @@ public struct FilesSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countFiles(input: input)
+        return try await countFiles(input: input).map {
+            Result(commit: hash, filetype: $0.filetype, files: $0.files)
+        }
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL] {

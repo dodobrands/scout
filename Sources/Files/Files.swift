@@ -14,26 +14,6 @@ public struct Files: AsyncParsableCommand {
         abstract: "Count files by extension"
     )
 
-    struct Summary: JobSummaryFormattable {
-        let filetypeResults: [(filetype: String, count: Int)]
-
-        var markdown: String {
-            var md = "## CountFiles Summary\n\n"
-
-            if !filetypeResults.isEmpty {
-                md += "### File Type Counts\n\n"
-                md += "| File Type | Count |\n"
-                md += "|-----------|-------|\n"
-                for result in filetypeResults {
-                    md += "| `.\(result.filetype)` | \(result.count) |\n"
-                }
-                md += "\n"
-            }
-
-            return md
-        }
-    }
-
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
     public var repoPath: String?
 
@@ -103,52 +83,44 @@ public struct Files: AsyncParsableCommand {
         }
 
         let sdk = FilesSDK()
-        var filetypeResults: [(filetype: String, count: Int)] = []
-        let jsonWriter = output.map { IncrementalJSONWriter<FilesSDK.Result>(path: $0) }
+        var allResults: [FilesSDK.Result] = []
 
-        for filetype in input.filetypes {
-            Self.logger.info("Processing file type: \(filetype)")
+        Self.logger.info(
+            "Will analyze \(commitHashes.count) commits for \(input.filetypes.count) file type(s)",
+            metadata: [
+                "commits": .array(commitHashes.map { .string($0) }),
+                "filetypes": .array(input.filetypes.map { .string($0) }),
+            ]
+        )
 
-            Self.logger.info(
-                "Will analyze \(commitHashes.count) commits for file type '\(filetype)'",
-                metadata: [
-                    "commits": .array(commitHashes.map { .string($0) })
-                ]
-            )
+        for hash in commitHashes {
+            Self.logger.info("Processing commit: \(hash)")
 
-            var lastResult: FilesSDK.Result?
-            for hash in commitHashes {
-                let result = try await sdk.analyzeCommit(
-                    hash: hash,
-                    filetype: filetype,
-                    input: input
-                )
-                lastResult = result
+            let results = try await sdk.analyzeCommit(hash: hash, input: input)
 
+            for result in results {
                 Self.logger.notice(
-                    "Found \(result.files.count) files of type '\(filetype)' at \(hash)"
+                    "Found \(result.files.count) files of type '\(result.filetype)' at \(hash)"
                 )
-
-                try jsonWriter?.append(result)
-            }
-
-            Self.logger.notice(
-                "Summary for '\(filetype)': analyzed \(commitHashes.count) commit(s)"
-            )
-            if let result = lastResult {
-                filetypeResults.append((filetype, result.files.count))
+                allResults.append(result)
+                if let outputPath = output {
+                    try allResults.writeJSON(to: outputPath)
+                }
             }
         }
 
-        let summary = Summary(filetypeResults: filetypeResults)
+        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+
+        let summary = FilesSummary(results: allResults)
         logSummary(summary)
     }
 
-    private func logSummary(_ summary: Summary) {
-        if !summary.filetypeResults.isEmpty {
+    private func logSummary(_ summary: FilesSummary) {
+        if !summary.results.isEmpty {
             Self.logger.info("File type counts:")
-            for result in summary.filetypeResults {
-                Self.logger.info("  - \(result.filetype): \(result.count)")
+            for result in summary.results {
+                let commit = result.commit.prefix(7)
+                Self.logger.info("  - \(commit): \(result.filetype): \(result.files.count)")
             }
         }
 
