@@ -20,10 +20,10 @@ public struct TypesConfig: Sendable {
     /// Returns nil if no config file exists.
     ///
     /// - Parameters:
-    ///   - configPath: Optional path to JSON file. If nil, looks for "count-types-config.json"
+    ///   - configPath: Optional path to JSON file. If nil, looks for "types-config.json"
     /// - Throws: `TypesConfigError` if JSON file is malformed or missing required fields
     public init?(configPath: String?) async throws {
-        let path = configPath ?? "count-types-config.json"
+        let path = configPath ?? "types-config.json"
         guard FileManager.default.fileExists(atPath: path) else {
             if configPath != nil {
                 throw TypesConfigError.missingFile(path: path)

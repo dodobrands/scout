@@ -76,10 +76,10 @@ public struct BuildSettings: AsyncParsableCommand {
                 configFilePath: SystemPackage.FilePath(configPath)
             )
         } else if FileManager.default.fileExists(
-            atPath: "extract-build-settings-extractConfig.json"
+            atPath: "build-settings-config.json"
         ) {
             fileConfig = try await BuildSettingsConfig(
-                configFilePath: SystemPackage.FilePath("extract-build-settings-extractConfig.json")
+                configFilePath: SystemPackage.FilePath("build-settings-config.json")
             )
         } else {
             fileConfig = nil

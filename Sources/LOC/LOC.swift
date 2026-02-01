@@ -75,9 +75,9 @@ public struct LOC: AsyncParsableCommand {
             fileConfig = try await LOCConfig(
                 configFilePath: SystemPackage.FilePath(configPath)
             )
-        } else if FileManager.default.fileExists(atPath: "count-loc-config.json") {
+        } else if FileManager.default.fileExists(atPath: "loc-config.json") {
             fileConfig = try await LOCConfig(
-                configFilePath: SystemPackage.FilePath("count-loc-config.json")
+                configFilePath: SystemPackage.FilePath("loc-config.json")
             )
         } else {
             fileConfig = nil

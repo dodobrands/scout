@@ -78,9 +78,9 @@ public struct Files: AsyncParsableCommand {
             fileConfig = try await FilesConfig(
                 configFilePath: SystemPackage.FilePath(configPath)
             )
-        } else if FileManager.default.fileExists(atPath: "count-files-config.json") {
+        } else if FileManager.default.fileExists(atPath: "files-config.json") {
             fileConfig = try await FilesConfig(
-                configFilePath: SystemPackage.FilePath("count-files-config.json")
+                configFilePath: SystemPackage.FilePath("files-config.json")
             )
         } else {
             fileConfig = nil

@@ -82,9 +82,9 @@ public struct Pattern: AsyncParsableCommand {
         let fileConfig: PatternConfig?
         if let configPath = config {
             fileConfig = try await PatternConfig(configFilePath: SystemPackage.FilePath(configPath))
-        } else if FileManager.default.fileExists(atPath: "search-config.json") {
+        } else if FileManager.default.fileExists(atPath: "pattern-config.json") {
             fileConfig = try await PatternConfig(
-                configFilePath: SystemPackage.FilePath("search-config.json")
+                configFilePath: SystemPackage.FilePath("pattern-config.json")
             )
         } else {
             fileConfig = nil
