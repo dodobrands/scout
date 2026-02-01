@@ -22,7 +22,7 @@ struct BuildSettingsOutputTests {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(output)
-        let json = String(data: data, encoding: .utf8)!
+        let json = try #require(String(data: data, encoding: .utf8))
 
         #expect(json.contains("\"MISSING_PARAM\":null"))
         #expect(json.contains("\"SWIFT_VERSION\":\"5.0\""))
@@ -43,7 +43,7 @@ struct BuildSettingsOutputTests {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(output)
-        let json = String(data: data, encoding: .utf8)!
+        let json = try #require(String(data: data, encoding: .utf8))
 
         #expect(json.contains("\"PARAM1\":null"))
         #expect(json.contains("\"PARAM2\":null"))
@@ -65,7 +65,7 @@ struct BuildSettingsOutputTests {
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(outputs)
-        let json = String(data: data, encoding: .utf8)!
+        let json = try #require(String(data: data, encoding: .utf8))
 
         #expect(json.hasPrefix("["))
         #expect(json.hasSuffix("]"))
