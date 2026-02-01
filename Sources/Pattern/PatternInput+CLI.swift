@@ -8,7 +8,7 @@ extension PatternInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: PatternCLIInputs, config: PatternConfig?) {
+    init(cli: PatternCLIInputs, config: PatternConfig?) {
         let patterns = cli.patterns ?? config?.patterns ?? []
         let extensions = cli.extensions ?? config?.extensions ?? ["swift"]
         let commits = cli.commits ?? ["HEAD"]

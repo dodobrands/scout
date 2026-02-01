@@ -2,7 +2,7 @@ import Common
 import Foundation
 
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
-public struct FilesCLIInputs: Sendable {
+struct FilesCLIInputs: Sendable {
     /// File extensions to count (e.g., ["swift", "storyboard"])
     public let filetypes: [String]?
 

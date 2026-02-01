@@ -2,7 +2,7 @@ import Common
 import Foundation
 
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
-public struct LOCCLIInputs: Sendable {
+struct LOCCLIInputs: Sendable {
     /// Commit hashes to analyze
     public let commits: [String]?
 

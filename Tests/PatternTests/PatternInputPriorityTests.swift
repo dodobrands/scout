@@ -1,8 +1,9 @@
 import Common
 import Foundation
-import Pattern
 import PatternSDK
 import Testing
+
+@testable import Pattern
 
 struct PatternInputPriorityTests {
 

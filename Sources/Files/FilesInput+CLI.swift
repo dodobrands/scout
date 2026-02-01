@@ -8,7 +8,7 @@ extension FilesInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: FilesCLIInputs, config: FilesConfig?) {
+    init(cli: FilesCLIInputs, config: FilesConfig?) {
         let filetypes = cli.filetypes ?? config?.filetypes ?? []
         let commits = cli.commits ?? ["HEAD"]
 

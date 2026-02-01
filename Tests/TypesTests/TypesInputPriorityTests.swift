@@ -1,8 +1,9 @@
 import Common
 import Foundation
 import Testing
-import Types
 import TypesSDK
+
+@testable import Types
 
 struct TypesInputPriorityTests {
 

@@ -1,3 +1,4 @@
+import BuildSettingsSDK
 import Common
 import Foundation
 import Logging
@@ -6,12 +7,12 @@ import System
 /// Error that occurred during setup command execution.
 public struct SetupCommandExecutionError: Error {
     /// The command that failed
-    public let command: BuildSettingsConfig.SetupCommand
+    public let command: SetupCommand
 
     /// The underlying error that occurred
     public let underlyingError: Error
 
-    public init(command: BuildSettingsConfig.SetupCommand, underlyingError: Error) {
+    public init(command: SetupCommand, underlyingError: Error) {
         self.command = command
         self.underlyingError = underlyingError
     }
@@ -41,7 +42,7 @@ public struct SetupCommandExecutor {
     ///   - repoPath: Path to the repository root
     /// - Throws: `CommandParserError` if a command cannot be prepared
     public static func execute(
-        _ commands: [BuildSettingsConfig.SetupCommand],
+        _ commands: [SetupCommand],
         in repoPath: URL
     ) async throws {
         for setupCommand in commands {

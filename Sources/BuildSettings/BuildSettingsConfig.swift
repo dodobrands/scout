@@ -3,9 +3,9 @@ import Foundation
 import SystemPackage
 
 /// Configuration for ExtractBuildSettings tool loaded from JSON file.
-public struct BuildSettingsConfig: Sendable {
+struct BuildSettingsConfig: Sendable {
     /// Represents a single setup command with optional working directory.
-    public struct SetupCommand: Sendable, Codable {
+    struct SetupCommand: Sendable, Codable {
         /// Command to execute
         public let command: String
 

@@ -2,7 +2,7 @@ import Common
 import Foundation
 
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
-public struct TypesCLIInputs: Sendable {
+struct TypesCLIInputs: Sendable {
     /// Type names to count (e.g., ["UIView", "UIViewController"])
     public let types: [String]?
 

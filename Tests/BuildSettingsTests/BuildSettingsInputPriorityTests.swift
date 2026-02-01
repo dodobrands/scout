@@ -1,8 +1,9 @@
-import BuildSettings
 import BuildSettingsSDK
 import Common
 import Foundation
 import Testing
+
+@testable import BuildSettings
 
 /// Tests for BuildSettingsInput priority: CLI > Config > Default
 @Suite("BuildSettingsInput Priority")

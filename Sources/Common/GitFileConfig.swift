@@ -2,7 +2,7 @@ import Foundation
 
 /// Git configuration loaded from JSON file. All fields are optional.
 /// Used as second layer in three-layer input architecture.
-public struct GitFileConfig: Sendable, Codable {
+package struct GitFileConfig: Sendable, Codable {
     /// Path to repository with sources
     public let repoPath: String?
 

@@ -8,7 +8,7 @@ extension TypesInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: TypesCLIInputs, config: TypesConfig?) {
+    init(cli: TypesCLIInputs, config: TypesConfig?) {
         let types = cli.types ?? config?.types ?? []
         let commits = cli.commits ?? ["HEAD"]
 

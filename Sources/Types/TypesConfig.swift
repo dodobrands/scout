@@ -3,7 +3,7 @@ import Foundation
 import SystemPackage
 
 /// Configuration for CountTypes tool loaded from JSON file.
-public struct TypesConfig: Sendable {
+struct TypesConfig: Sendable {
     /// Types to count (e.g., ["UIView", "UIViewController", "View", "XCTestCase"])
     public let types: [String]?
 
@@ -11,7 +11,7 @@ public struct TypesConfig: Sendable {
     public let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(types: [String]?, git: GitFileConfig? = nil) {
+    init(types: [String]?, git: GitFileConfig? = nil) {
         self.types = types
         self.git = git
     }

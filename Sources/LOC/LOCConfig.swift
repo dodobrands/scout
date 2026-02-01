@@ -3,9 +3,9 @@ import Foundation
 import SystemPackage
 
 /// Configuration for CountLOC tool loaded from JSON file.
-public struct LOCConfig: Sendable {
+struct LOCConfig: Sendable {
     /// Single LOC configuration entry
-    public struct LOCConfiguration: Sendable, Codable {
+    struct LOCConfiguration: Sendable, Codable {
         /// Programming languages to count (array of strings)
         public let languages: [String]
 
@@ -30,7 +30,7 @@ public struct LOCConfig: Sendable {
     public let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(configurations: [LOCConfiguration]?, git: GitFileConfig? = nil) {
+    init(configurations: [LOCConfiguration]?, git: GitFileConfig? = nil) {
         self.configurations = configurations
         self.git = git
     }

@@ -1,8 +1,9 @@
 import Common
-import Files
 import FilesSDK
 import Foundation
 import Testing
+
+@testable import Files
 
 struct FilesInputPriorityTests {
 

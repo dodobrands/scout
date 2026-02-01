@@ -3,7 +3,7 @@ import Foundation
 import SystemPackage
 
 /// Configuration for Search tool loaded from JSON file.
-public struct PatternConfig: Sendable {
+struct PatternConfig: Sendable {
     /// Patterns to search for (e.g., ["// periphery:ignore", "TODO:"])
     public let patterns: [String]?
 

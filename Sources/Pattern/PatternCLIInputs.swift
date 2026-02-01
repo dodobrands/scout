@@ -2,7 +2,7 @@ import Common
 import Foundation
 
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
-public struct PatternCLIInputs: Sendable {
+struct PatternCLIInputs: Sendable {
     /// Patterns to search for
     public let patterns: [String]?
 

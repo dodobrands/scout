@@ -4,7 +4,7 @@ import LOCSDK
 
 extension LOCConfiguration {
     /// Initialize from file config LOCConfiguration
-    public init(_ fileConfig: LOCConfig.LOCConfiguration) {
+    init(_ fileConfig: LOCConfig.LOCConfiguration) {
         self.init(
             languages: fileConfig.languages,
             include: fileConfig.include,
@@ -19,7 +19,7 @@ extension LOCInput {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    public init(cli: LOCCLIInputs, config: LOCConfig?) {
+    init(cli: LOCCLIInputs, config: LOCConfig?) {
         let configurations = config?.configurations?.map(LOCConfiguration.init) ?? []
         let commits = cli.commits ?? ["HEAD"]
 

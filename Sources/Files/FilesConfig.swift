@@ -3,7 +3,7 @@ import Foundation
 import SystemPackage
 
 /// Configuration for CountFiles tool loaded from JSON file.
-public struct FilesConfig: Sendable {
+struct FilesConfig: Sendable {
     /// File extensions to count (without dot, e.g., ["storyboard", "xib"])
     public let filetypes: [String]?
 
@@ -11,7 +11,7 @@ public struct FilesConfig: Sendable {
     public let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(filetypes: [String]?, git: GitFileConfig? = nil) {
+    init(filetypes: [String]?, git: GitFileConfig? = nil) {
         self.filetypes = filetypes
         self.git = git
     }

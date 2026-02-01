@@ -30,7 +30,7 @@ public struct GitConfiguration: Sendable {
 
     /// Merge initializer: CLI > FileConfig > Default
     /// This is the single place where defaults are applied.
-    public init(cli: GitCLIInputs, fileConfig: GitFileConfig?) {
+    package init(cli: GitCLIInputs, fileConfig: GitFileConfig?) {
         self.repoPath =
             cli.repoPath
             ?? fileConfig?.repoPath

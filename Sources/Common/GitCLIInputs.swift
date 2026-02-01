@@ -2,7 +2,7 @@ import Foundation
 
 /// Raw git CLI inputs from ArgumentParser. All fields are optional.
 /// Used as first layer in three-layer input architecture.
-public struct GitCLIInputs: Sendable {
+package struct GitCLIInputs: Sendable {
     /// Path to repository with sources
     public let repoPath: String?
 

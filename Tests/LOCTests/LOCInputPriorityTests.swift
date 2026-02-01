@@ -1,8 +1,9 @@
 import Common
 import Foundation
-import LOC
 import LOCSDK
 import Testing
+
+@testable import LOC
 
 struct LOCInputPriorityTests {
 
