@@ -1,3 +1,4 @@
+import Common
 import FilesSDK
 import Foundation
 import Testing
@@ -8,8 +9,10 @@ struct FilesSDKTests {
     @Test
     func `When searching for swift files, should find all swift files`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "swift")
 
-        let result = try await sut.countFiles(of: "swift", in: samplesURL)
+        let result = try await sut.countFiles(input: input)
 
         #expect(result.filetype == "swift")
         #expect(result.files.count == 2)
@@ -20,8 +23,10 @@ struct FilesSDKTests {
     @Test
     func `When searching for storyboard files, should find all storyboards`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "storyboard")
 
-        let result = try await sut.countFiles(of: "storyboard", in: samplesURL)
+        let result = try await sut.countFiles(input: input)
 
         #expect(result.filetype == "storyboard")
         #expect(result.files.count == 1)
@@ -31,8 +36,10 @@ struct FilesSDKTests {
     @Test
     func `When searching for xib files, should find all xibs`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "xib")
 
-        let result = try await sut.countFiles(of: "xib", in: samplesURL)
+        let result = try await sut.countFiles(input: input)
 
         #expect(result.filetype == "xib")
         #expect(result.files.count == 1)
@@ -42,8 +49,10 @@ struct FilesSDKTests {
     @Test
     func `When searching for json files, should find all json files`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "json")
 
-        let result = try await sut.countFiles(of: "json", in: samplesURL)
+        let result = try await sut.countFiles(input: input)
 
         #expect(result.filetype == "json")
         #expect(result.files.count == 1)
@@ -52,8 +61,10 @@ struct FilesSDKTests {
     @Test
     func `When searching for non-existent extension, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "xyz")
 
-        let result = try await sut.countFiles(of: "xyz", in: samplesURL)
+        let result = try await sut.countFiles(input: input)
 
         #expect(result.files.isEmpty)
     }

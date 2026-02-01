@@ -3,6 +3,23 @@ import Foundation
 import Logging
 import System
 
+/// Input parameters for PatternSDK operations.
+public struct PatternInput: Sendable {
+    public let git: GitConfiguration
+    public let pattern: String
+    public let extensions: [String]
+
+    public init(
+        git: GitConfiguration,
+        pattern: String,
+        extensions: [String] = ["swift"]
+    ) {
+        self.git = git
+        self.pattern = pattern
+        self.extensions = extensions
+    }
+}
+
 /// SDK for searching string patterns in source files.
 public struct PatternSDK: Sendable {
     private static let logger = Logger(label: "scout.PatternSDK")
@@ -32,75 +49,48 @@ public struct PatternSDK: Sendable {
     }
 
     /// Searches for occurrences of the specified pattern in the repository.
-    /// - Parameters:
-    ///   - pattern: Pattern string to search for
-    ///   - repoPath: Path to the repository
-    ///   - extensions: File extensions to search in (e.g., ["swift", "m"])
-    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
-    ///   - fixLFS: Fix broken LFS pointers by committing modified files
-    ///   - initializeSubmodules: Whether to initialize git submodules
+    /// - Parameter input: Input parameters for the operation
     /// - Returns: Result containing all matches with file and line number
-    public func search(
-        pattern: String,
-        in repoPath: URL,
-        extensions: [String] = ["swift"],
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
-    ) async throws -> Result {
-        try await GitFix.prepareRepository(
-            in: repoPath,
-            gitClean: gitClean,
-            fixLFS: fixLFS,
-            initializeSubmodules: initializeSubmodules
-        )
+    public func search(input: PatternInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        try await GitFix.prepareRepository(git: input.git)
 
         var allMatches: [Match] = []
 
-        for ext in extensions {
+        for ext in input.extensions {
             let files = findFiles(of: ext, in: repoPath)
             for file in files {
-                let fileMatches = try searchInFile(pattern: pattern, file: file, repoPath: repoPath)
+                let fileMatches = try searchInFile(
+                    pattern: input.pattern,
+                    file: file,
+                    repoPath: repoPath
+                )
                 allMatches.append(contentsOf: fileMatches)
             }
         }
 
-        return Result(pattern: pattern, matches: allMatches)
+        return Result(pattern: input.pattern, matches: allMatches)
     }
 
     /// Checks out a commit and searches for pattern occurrences.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - repoPath: Path to the repository
-    ///   - pattern: Pattern string to search for
-    ///   - extensions: File extensions to search in
-    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
-    ///   - fixLFS: Fix broken LFS pointers by committing modified files
-    ///   - initializeSubmodules: Whether to initialize git submodules
+    ///   - input: Input parameters for the operation
     /// - Returns: Result containing all matches
     public func analyzeCommit(
         hash: String,
-        repoPath: URL,
-        pattern: String,
-        extensions: [String] = ["swift"],
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        input: PatternInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Shell.execute(
             "git",
             arguments: ["checkout", hash],
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await search(
-            pattern: pattern,
-            in: repoPath,
-            extensions: extensions,
-            gitClean: gitClean,
-            fixLFS: fixLFS,
-            initializeSubmodules: initializeSubmodules
-        )
+        return try await search(input: input)
     }
 
     private func searchInFile(pattern: String, file: URL, repoPath: URL) throws -> [Match] {

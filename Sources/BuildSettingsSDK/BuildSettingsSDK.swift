@@ -40,24 +40,41 @@ public struct TargetWithBuildSettings: Sendable, Codable {
 
 // MARK: - BuildSettingsSDK
 
+/// Represents a setup command to execute before analysis.
+public struct SetupCommand: Sendable {
+    public let command: String
+    public let workingDirectory: String?
+    public let optional: Bool
+
+    public init(command: String, workingDirectory: String? = nil, optional: Bool = false) {
+        self.command = command
+        self.workingDirectory = workingDirectory
+        self.optional = optional
+    }
+}
+
+/// Input parameters for BuildSettingsSDK operations.
+public struct BuildSettingsInput: Sendable {
+    public let git: GitConfiguration
+    public let setupCommands: [SetupCommand]
+    public let configuration: String
+
+    public init(
+        git: GitConfiguration,
+        setupCommands: [SetupCommand],
+        configuration: String
+    ) {
+        self.git = git
+        self.setupCommands = setupCommands
+        self.configuration = configuration
+    }
+}
+
 /// SDK for extracting build settings from Xcode projects.
 public struct BuildSettingsSDK: Sendable {
     private static let logger = Logger(label: "scout.BuildSettingsSDK")
 
     public init() {}
-
-    /// Represents a setup command to execute before analysis.
-    public struct SetupCommand: Sendable {
-        public let command: String
-        public let workingDirectory: String?
-        public let optional: Bool
-
-        public init(command: String, workingDirectory: String? = nil, optional: Bool = false) {
-            self.command = command
-            self.workingDirectory = workingDirectory
-            self.optional = optional
-        }
-    }
 
     /// Error that can occur during analysis.
     public enum AnalysisError: Error, LocalizedError {
@@ -81,22 +98,14 @@ public struct BuildSettingsSDK: Sendable {
     public typealias Result = [TargetWithBuildSettings]
 
     /// Extracts build settings from Xcode projects in the repository.
-    public func extractBuildSettings(
-        in repoPath: URL,
-        setupCommands: [SetupCommand],
-        configuration: String,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
-    ) async throws -> Result {
-        try await GitFix.prepareRepository(
-            in: repoPath,
-            gitClean: gitClean,
-            fixLFS: fixLFS,
-            initializeSubmodules: initializeSubmodules
-        )
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Array of targets with their build settings
+    public func extractBuildSettings(input: BuildSettingsInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
 
-        try await executeSetupCommands(setupCommands, in: repoPath)
+        try await GitFix.prepareRepository(git: input.git)
+
+        try await executeSetupCommands(input.setupCommands, in: repoPath)
 
         let foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
         let projectsWithTargets = try await getTargetsForAllProjects(
@@ -105,22 +114,23 @@ public struct BuildSettingsSDK: Sendable {
         let targetsWithBuildSettings = try await getBuildSettingsForAllTargets(
             projectsWithTargets: projectsWithTargets,
             foundProjectsAndWorkspaces: foundProjectsAndWorkspaces,
-            configuration: configuration
+            configuration: input.configuration
         )
 
         return targetsWithBuildSettings
     }
 
     /// Checks out a commit and extracts build settings.
+    /// - Parameters:
+    ///   - hash: Commit hash to checkout
+    ///   - input: Input parameters for the operation
+    /// - Returns: Array of targets with their build settings
     public func analyzeCommit(
         hash: String,
-        repoPath: URL,
-        setupCommands: [SetupCommand],
-        configuration: String,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        input: BuildSettingsInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         do {
             try await Shell.execute(
                 "git",
@@ -132,14 +142,7 @@ public struct BuildSettingsSDK: Sendable {
         }
 
         do {
-            return try await extractBuildSettings(
-                in: repoPath,
-                setupCommands: setupCommands,
-                configuration: configuration,
-                gitClean: gitClean,
-                fixLFS: fixLFS,
-                initializeSubmodules: initializeSubmodules
-            )
+            return try await extractBuildSettings(input: input)
         } catch let error as AnalysisError {
             throw error
         } catch {

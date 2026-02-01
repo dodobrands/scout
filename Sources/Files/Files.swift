@@ -107,16 +107,17 @@ public struct Files: AsyncParsableCommand {
                 ]
             )
 
+            let gitConfig = GitConfiguration(
+                repoPath: repoPath,
+                clean: gitClean,
+                fixLFS: fixLfs,
+                initializeSubmodules: initializeSubmodules
+            )
+            let input = FilesInput(git: gitConfig, filetype: filetype)
+
             var lastResult: FilesSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
-                    hash: hash,
-                    repoPath: repoPathURL,
-                    filetype: filetype,
-                    gitClean: gitClean,
-                    fixLFS: fixLfs,
-                    initializeSubmodules: initializeSubmodules
-                )
+                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(
                     "Found \(lastResult!.files.count) files of type '\(filetype)' at \(hash)"

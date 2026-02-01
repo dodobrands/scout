@@ -126,17 +126,21 @@ public struct Pattern: AsyncParsableCommand {
                 ]
             )
 
+            let gitConfig = GitConfiguration(
+                repoPath: repoPath,
+                clean: gitClean,
+                fixLFS: fixLfs,
+                initializeSubmodules: initializeSubmodules
+            )
+            let input = PatternInput(
+                git: gitConfig,
+                pattern: pattern,
+                extensions: fileExtensions
+            )
+
             var lastResult: PatternSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
-                    hash: hash,
-                    repoPath: repoPathURL,
-                    pattern: pattern,
-                    extensions: fileExtensions,
-                    gitClean: gitClean,
-                    fixLFS: fixLfs,
-                    initializeSubmodules: initializeSubmodules
-                )
+                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(
                     "Found \(lastResult!.matches.count) matches for '\(pattern)' at \(hash)"

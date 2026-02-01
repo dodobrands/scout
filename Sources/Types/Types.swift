@@ -111,16 +111,17 @@ public struct Types: AsyncParsableCommand {
                 ]
             )
 
+            let gitConfig = GitConfiguration(
+                repoPath: repoPath,
+                clean: gitClean,
+                fixLFS: fixLfs,
+                initializeSubmodules: initializeSubmodules
+            )
+            let input = TypesInput(git: gitConfig, typeName: typeName)
+
             var lastResult: TypesSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
-                    hash: hash,
-                    repoPath: repoPathURL,
-                    typeName: typeName,
-                    gitClean: gitClean,
-                    fixLFS: fixLfs,
-                    initializeSubmodules: initializeSubmodules
-                )
+                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(
                     "Found \(lastResult!.types.count) types inherited from \(typeName) at \(hash)"

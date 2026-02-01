@@ -40,6 +40,20 @@ public struct LOCConfiguration: Sendable {
     }
 }
 
+/// Input parameters for LOCSDK operations.
+public struct LOCInput: Sendable {
+    public let git: GitConfiguration
+    public let configuration: LOCConfiguration
+
+    public init(
+        git: GitConfiguration,
+        configuration: LOCConfiguration
+    ) {
+        self.git = git
+        self.configuration = configuration
+    }
+}
+
 /// SDK for counting lines of code.
 public struct LOCSDK: Sendable {
     public init() {}
@@ -67,37 +81,23 @@ public struct LOCSDK: Sendable {
     }
 
     /// Counts lines of code in the repository with the specified configuration.
-    /// - Parameters:
-    ///   - repoPath: Path to the repository
-    ///   - configuration: LOC counting configuration
-    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
-    ///   - fixLFS: Fix broken LFS pointers by committing modified files
-    ///   - initializeSubmodules: Whether to initialize git submodules
+    /// - Parameter input: Input parameters for the operation
     /// - Returns: Result containing total LOC count
-    public func countLOC(
-        in repoPath: URL,
-        configuration: LOCConfiguration,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
-    ) async throws -> Result {
+    public func countLOC(input: LOCInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Self.checkClocInstalled()
-        try await GitFix.prepareRepository(
-            in: repoPath,
-            gitClean: gitClean,
-            fixLFS: fixLFS,
-            initializeSubmodules: initializeSubmodules
-        )
+        try await GitFix.prepareRepository(git: input.git)
 
         let clocRunner = ClocRunner()
         let foldersToAnalyze = foldersToAnalyze(
             in: repoPath,
-            include: configuration.include,
-            exclude: configuration.exclude
+            include: input.configuration.include,
+            exclude: input.configuration.exclude
         )
 
         let loc =
-            try await configuration.languages
+            try await input.configuration.languages
             .asyncFlatMap { language in
                 try await foldersToAnalyze.asyncMap {
                     try await clocRunner.linesOfCode(at: $0, language: language)
@@ -106,40 +106,28 @@ public struct LOCSDK: Sendable {
             .compactMap { Int($0) }
             .reduce(0, +)
 
-        let metric = "LOC \(configuration.languages) \(configuration.include)"
+        let metric = "LOC \(input.configuration.languages) \(input.configuration.include)"
         return Result(metric: metric, linesOfCode: loc)
     }
 
     /// Checks out a commit and counts lines of code.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - repoPath: Path to the repository
-    ///   - configuration: LOC counting configuration
-    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
-    ///   - fixLFS: Fix broken LFS pointers by committing modified files
-    ///   - initializeSubmodules: Whether to initialize git submodules
+    ///   - input: Input parameters for the operation
     /// - Returns: Result containing total LOC count
     public func analyzeCommit(
         hash: String,
-        repoPath: URL,
-        configuration: LOCConfiguration,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        input: LOCInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Shell.execute(
             "git",
             arguments: ["checkout", hash],
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countLOC(
-            in: repoPath,
-            configuration: configuration,
-            gitClean: gitClean,
-            fixLFS: fixLFS,
-            initializeSubmodules: initializeSubmodules
-        )
+        return try await countLOC(input: input)
     }
 
     private func foldersToAnalyze(

@@ -1,3 +1,4 @@
+import Common
 import Foundation
 import Testing
 import TypesSDK
@@ -8,8 +9,10 @@ struct TypesSDKTests {
     @Test
     func `When searching for UIView types, should find all UIView subclasses`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "UIView")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "UIView")
+        let result = try await sut.countTypes(input: input)
 
         #expect(result.typeName == "UIView")
         #expect(result.types == ["AwesomeView", "DodoView"])
@@ -18,8 +21,10 @@ struct TypesSDKTests {
     @Test
     func `When searching for SwiftUI View types, should find all View conformances`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "View")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "View")
+        let result = try await sut.countTypes(input: input)
 
         #expect(result.typeName == "View")
         #expect(result.types == ["HelloView"])
@@ -28,8 +33,10 @@ struct TypesSDKTests {
     @Test
     func `When searching with wildcard pattern, should match all generic variants`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "JsonAsyncRequest<*>")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "JsonAsyncRequest<*>")
+        let result = try await sut.countTypes(input: input)
 
         #expect(result.typeName == "JsonAsyncRequest<*>")
         #expect(result.types == ["CancelOrderRequest", "OrderListRequest", "ProfileRequest"])
@@ -38,8 +45,10 @@ struct TypesSDKTests {
     @Test
     func `When searching without wildcard, should not match generic variants`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "JsonAsyncRequest")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "JsonAsyncRequest")
+        let result = try await sut.countTypes(input: input)
 
         #expect(result.types.isEmpty)
     }
@@ -47,8 +56,10 @@ struct TypesSDKTests {
     @Test
     func `When searching for non-existent type, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "NonExistentType")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "NonExistentType")
+        let result = try await sut.countTypes(input: input)
 
         #expect(result.types.isEmpty)
     }
@@ -56,8 +67,10 @@ struct TypesSDKTests {
     @Test
     func `When searching for protocol, should find all conforming types`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "Coordinator")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "Coordinator")
+        let result = try await sut.countTypes(input: input)
 
         #expect(
             result.types == [
@@ -69,8 +82,10 @@ struct TypesSDKTests {
     @Test
     func `When searching for child protocol, should find only direct conformances`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "FlowCoordinator")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "FlowCoordinator")
+        let result = try await sut.countTypes(input: input)
 
         #expect(result.types == ["AuthCoordinator", "MenuCoordinator"])
     }
@@ -78,8 +93,10 @@ struct TypesSDKTests {
     @Test
     func `When type has deep inheritance chain, should find all descendants`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "BaseViewModel")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "BaseViewModel")
+        let result = try await sut.countTypes(input: input)
 
         #expect(
             result.types == [
@@ -94,8 +111,10 @@ struct TypesSDKTests {
     @Test
     func `When searching middle of inheritance chain, should find only descendants`() async throws {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = TypesInput(git: gitConfig, typeName: "ListViewModel")
 
-        let result = try await sut.countTypes(in: samplesURL, typeName: "ListViewModel")
+        let result = try await sut.countTypes(input: input)
 
         #expect(
             result.types == [
@@ -108,9 +127,12 @@ struct TypesSDKTests {
     func `When type conforms to multiple protocols, should be found by each protocol`() async throws
     {
         let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let trackableInput = TypesInput(git: gitConfig, typeName: "Trackable")
+        let loggableInput = TypesInput(git: gitConfig, typeName: "Loggable")
 
-        let trackableResult = try await sut.countTypes(in: samplesURL, typeName: "Trackable")
-        let loggableResult = try await sut.countTypes(in: samplesURL, typeName: "Loggable")
+        let trackableResult = try await sut.countTypes(input: trackableInput)
+        let loggableResult = try await sut.countTypes(input: loggableInput)
 
         #expect(trackableResult.types == ["BaseService", "OrderService", "PaymentService"])
         #expect(loggableResult.types == ["BaseService", "OrderService", "PaymentService"])

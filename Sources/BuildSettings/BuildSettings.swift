@@ -100,12 +100,25 @@ public struct BuildSettings: AsyncParsableCommand {
 
         let sdk = BuildSettingsSDK()
         let sdkSetupCommands = extractConfig.setupCommands.map {
-            BuildSettingsSDK.SetupCommand(
+            SetupCommand(
                 command: $0.command,
                 workingDirectory: $0.workingDirectory,
                 optional: $0.optional ?? false
             )
         }
+
+        let gitConfig = GitConfiguration(
+            repoPath: repoPath,
+            clean: gitClean,
+            fixLFS: fixLfs,
+            initializeSubmodules: initializeSubmodules
+        )
+
+        let input = BuildSettingsInput(
+            git: gitConfig,
+            setupCommands: sdkSetupCommands,
+            configuration: extractConfig.configuration
+        )
 
         for hash in commitHashes {
             Self.logger.info(
@@ -115,15 +128,7 @@ public struct BuildSettings: AsyncParsableCommand {
 
             let result: BuildSettingsSDK.Result
             do {
-                result = try await sdk.analyzeCommit(
-                    hash: hash,
-                    repoPath: repoPathURL,
-                    setupCommands: sdkSetupCommands,
-                    configuration: extractConfig.configuration,
-                    gitClean: gitClean,
-                    fixLFS: fixLfs,
-                    initializeSubmodules: initializeSubmodules
-                )
+                result = try await sdk.analyzeCommit(hash: hash, input: input)
             } catch let error as BuildSettingsSDK.AnalysisError {
                 Self.logger.warning(
                     "Skipping commit due to analysis failure",
