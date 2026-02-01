@@ -6,30 +6,39 @@ Shared utilities and helpers used across the project.
 
 Provides common functionality including:
 - Shell command execution
-- Error types for the project
-- Retry logic for async operations
-- URL and file path helpers
-- Logging setup
+- Git operations and configuration
+- Logging setup for CLI and GitHub Actions
 - Custom operators
+- Async collection extensions
 
 ## Architecture
 
-### Error Types
+### Git Operations
 
-- **`FileError`** — File and resource access errors
-- **`GitError`** — Git operation errors
-- **`NetworkError`** — Network and URL-related errors
-- **`ParseError`** — JSON and date parsing errors
-- **`ValidationError`** — Input validation errors
-- **`ConfigurationError`** — Configuration-related errors
+- **`Git`** — Git commands (e.g., get HEAD commit)
+- **`GitConfiguration`** — Resolved git configuration with all values set
+- **`GitCLIInputs`** — Raw CLI inputs for git options
+- **`GitFileConfig`** — Git configuration from JSON file
+- **`GitFix`** — Repository preparation (clean, LFS fix, submodules)
 
 ### Core Utilities
 
 - **`Shell`** — Safe shell command execution without shell interpretation
-- **`Task+Retry`** — Automatic retry with exponential backoff for async operations
 - **`UnwrapOrThrow`** — Custom `?!` operator for unwrapping optionals or throwing errors
-- **`URL+Helpers`** — URL manipulation helpers
 - **`LoggingSetup`** — Structured logging configuration
+- **`GitHubActionsLogHandler`** — GitHub Actions compatible log handler with job summaries
+
+### Extensions
+
+- **`Array+AsyncMap`** — `asyncMap` and `asyncFlatMap` for arrays
+- **`Array+NilIfEmpty`** — `nilIfEmpty` property for arrays
+- **`Sequence+ConcurrentMap`** — `concurrentMap` for parallel async operations
+
+### Error Types
+
+- **`ParseError`** — JSON and structure parsing errors
+- **`URLError`** — URL validation errors
+- **`ShellError`** — Shell command execution errors
 
 ## Usage
 
@@ -54,43 +63,28 @@ let result = try await Shell.execute(
 
 **Important:** Always pass executable and arguments separately. The executor calls commands directly without shell interpretation for security.
 
-### Retry Logic
-
-```swift
-import Common
-
-// Automatically retry network operation
-let data = try await Task.retrying {
-    try await downloadData(from: url)
-}
-```
-
-The retry mechanism uses exponential backoff and handles transient failures automatically.
-
 ### Unwrap Operator
 
 ```swift
 import Common
 
 // Unwrap optional or throw error
-let value = optionalValue ?! ValidationError.invalidURL(
+let value = optionalValue ?! URLError.invalidURL(
     parameter: "endpoint",
     value: urlString
 )
 ```
 
-### Error Handling
+### Git Operations
 
 ```swift
 import Common
 
-do {
-    let file = try readFile(at: path)
-} catch FileError.resourceNotFound(let name, let ext, let subdirectory) {
-    print("Resource not found: \(name).\(ext) in \(subdirectory ?? "root")")
-} catch {
-    // Handle other errors
-}
+// Get current HEAD commit
+let commit = try await Git.headCommit(in: repoURL)
+
+// Prepare repository before analysis
+try await GitFix.prepareRepository(git: gitConfiguration)
 ```
 
 ## API Reference
@@ -104,40 +98,19 @@ Executes a command directly without shell interpretation.
 **Parameters:**
 - `_ executable: String` — Executable name (e.g., "git", "cloc")
 - `arguments: [String]` — Command arguments
-- `workingDirectory: URL?` — Optional working directory
+- `workingDirectory: FilePath?` — Optional working directory
 
 **Returns:** Command output as `String`
 
-**Throws:** `Subprocess.Error` for command execution failures
+**Throws:** `ShellError` for command execution failures
 
 **Example:**
 ```swift
 let output = try await Shell.execute(
     "git",
     arguments: ["log", "--oneline"],
-    workingDirectory: repoPath
+    workingDirectory: FilePath(repoPath)
 )
-```
-
-### `Task+Retry`
-
-#### `retrying(maxAttempts:baseDelay:maxDelay:operation:)`
-
-Automatically retries an async operation with exponential backoff.
-
-**Parameters:**
-- `maxAttempts: Int` — Maximum number of retry attempts (default: 3)
-- `baseDelay: TimeInterval` — Base delay between retries (default: 1.0)
-- `maxDelay: TimeInterval` — Maximum delay cap (default: 60.0)
-- `operation: () async throws -> T` — Async operation to retry
-
-**Returns:** Result of the operation
-
-**Example:**
-```swift
-let result = try await Task.retrying {
-    try await networkRequest()
-}
 ```
 
 ### Custom Operator `?!`
@@ -153,51 +126,37 @@ If `optional` is `nil`, throws the provided error. Otherwise, returns the unwrap
 
 ## Error Types
 
-### `FileError`
-
-```swift
-public enum FileError: Error {
-    case fileNotFound(name: String, in: URL)
-    case resourceNotFound(name: String, extension: String?, subdirectory: String?)
-}
-```
-
-### `GitError`
-
-```swift
-public enum GitError: Error {
-    case commandFailed(command: String, output: String)
-    case invalidCommitHash(String)
-}
-```
-
-### `NetworkError`
-
-```swift
-public enum NetworkError: Error {
-    case invalidURLComponents(parameter: String, value: String)
-    case cannotBuildURL(components: URLComponents)
-}
-```
-
 ### `ParseError`
 
 ```swift
 public enum ParseError: Error {
-    case invalidJSON(Data)
-    case invalidDateFormat(String)
+    case invalidJSON(data: Data, underlyingError: Error?, responseString: String?)
+    case invalidDateFormat(string: String, format: String)
+    case missingKey(key: String, in: [String: Sendable])
+    case invalidType(key: String, expected: String, actual: String)
+    case invalidStructure(key: String)
 }
 ```
 
-### `ValidationError`
+### `URLError`
 
 ```swift
-public enum ValidationError: Error {
+public enum URLError: Error {
+    case emptyURL(parameter: String)
     case invalidURL(parameter: String, value: String)
-    case invalidEnumValue(String, allowedValues: [String])
+}
+```
+
+### `ShellError`
+
+```swift
+public enum ShellError: Error {
+    case executionFailed(executable: String, arguments: [String], underlyingError: String)
+    case processFailed(executable: String, arguments: [String], exitCode: TerminationStatus, error: String)
 }
 ```
 
 ## See Also
 
 - Used by all modules in the project for common functionality
+- [GitConfiguration.md](GitConfiguration.md) — Git configuration format documentation

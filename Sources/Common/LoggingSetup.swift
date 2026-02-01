@@ -2,8 +2,8 @@ import Foundation
 import Logging
 import LoggingOSLog
 
-public enum LoggingSetup {
-    public static func setup(verbose: Bool) {
+package enum LoggingSetup {
+    package static func setup(verbose: Bool) {
         let logLevel: Logger.Level = verbose ? .debug : .info
 
         LoggingSystem.bootstrap { label in

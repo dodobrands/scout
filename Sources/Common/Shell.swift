@@ -85,7 +85,7 @@ import System
 /// - Better error handling and logging
 /// - Cross-platform compatibility
 /// - Output parsing is explicit and controllable
-public class Shell {
+package class Shell {
     private static let logger = Logger(label: "scout.Shell")
 
     /// Executes a command directly without shell interpretation.
@@ -117,7 +117,7 @@ public class Shell {
     /// let firstLine = output.split(separator: "\n").first.map(String.init) ?? ""
     /// ```
     @discardableResult
-    public static func execute(
+    package static func execute(
         _ executable: String,
         arguments: [String] = [],
         workingDirectory: FilePath? = nil
@@ -205,7 +205,7 @@ public class Shell {
     }
 }
 
-public enum ShellError: Error {
+package enum ShellError: Error {
     /// Process execution failed (executable not found, permission denied, etc.)
     case executionFailed(executable: String, arguments: [String], underlyingError: String)
 
@@ -219,7 +219,7 @@ public enum ShellError: Error {
 }
 
 extension ShellError: LocalizedError {
-    public var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .executionFailed(let executable, let arguments, let underlyingError):
             return
@@ -239,7 +239,7 @@ extension ShellError: LocalizedError {
 }
 
 extension ShellError: CustomNSError {
-    public var errorUserInfo: [String: Any] {
+    package var errorUserInfo: [String: Any] {
         switch self {
         case .executionFailed(let executable, let arguments, let underlyingError):
             return [

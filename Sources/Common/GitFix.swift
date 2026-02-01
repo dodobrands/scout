@@ -2,12 +2,12 @@ import Foundation
 import Logging
 import System
 
-public class GitFix {
+package class GitFix {
     private static let logger = Logger(label: "scout.GitFix")
 
     /// Performs git operations before analysis based on GitConfiguration.
     /// - Parameter git: Git configuration with repository path and operation flags
-    public static func prepareRepository(git: GitConfiguration) async throws {
+    package static func prepareRepository(git: GitConfiguration) async throws {
         try await prepareRepository(
             in: URL(filePath: git.repoPath),
             gitClean: git.clean,
@@ -22,7 +22,7 @@ public class GitFix {
     ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` to clean working directory
     ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Initialize and update git submodules
-    public static func prepareRepository(
+    package static func prepareRepository(
         in repoPath: URL,
         gitClean: Bool = false,
         fixLFS: Bool = false,
@@ -41,7 +41,7 @@ public class GitFix {
 
     /// Cleans untracked files and resets working directory to HEAD.
     /// Executes: `git clean -ffdx && git reset --hard HEAD`
-    public static func cleanAndReset(in repoPath: URL) async throws {
+    package static func cleanAndReset(in repoPath: URL) async throws {
         let repoPathFilePath = FilePath(repoPath.path(percentEncoded: false))
 
         logger.debug("Cleaning untracked files and resetting working directory")
