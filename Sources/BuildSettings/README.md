@@ -33,11 +33,22 @@ scout build-settings --config build-settings-config.json
 
 ### JSON Format
 
+**Minimal (no setup commands):**
+
+```json
+{
+  "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
+  "workspaceName": "MyApp",
+  "configuration": "Debug"
+}
+```
+
+**With setup commands (e.g., for generated projects):**
+
 ```json
 {
   "setupCommands": [
-    { "command": "mise install" },
-    { "command": "tuist install", "workingDirectory": "App" },
+    { "command": "bundle exec pod install" },
     { "command": "tuist generate --no-open", "workingDirectory": "App" }
   ],
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
