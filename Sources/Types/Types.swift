@@ -14,26 +14,6 @@ public struct Types: AsyncParsableCommand {
         abstract: "Count Swift types inherited from specified base types"
     )
 
-    struct Summary: JobSummaryFormattable {
-        let typeResults: [(typeName: String, count: Int)]
-
-        var markdown: String {
-            var md = "## CountTypes Summary\n\n"
-
-            if !typeResults.isEmpty {
-                md += "### Type Counts\n\n"
-                md += "| Type | Count |\n"
-                md += "|------|-------|\n"
-                for result in typeResults {
-                    md += "| `\(result.typeName)` | \(result.count) |\n"
-                }
-                md += "\n"
-            }
-
-            return md
-        }
-    }
-
     @Option(
         name: [.long, .short],
         help: "Path to repository with Swift sources (default: current directory)"
@@ -106,52 +86,44 @@ public struct Types: AsyncParsableCommand {
         }
 
         let sdk = TypesSDK()
-        var typeResults: [(typeName: String, count: Int)] = []
-        let jsonWriter = output.map { IncrementalJSONWriter<TypesSDK.Result>(path: $0) }
+        var allResults: [TypesSDK.Result] = []
 
-        for typeName in input.types {
-            Self.logger.info("Processing type: \(typeName)")
+        Self.logger.info(
+            "Will analyze \(commitHashes.count) commits for \(input.types.count) type(s)",
+            metadata: [
+                "commits": .array(commitHashes.map { .string($0) }),
+                "types": .array(input.types.map { .string($0) }),
+            ]
+        )
 
-            Self.logger.info(
-                "Will analyze \(commitHashes.count) commits for type '\(typeName)'",
-                metadata: [
-                    "commits": .array(commitHashes.map { .string($0) })
-                ]
-            )
+        for hash in commitHashes {
+            Self.logger.info("Processing commit: \(hash)")
 
-            var lastResult: TypesSDK.Result?
-            for hash in commitHashes {
-                let result = try await sdk.analyzeCommit(
-                    hash: hash,
-                    typeName: typeName,
-                    input: input
-                )
-                lastResult = result
+            let results = try await sdk.analyzeCommit(hash: hash, input: input)
 
+            for result in results {
                 Self.logger.notice(
-                    "Found \(result.types.count) types inherited from \(typeName) at \(hash)"
+                    "Found \(result.types.count) types inherited from \(result.typeName) at \(hash)"
                 )
-
-                try jsonWriter?.append(result)
-            }
-
-            Self.logger.notice(
-                "Summary for '\(typeName)': analyzed \(commitHashes.count) commit(s)"
-            )
-            if let result = lastResult {
-                typeResults.append((typeName, result.types.count))
+                allResults.append(result)
+                if let outputPath = output {
+                    try allResults.writeJSON(to: outputPath)
+                }
             }
         }
 
-        let summary = Summary(typeResults: typeResults)
+        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+
+        let summary = TypesSummary(results: allResults)
         logSummary(summary)
     }
 
-    private func logSummary(_ summary: Summary) {
-        if !summary.typeResults.isEmpty {
+    private func logSummary(_ summary: TypesSummary) {
+        if !summary.results.isEmpty {
             Self.logger.info("Type counts:")
-            for result in summary.typeResults {
-                Self.logger.info("  - \(result.typeName): \(result.count)")
+            for result in summary.results {
+                let commit = result.commit.prefix(7)
+                Self.logger.info("  - \(commit): \(result.typeName): \(result.types.count)")
             }
         }
 

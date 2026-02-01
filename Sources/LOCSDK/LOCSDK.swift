@@ -73,10 +73,12 @@ public struct LOCSDK: Sendable {
 
     /// Result of LOC counting operation.
     public struct Result: Sendable, Codable {
+        public let commit: String
         public let metric: String
         public let linesOfCode: Int
 
-        public init(metric: String, linesOfCode: Int) {
+        public init(commit: String = "", metric: String, linesOfCode: Int) {
+            self.commit = commit
             self.metric = metric
             self.linesOfCode = linesOfCode
         }
@@ -176,7 +178,9 @@ public struct LOCSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countLOC(input: input)
+        return try await countLOC(input: input).map {
+            Result(commit: hash, metric: $0.metric, linesOfCode: $0.linesOfCode)
+        }
     }
 
     private func foldersToAnalyze(
