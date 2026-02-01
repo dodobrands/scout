@@ -7,10 +7,6 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "Common",
-            targets: ["Common"]
-        ),
-        .library(
             name: "TypesSDK",
             targets: ["TypesSDK"]
         ),
