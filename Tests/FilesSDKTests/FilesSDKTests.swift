@@ -1,3 +1,4 @@
+import Common
 import FilesSDK
 import Foundation
 import Testing
@@ -8,7 +9,8 @@ struct FilesSDKTests {
     @Test
     func `When searching for swift files, should find all swift files`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesInput(repoPath: samplesURL, filetype: "swift")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "swift")
 
         let result = try await sut.countFiles(input: input)
 
@@ -21,7 +23,8 @@ struct FilesSDKTests {
     @Test
     func `When searching for storyboard files, should find all storyboards`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesInput(repoPath: samplesURL, filetype: "storyboard")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "storyboard")
 
         let result = try await sut.countFiles(input: input)
 
@@ -33,7 +36,8 @@ struct FilesSDKTests {
     @Test
     func `When searching for xib files, should find all xibs`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesInput(repoPath: samplesURL, filetype: "xib")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "xib")
 
         let result = try await sut.countFiles(input: input)
 
@@ -45,7 +49,8 @@ struct FilesSDKTests {
     @Test
     func `When searching for json files, should find all json files`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesInput(repoPath: samplesURL, filetype: "json")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "json")
 
         let result = try await sut.countFiles(input: input)
 
@@ -56,7 +61,8 @@ struct FilesSDKTests {
     @Test
     func `When searching for non-existent extension, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesInput(repoPath: samplesURL, filetype: "xyz")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = FilesInput(git: gitConfig, filetype: "xyz")
 
         let result = try await sut.countFiles(input: input)
 

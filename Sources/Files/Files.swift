@@ -107,13 +107,13 @@ public struct Files: AsyncParsableCommand {
                 ]
             )
 
-            let input = FilesInput(
-                repoPath: repoPathURL,
-                filetype: filetype,
-                gitClean: gitClean,
+            let gitConfig = GitConfiguration(
+                repoPath: repoPath,
+                clean: gitClean,
                 fixLFS: fixLfs,
                 initializeSubmodules: initializeSubmodules
             )
+            let input = FilesInput(git: gitConfig, filetype: filetype)
 
             var lastResult: FilesSDK.Result?
             for hash in commitHashes {

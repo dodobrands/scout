@@ -126,13 +126,16 @@ public struct Pattern: AsyncParsableCommand {
                 ]
             )
 
-            let input = PatternInput(
-                repoPath: repoPathURL,
-                pattern: pattern,
-                extensions: fileExtensions,
-                gitClean: gitClean,
+            let gitConfig = GitConfiguration(
+                repoPath: repoPath,
+                clean: gitClean,
                 fixLFS: fixLfs,
                 initializeSubmodules: initializeSubmodules
+            )
+            let input = PatternInput(
+                git: gitConfig,
+                pattern: pattern,
+                extensions: fileExtensions
             )
 
             var lastResult: PatternSDK.Result?

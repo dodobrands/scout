@@ -42,24 +42,15 @@ public struct LOCConfiguration: Sendable {
 
 /// Input parameters for LOCSDK operations.
 public struct LOCInput: Sendable {
-    public let repoPath: URL
+    public let git: GitConfiguration
     public let configuration: LOCConfiguration
-    public let gitClean: Bool
-    public let fixLFS: Bool
-    public let initializeSubmodules: Bool
 
     public init(
-        repoPath: URL,
-        configuration: LOCConfiguration,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        git: GitConfiguration,
+        configuration: LOCConfiguration
     ) {
-        self.repoPath = repoPath
+        self.git = git
         self.configuration = configuration
-        self.gitClean = gitClean
-        self.fixLFS = fixLFS
-        self.initializeSubmodules = initializeSubmodules
     }
 }
 
@@ -93,17 +84,19 @@ public struct LOCSDK: Sendable {
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Result containing total LOC count
     public func countLOC(input: LOCInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Self.checkClocInstalled()
         try await GitFix.prepareRepository(
-            in: input.repoPath,
-            gitClean: input.gitClean,
-            fixLFS: input.fixLFS,
-            initializeSubmodules: input.initializeSubmodules
+            in: repoPath,
+            gitClean: input.git.clean,
+            fixLFS: input.git.fixLFS,
+            initializeSubmodules: input.git.initializeSubmodules
         )
 
         let clocRunner = ClocRunner()
         let foldersToAnalyze = foldersToAnalyze(
-            in: input.repoPath,
+            in: repoPath,
             include: input.configuration.include,
             exclude: input.configuration.exclude
         )
@@ -131,10 +124,12 @@ public struct LOCSDK: Sendable {
         hash: String,
         input: LOCInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Shell.execute(
             "git",
             arguments: ["checkout", hash],
-            workingDirectory: FilePath(input.repoPath.path(percentEncoded: false))
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
         return try await countLOC(input: input)

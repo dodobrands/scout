@@ -5,24 +5,15 @@ import System
 
 /// Input parameters for FilesSDK operations.
 public struct FilesInput: Sendable {
-    public let repoPath: URL
+    public let git: GitConfiguration
     public let filetype: String
-    public let gitClean: Bool
-    public let fixLFS: Bool
-    public let initializeSubmodules: Bool
 
     public init(
-        repoPath: URL,
-        filetype: String,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        git: GitConfiguration,
+        filetype: String
     ) {
-        self.repoPath = repoPath
+        self.git = git
         self.filetype = filetype
-        self.gitClean = gitClean
-        self.fixLFS = fixLFS
-        self.initializeSubmodules = initializeSubmodules
     }
 }
 
@@ -47,14 +38,16 @@ public struct FilesSDK: Sendable {
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching files
     public func countFiles(input: FilesInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await GitFix.prepareRepository(
-            in: input.repoPath,
-            gitClean: input.gitClean,
-            fixLFS: input.fixLFS,
-            initializeSubmodules: input.initializeSubmodules
+            in: repoPath,
+            gitClean: input.git.clean,
+            fixLFS: input.git.fixLFS,
+            initializeSubmodules: input.git.initializeSubmodules
         )
 
-        let files = findFiles(of: input.filetype, in: input.repoPath)
+        let files = findFiles(of: input.filetype, in: repoPath)
 
         return Result(
             filetype: input.filetype,
@@ -71,10 +64,12 @@ public struct FilesSDK: Sendable {
         hash: String,
         input: FilesInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Shell.execute(
             "git",
             arguments: ["checkout", hash],
-            workingDirectory: FilePath(input.repoPath.path(percentEncoded: false))
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
         return try await countFiles(input: input)

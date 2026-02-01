@@ -104,13 +104,13 @@ public struct LOC: AsyncParsableCommand {
                 ]
             )
 
-            let input = LOCInput(
-                repoPath: repoPathURL,
-                configuration: sdkConfig,
-                gitClean: gitClean,
+            let gitConfig = GitConfiguration(
+                repoPath: repoPath,
+                clean: gitClean,
                 fixLFS: fixLfs,
                 initializeSubmodules: initializeSubmodules
             )
+            let input = LOCInput(git: gitConfig, configuration: sdkConfig)
 
             var lastResult: LOCSDK.Result?
             for hash in commitHashes {

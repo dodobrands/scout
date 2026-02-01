@@ -111,13 +111,13 @@ public struct Types: AsyncParsableCommand {
                 ]
             )
 
-            let input = TypesInput(
-                repoPath: repoPathURL,
-                typeName: typeName,
-                gitClean: gitClean,
+            let gitConfig = GitConfiguration(
+                repoPath: repoPath,
+                clean: gitClean,
                 fixLFS: fixLfs,
                 initializeSubmodules: initializeSubmodules
             )
+            let input = TypesInput(git: gitConfig, typeName: typeName)
 
             var lastResult: TypesSDK.Result?
             for hash in commitHashes {

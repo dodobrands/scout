@@ -1,3 +1,4 @@
+import Common
 import Foundation
 import PatternSDK
 import Testing
@@ -8,7 +9,8 @@ struct PatternSDKTests {
     @Test
     func `When searching for TODO comments, should find all occurrences`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = PatternInput(repoPath: samplesURL, pattern: "// TODO:")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = PatternInput(git: gitConfig, pattern: "// TODO:")
 
         let result = try await sut.search(input: input)
 
@@ -19,7 +21,8 @@ struct PatternSDKTests {
     @Test
     func `When searching for FIXME comments, should find all occurrences`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = PatternInput(repoPath: samplesURL, pattern: "// FIXME:")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = PatternInput(git: gitConfig, pattern: "// FIXME:")
 
         let result = try await sut.search(input: input)
 
@@ -29,7 +32,8 @@ struct PatternSDKTests {
     @Test
     func `When searching for periphery ignore, should find all annotations`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = PatternInput(repoPath: samplesURL, pattern: "periphery:ignore")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = PatternInput(git: gitConfig, pattern: "periphery:ignore")
 
         let result = try await sut.search(input: input)
 
@@ -39,7 +43,8 @@ struct PatternSDKTests {
     @Test
     func `When searching for non-existent pattern, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = PatternInput(repoPath: samplesURL, pattern: "THIS_PATTERN_DOES_NOT_EXIST")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = PatternInput(git: gitConfig, pattern: "THIS_PATTERN_DOES_NOT_EXIST")
 
         let result = try await sut.search(input: input)
 
@@ -49,7 +54,8 @@ struct PatternSDKTests {
     @Test
     func `When match found, should return correct line number`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = PatternInput(repoPath: samplesURL, pattern: "swiftlint:disable")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = PatternInput(git: gitConfig, pattern: "swiftlint:disable")
 
         let result = try await sut.search(input: input)
 
@@ -60,7 +66,8 @@ struct PatternSDKTests {
     @Test
     func `When pattern found multiple times, should return different line numbers`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = PatternInput(repoPath: samplesURL, pattern: "// TODO:")
+        let gitConfig = GitConfiguration(repoPath: samplesURL.path)
+        let input = PatternInput(git: gitConfig, pattern: "// TODO:")
 
         let result = try await sut.search(input: input)
 

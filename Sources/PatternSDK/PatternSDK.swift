@@ -5,27 +5,18 @@ import System
 
 /// Input parameters for PatternSDK operations.
 public struct PatternInput: Sendable {
-    public let repoPath: URL
+    public let git: GitConfiguration
     public let pattern: String
     public let extensions: [String]
-    public let gitClean: Bool
-    public let fixLFS: Bool
-    public let initializeSubmodules: Bool
 
     public init(
-        repoPath: URL,
+        git: GitConfiguration,
         pattern: String,
-        extensions: [String] = ["swift"],
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        extensions: [String] = ["swift"]
     ) {
-        self.repoPath = repoPath
+        self.git = git
         self.pattern = pattern
         self.extensions = extensions
-        self.gitClean = gitClean
-        self.fixLFS = fixLFS
-        self.initializeSubmodules = initializeSubmodules
     }
 }
 
@@ -61,22 +52,24 @@ public struct PatternSDK: Sendable {
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Result containing all matches with file and line number
     public func search(input: PatternInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await GitFix.prepareRepository(
-            in: input.repoPath,
-            gitClean: input.gitClean,
-            fixLFS: input.fixLFS,
-            initializeSubmodules: input.initializeSubmodules
+            in: repoPath,
+            gitClean: input.git.clean,
+            fixLFS: input.git.fixLFS,
+            initializeSubmodules: input.git.initializeSubmodules
         )
 
         var allMatches: [Match] = []
 
         for ext in input.extensions {
-            let files = findFiles(of: ext, in: input.repoPath)
+            let files = findFiles(of: ext, in: repoPath)
             for file in files {
                 let fileMatches = try searchInFile(
                     pattern: input.pattern,
                     file: file,
-                    repoPath: input.repoPath
+                    repoPath: repoPath
                 )
                 allMatches.append(contentsOf: fileMatches)
             }
@@ -94,10 +87,12 @@ public struct PatternSDK: Sendable {
         hash: String,
         input: PatternInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Shell.execute(
             "git",
             arguments: ["checkout", hash],
-            workingDirectory: FilePath(input.repoPath.path(percentEncoded: false))
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
         return try await search(input: input)

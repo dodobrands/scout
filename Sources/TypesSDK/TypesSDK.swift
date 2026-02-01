@@ -5,24 +5,15 @@ import System
 
 /// Input parameters for TypesSDK operations.
 public struct TypesInput: Sendable {
-    public let repoPath: URL
+    public let git: GitConfiguration
     public let typeName: String
-    public let gitClean: Bool
-    public let fixLFS: Bool
-    public let initializeSubmodules: Bool
 
     public init(
-        repoPath: URL,
-        typeName: String,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        git: GitConfiguration,
+        typeName: String
     ) {
-        self.repoPath = repoPath
+        self.git = git
         self.typeName = typeName
-        self.gitClean = gitClean
-        self.fixLFS = fixLFS
-        self.initializeSubmodules = initializeSubmodules
     }
 }
 
@@ -47,16 +38,17 @@ public struct TypesSDK: Sendable {
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching types
     public func countTypes(input: TypesInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
         let parser = SwiftParser()
 
         try await GitFix.prepareRepository(
-            in: input.repoPath,
-            gitClean: input.gitClean,
-            fixLFS: input.fixLFS,
-            initializeSubmodules: input.initializeSubmodules
+            in: repoPath,
+            gitClean: input.git.clean,
+            fixLFS: input.git.fixLFS,
+            initializeSubmodules: input.git.initializeSubmodules
         )
 
-        let swiftFiles = findSwiftFiles(in: input.repoPath)
+        let swiftFiles = findSwiftFiles(in: repoPath)
         let objects = try swiftFiles.flatMap {
             try parser.parseFile(from: $0)
         }
@@ -86,10 +78,12 @@ public struct TypesSDK: Sendable {
         hash: String,
         input: TypesInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await Shell.execute(
             "git",
             arguments: ["checkout", hash],
-            workingDirectory: FilePath(input.repoPath.path(percentEncoded: false))
+            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
         return try await countTypes(input: input)
