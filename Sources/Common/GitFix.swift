@@ -5,6 +5,17 @@ import System
 public class GitFix {
     private static let logger = Logger(label: "mobile-code-metrics.GitFix")
 
+    /// Performs git operations before analysis based on GitConfiguration.
+    /// - Parameter git: Git configuration with repository path and operation flags
+    public static func prepareRepository(git: GitConfiguration) async throws {
+        try await prepareRepository(
+            in: URL(filePath: git.repoPath),
+            gitClean: git.clean,
+            fixLFS: git.fixLFS,
+            initializeSubmodules: git.initializeSubmodules
+        )
+    }
+
     /// Performs git operations before analysis based on provided flags.
     /// - Parameters:
     ///   - repoPath: Path to the repository

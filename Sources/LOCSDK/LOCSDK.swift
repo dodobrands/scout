@@ -87,12 +87,7 @@ public struct LOCSDK: Sendable {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Self.checkClocInstalled()
-        try await GitFix.prepareRepository(
-            in: repoPath,
-            gitClean: input.git.clean,
-            fixLFS: input.git.fixLFS,
-            initializeSubmodules: input.git.initializeSubmodules
-        )
+        try await GitFix.prepareRepository(git: input.git)
 
         let clocRunner = ClocRunner()
         let foldersToAnalyze = foldersToAnalyze(

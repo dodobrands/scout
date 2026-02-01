@@ -40,12 +40,7 @@ public struct FilesSDK: Sendable {
     public func countFiles(input: FilesInput) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
 
-        try await GitFix.prepareRepository(
-            in: repoPath,
-            gitClean: input.git.clean,
-            fixLFS: input.git.fixLFS,
-            initializeSubmodules: input.git.initializeSubmodules
-        )
+        try await GitFix.prepareRepository(git: input.git)
 
         let files = findFiles(of: input.filetype, in: repoPath)
 

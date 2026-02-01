@@ -103,12 +103,7 @@ public struct BuildSettingsSDK: Sendable {
     public func extractBuildSettings(input: BuildSettingsInput) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
 
-        try await GitFix.prepareRepository(
-            in: repoPath,
-            gitClean: input.git.clean,
-            fixLFS: input.git.fixLFS,
-            initializeSubmodules: input.git.initializeSubmodules
-        )
+        try await GitFix.prepareRepository(git: input.git)
 
         try await executeSetupCommands(input.setupCommands, in: repoPath)
 
