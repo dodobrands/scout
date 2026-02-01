@@ -55,27 +55,18 @@ public struct SetupCommand: Sendable {
 
 /// Input parameters for BuildSettingsSDK operations.
 public struct BuildSettingsInput: Sendable {
-    public let repoPath: URL
+    public let git: GitConfiguration
     public let setupCommands: [SetupCommand]
     public let configuration: String
-    public let gitClean: Bool
-    public let fixLFS: Bool
-    public let initializeSubmodules: Bool
 
     public init(
-        repoPath: URL,
+        git: GitConfiguration,
         setupCommands: [SetupCommand],
-        configuration: String,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        configuration: String
     ) {
-        self.repoPath = repoPath
+        self.git = git
         self.setupCommands = setupCommands
         self.configuration = configuration
-        self.gitClean = gitClean
-        self.fixLFS = fixLFS
-        self.initializeSubmodules = initializeSubmodules
     }
 }
 
@@ -110,16 +101,18 @@ public struct BuildSettingsSDK: Sendable {
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Array of targets with their build settings
     public func extractBuildSettings(input: BuildSettingsInput) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         try await GitFix.prepareRepository(
-            in: input.repoPath,
-            gitClean: input.gitClean,
-            fixLFS: input.fixLFS,
-            initializeSubmodules: input.initializeSubmodules
+            in: repoPath,
+            gitClean: input.git.clean,
+            fixLFS: input.git.fixLFS,
+            initializeSubmodules: input.git.initializeSubmodules
         )
 
-        try await executeSetupCommands(input.setupCommands, in: input.repoPath)
+        try await executeSetupCommands(input.setupCommands, in: repoPath)
 
-        let foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: input.repoPath)
+        let foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
         let projectsWithTargets = try await getTargetsForAllProjects(
             foundProjectsAndWorkspaces: foundProjectsAndWorkspaces
         )
@@ -141,11 +134,13 @@ public struct BuildSettingsSDK: Sendable {
         hash: String,
         input: BuildSettingsInput
     ) async throws -> Result {
+        let repoPath = URL(filePath: input.git.repoPath)
+
         do {
             try await Shell.execute(
                 "git",
                 arguments: ["checkout", hash],
-                workingDirectory: FilePath(input.repoPath.path(percentEncoded: false))
+                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
             )
         } catch {
             throw AnalysisError.checkoutFailed(hash: hash, error: error.localizedDescription)

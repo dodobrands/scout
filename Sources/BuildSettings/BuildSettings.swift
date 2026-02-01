@@ -107,13 +107,17 @@ public struct BuildSettings: AsyncParsableCommand {
             )
         }
 
-        let input = BuildSettingsInput(
-            repoPath: repoPathURL,
-            setupCommands: sdkSetupCommands,
-            configuration: extractConfig.configuration,
-            gitClean: gitClean,
+        let gitConfig = GitConfiguration(
+            repoPath: repoPath,
+            clean: gitClean,
             fixLFS: fixLfs,
             initializeSubmodules: initializeSubmodules
+        )
+
+        let input = BuildSettingsInput(
+            git: gitConfig,
+            setupCommands: sdkSetupCommands,
+            configuration: extractConfig.configuration
         )
 
         for hash in commitHashes {
