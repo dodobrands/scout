@@ -59,6 +59,12 @@ public struct BuildSettings: AsyncParsableCommand {
     )
     public var initializeSubmodules: Bool = false
 
+    @Flag(
+        name: .long,
+        help: "Continue analysis even if setup commands fail"
+    )
+    public var ignoreSetupErrors: Bool = false
+
     static let logger = Logger(label: "scout.ExtractBuildSettings")
 
     public func run() async throws {
@@ -109,12 +115,13 @@ public struct BuildSettings: AsyncParsableCommand {
 
             let result: BuildSettingsSDK.Result
             do {
-                result = try await sdk.analyzeCommit(
+                            result = try await sdk.analyzeCommit(
                     hash: hash,
                     repoPath: repoPathURL,
                     setupCommands: sdkSetupCommands,
                     configuration: extractConfig.configuration,
-                    initializeSubmodules: initializeSubmodules
+                    initializeSubmodules: initializeSubmodules,
+                    ignoreSetupErrors: ignoreSetupErrors
                 )
             } catch let error as BuildSettingsSDK.AnalysisError {
                 Self.logger.warning(

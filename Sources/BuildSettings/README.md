@@ -22,6 +22,7 @@ scout build-settings --config build-settings-config.json --commits abc123 def456
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--initialize-submodules, -I` — Initialize submodules (reset and update to correct commits)
+- `--ignore-setup-errors` — Continue analysis even if setup commands fail (default: stop on error)
 
 ## Configuration
 
@@ -65,7 +66,7 @@ scout build-settings --config build-settings-config.json
 | `workspaceName` | `String` | Xcode workspace/project name (without extension) |
 | `configuration` | `String` | Build configuration (Debug, Release, etc.) |
 | `buildSettingsParameters` | `[String]` | Build settings to extract |
-| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional). If any command fails, analysis stops with an error. |
+| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional). By default, analysis stops if any command fails. Use `--ignore-setup-errors` to continue. |
 | `setupCommands[].command` | `String` | Shell command to execute |
 | `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
 

@@ -83,11 +83,12 @@ public struct BuildSettingsSDK: Sendable {
         in repoPath: URL,
         setupCommands: [SetupCommand],
         configuration: String,
-        initializeSubmodules: Bool = false
+        initializeSubmodules: Bool = false,
+        ignoreSetupErrors: Bool = false
     ) async throws -> Result {
         try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
 
-        try await executeSetupCommands(setupCommands, in: repoPath)
+        try await executeSetupCommands(setupCommands, in: repoPath, ignoreErrors: ignoreSetupErrors)
 
         let foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
         let projectsWithTargets = try await getTargetsForAllProjects(
@@ -108,7 +109,8 @@ public struct BuildSettingsSDK: Sendable {
         repoPath: URL,
         setupCommands: [SetupCommand],
         configuration: String,
-        initializeSubmodules: Bool = false
+        initializeSubmodules: Bool = false,
+        ignoreSetupErrors: Bool = false
     ) async throws -> Result {
         do {
             try await Shell.execute(
@@ -125,7 +127,8 @@ public struct BuildSettingsSDK: Sendable {
                 in: repoPath,
                 setupCommands: setupCommands,
                 configuration: configuration,
-                initializeSubmodules: initializeSubmodules
+                initializeSubmodules: initializeSubmodules,
+                ignoreSetupErrors: ignoreSetupErrors
             )
         } catch let error as AnalysisError {
             throw error
@@ -138,7 +141,8 @@ public struct BuildSettingsSDK: Sendable {
 
     private func executeSetupCommands(
         _ commands: [SetupCommand],
-        in repoPath: URL
+        in repoPath: URL,
+        ignoreErrors: Bool
     ) async throws {
         for setupCommand in commands {
             let workingDirPath: FilePath
@@ -164,10 +168,20 @@ public struct BuildSettingsSDK: Sendable {
                     workingDirectory: workingDirPath
                 )
             } catch {
-                throw AnalysisError.setupCommandFailed(
-                    command: setupCommand.command,
-                    error: error.localizedDescription
-                )
+                if ignoreErrors {
+                    Self.logger.warning(
+                        "Setup command failed, continuing due to --ignore-setup-errors",
+                        metadata: [
+                            "command": "\(setupCommand.command)",
+                            "error": "\(error.localizedDescription)",
+                        ]
+                    )
+                } else {
+                    throw AnalysisError.setupCommandFailed(
+                        command: setupCommand.command,
+                        error: error.localizedDescription
+                    )
+                }
             }
         }
     }
