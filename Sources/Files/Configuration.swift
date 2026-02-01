@@ -1,3 +1,4 @@
+import Common
 import Foundation
 import SystemPackage
 
@@ -6,9 +7,13 @@ public struct CountFilesConfig: Sendable {
     /// File extensions to count (without dot, e.g., ["storyboard", "xib"])
     public let filetypes: [String]
 
+    /// Git operations configuration
+    public let git: GitConfiguration
+
     /// Initialize configuration directly (for testing)
-    public init(filetypes: [String]) {
+    public init(filetypes: [String], git: GitConfiguration = .default) {
         self.filetypes = filetypes
+        self.git = git
     }
 
     /// Initialize configuration from JSON file.
@@ -30,6 +35,7 @@ public struct CountFilesConfig: Sendable {
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.filetypes = variables.filetypes
+            self.git = variables.git ?? .default
         } catch let decodingError as DecodingError {
             throw CountFilesConfigError.invalidJSON(
                 path: configPathString,
@@ -45,6 +51,7 @@ public struct CountFilesConfig: Sendable {
 
     private struct Variables: Codable {
         let filetypes: [String]
+        let git: GitConfiguration?
     }
 }
 

@@ -24,14 +24,23 @@ public struct FilesSDK: Sendable {
     /// - Parameters:
     ///   - filetype: File extension to count (without dot)
     ///   - repoPath: Path to the repository
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing count and list of matching files
     public func countFiles(
         of filetype: String,
         in repoPath: URL,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
+        try await GitFix.prepareRepository(
+            in: repoPath,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
+            initializeSubmodules: initializeSubmodules
+        )
 
         let files = findFiles(of: filetype, in: repoPath)
 
@@ -46,12 +55,16 @@ public struct FilesSDK: Sendable {
     ///   - hash: Commit hash to checkout
     ///   - repoPath: Path to the repository
     ///   - filetype: File extension to count (without dot)
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing count and list of matching files
     public func analyzeCommit(
         hash: String,
         repoPath: URL,
         filetype: String,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
         try await Shell.execute(
@@ -63,6 +76,8 @@ public struct FilesSDK: Sendable {
         return try await countFiles(
             of: filetype,
             in: repoPath,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
             initializeSubmodules: initializeSubmodules
         )
     }

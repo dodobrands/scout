@@ -36,15 +36,24 @@ public struct PatternSDK: Sendable {
     ///   - pattern: Pattern string to search for
     ///   - repoPath: Path to the repository
     ///   - extensions: File extensions to search in (e.g., ["swift", "m"])
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing all matches with file and line number
     public func search(
         pattern: String,
         in repoPath: URL,
         extensions: [String] = ["swift"],
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
+        try await GitFix.prepareRepository(
+            in: repoPath,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
+            initializeSubmodules: initializeSubmodules
+        )
 
         var allMatches: [Match] = []
 
@@ -65,6 +74,8 @@ public struct PatternSDK: Sendable {
     ///   - repoPath: Path to the repository
     ///   - pattern: Pattern string to search for
     ///   - extensions: File extensions to search in
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing all matches
     public func analyzeCommit(
@@ -72,6 +83,8 @@ public struct PatternSDK: Sendable {
         repoPath: URL,
         pattern: String,
         extensions: [String] = ["swift"],
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
         try await Shell.execute(
@@ -84,6 +97,8 @@ public struct PatternSDK: Sendable {
             pattern: pattern,
             in: repoPath,
             extensions: extensions,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
             initializeSubmodules: initializeSubmodules
         )
     }

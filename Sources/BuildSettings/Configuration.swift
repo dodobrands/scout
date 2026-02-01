@@ -1,3 +1,4 @@
+import Common
 import Foundation
 import SystemPackage
 
@@ -28,17 +29,22 @@ public struct ExtractBuildSettingsConfig: Sendable {
     /// Build configuration name (e.g., "Debug", "Release")
     public let configuration: String
 
+    /// Git operations configuration
+    public let git: GitConfiguration
+
     /// Initialize configuration directly (for testing)
     public init(
         setupCommands: [SetupCommand],
         buildSettingsParameters: [String],
         workspaceName: String,
-        configuration: String
+        configuration: String,
+        git: GitConfiguration = .default
     ) {
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
         self.workspaceName = workspaceName
         self.configuration = configuration
+        self.git = git
     }
 
     /// Initialize configuration from JSON file.
@@ -63,6 +69,7 @@ public struct ExtractBuildSettingsConfig: Sendable {
             self.buildSettingsParameters = variables.buildSettingsParameters
             self.workspaceName = variables.workspaceName
             self.configuration = variables.configuration
+            self.git = variables.git ?? .default
         } catch let decodingError as DecodingError {
             throw ExtractBuildSettingsConfigError.invalidJSON(
                 path: configPathString,
@@ -81,6 +88,7 @@ public struct ExtractBuildSettingsConfig: Sendable {
         let buildSettingsParameters: [String]
         let workspaceName: String
         let configuration: String
+        let git: GitConfiguration?
     }
 }
 

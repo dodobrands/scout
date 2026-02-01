@@ -37,7 +37,7 @@ public struct Pattern: AsyncParsableCommand {
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
     public var repoPath: String = FileManager.default.currentDirectoryPath
 
-    @Option(name: .long, help: "Path to configuration JSON file")
+    @Option(help: "Path to configuration JSON file")
     public var config: String?
 
     @Argument(help: "Patterns to search (e.g., \"import UIKit\" \"import SwiftUI\")")
@@ -63,9 +63,14 @@ public struct Pattern: AsyncParsableCommand {
     public var verbose: Bool = false
 
     @Flag(
-        name: [.long, .customShort("I")],
-        help: "Initialize submodules (reset and update to correct commits)"
+        help: "Clean working directory before analysis (git clean -ffdx && git reset --hard HEAD)"
     )
+    public var gitClean: Bool = false
+
+    @Flag(help: "Fix broken LFS pointers by committing modified files after checkout")
+    public var fixLfs: Bool = false
+
+    @Flag(help: "Initialize submodules (reset and update to correct commits)")
     public var initializeSubmodules: Bool = false
 
     private static let logger = Logger(label: "scout.Pattern")
@@ -128,6 +133,8 @@ public struct Pattern: AsyncParsableCommand {
                     repoPath: repoPathURL,
                     pattern: pattern,
                     extensions: fileExtensions,
+                    gitClean: gitClean,
+                    fixLFS: fixLfs,
                     initializeSubmodules: initializeSubmodules
                 )
 

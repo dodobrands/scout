@@ -70,15 +70,24 @@ public struct LOCSDK: Sendable {
     /// - Parameters:
     ///   - repoPath: Path to the repository
     ///   - configuration: LOC counting configuration
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing total LOC count
     public func countLOC(
         in repoPath: URL,
         configuration: LOCConfiguration,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
         try await Self.checkClocInstalled()
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
+        try await GitFix.prepareRepository(
+            in: repoPath,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
+            initializeSubmodules: initializeSubmodules
+        )
 
         let clocRunner = ClocRunner()
         let foldersToAnalyze = foldersToAnalyze(
@@ -106,12 +115,16 @@ public struct LOCSDK: Sendable {
     ///   - hash: Commit hash to checkout
     ///   - repoPath: Path to the repository
     ///   - configuration: LOC counting configuration
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing total LOC count
     public func analyzeCommit(
         hash: String,
         repoPath: URL,
         configuration: LOCConfiguration,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
         try await Shell.execute(
@@ -123,6 +136,8 @@ public struct LOCSDK: Sendable {
         return try await countLOC(
             in: repoPath,
             configuration: configuration,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
             initializeSubmodules: initializeSubmodules
         )
     }

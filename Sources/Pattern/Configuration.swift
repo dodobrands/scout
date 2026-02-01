@@ -1,3 +1,4 @@
+import Common
 import Foundation
 import SystemPackage
 
@@ -9,10 +10,18 @@ public struct SearchConfig: Sendable {
     /// File extensions to search in (e.g., ["swift", "m"])
     public let extensions: [String]
 
+    /// Git operations configuration
+    public let git: GitConfiguration
+
     /// Initialize configuration directly (for testing)
-    public init(patterns: [String], extensions: [String] = ["swift"]) {
+    public init(
+        patterns: [String],
+        extensions: [String] = ["swift"],
+        git: GitConfiguration = .default
+    ) {
         self.patterns = patterns
         self.extensions = extensions
+        self.git = git
     }
 
     /// Initialize configuration from JSON file.
@@ -35,6 +44,7 @@ public struct SearchConfig: Sendable {
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.patterns = variables.patterns
             self.extensions = variables.extensions ?? ["swift"]
+            self.git = variables.git ?? .default
         } catch let decodingError as DecodingError {
             throw SearchConfigError.invalidJSON(
                 path: configPathString,
@@ -51,6 +61,7 @@ public struct SearchConfig: Sendable {
     private struct Variables: Codable {
         let patterns: [String]
         let extensions: [String]?
+        let git: GitConfiguration?
     }
 }
 

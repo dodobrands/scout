@@ -85,9 +85,16 @@ public struct BuildSettingsSDK: Sendable {
         in repoPath: URL,
         setupCommands: [SetupCommand],
         configuration: String,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
+        try await GitFix.prepareRepository(
+            in: repoPath,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
+            initializeSubmodules: initializeSubmodules
+        )
 
         try await executeSetupCommands(setupCommands, in: repoPath)
 
@@ -110,6 +117,8 @@ public struct BuildSettingsSDK: Sendable {
         repoPath: URL,
         setupCommands: [SetupCommand],
         configuration: String,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
         do {
@@ -127,6 +136,8 @@ public struct BuildSettingsSDK: Sendable {
                 in: repoPath,
                 setupCommands: setupCommands,
                 configuration: configuration,
+                gitClean: gitClean,
+                fixLFS: fixLFS,
                 initializeSubmodules: initializeSubmodules
             )
         } catch let error as AnalysisError {

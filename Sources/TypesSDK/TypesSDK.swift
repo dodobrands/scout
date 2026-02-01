@@ -24,16 +24,25 @@ public struct TypesSDK: Sendable {
     /// - Parameters:
     ///   - repoPath: Path to the repository
     ///   - typeName: Base type name to search for
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing count and list of matching types
     public func countTypes(
         in repoPath: URL,
         typeName: String,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
         let parser = SwiftParser()
 
-        try await GitFix.fixGitIssues(in: repoPath, initializeSubmodules: initializeSubmodules)
+        try await GitFix.prepareRepository(
+            in: repoPath,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
+            initializeSubmodules: initializeSubmodules
+        )
 
         let swiftFiles = findSwiftFiles(in: repoPath)
         let objects = try swiftFiles.flatMap {
@@ -61,12 +70,16 @@ public struct TypesSDK: Sendable {
     ///   - hash: Commit hash to checkout
     ///   - repoPath: Path to the repository
     ///   - typeName: Base type name to search for
+    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    ///   - fixLFS: Fix broken LFS pointers by committing modified files
     ///   - initializeSubmodules: Whether to initialize git submodules
     /// - Returns: Result containing count and list of matching types
     public func analyzeCommit(
         hash: String,
         repoPath: URL,
         typeName: String,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
         initializeSubmodules: Bool = false
     ) async throws -> Result {
         try await Shell.execute(
@@ -78,6 +91,8 @@ public struct TypesSDK: Sendable {
         return try await countTypes(
             in: repoPath,
             typeName: typeName,
+            gitClean: gitClean,
+            fixLFS: fixLFS,
             initializeSubmodules: initializeSubmodules
         )
     }
