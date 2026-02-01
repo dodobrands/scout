@@ -3,6 +3,29 @@ import Foundation
 import Logging
 import System
 
+/// Input parameters for FilesSDK operations.
+public struct FilesInput: Sendable {
+    public let repoPath: URL
+    public let filetype: String
+    public let gitClean: Bool
+    public let fixLFS: Bool
+    public let initializeSubmodules: Bool
+
+    public init(
+        repoPath: URL,
+        filetype: String,
+        gitClean: Bool = false,
+        fixLFS: Bool = false,
+        initializeSubmodules: Bool = false
+    ) {
+        self.repoPath = repoPath
+        self.filetype = filetype
+        self.gitClean = gitClean
+        self.fixLFS = fixLFS
+        self.initializeSubmodules = initializeSubmodules
+    }
+}
+
 /// SDK for counting files by extension.
 public struct FilesSDK: Sendable {
     private static let logger = Logger(label: "scout.FilesSDK")
@@ -21,31 +44,20 @@ public struct FilesSDK: Sendable {
     }
 
     /// Counts files with the specified extension in the repository.
-    /// - Parameters:
-    ///   - filetype: File extension to count (without dot)
-    ///   - repoPath: Path to the repository
-    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
-    ///   - fixLFS: Fix broken LFS pointers by committing modified files
-    ///   - initializeSubmodules: Whether to initialize git submodules
+    /// - Parameter input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching files
-    public func countFiles(
-        of filetype: String,
-        in repoPath: URL,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
-    ) async throws -> Result {
+    public func countFiles(input: FilesInput) async throws -> Result {
         try await GitFix.prepareRepository(
-            in: repoPath,
-            gitClean: gitClean,
-            fixLFS: fixLFS,
-            initializeSubmodules: initializeSubmodules
+            in: input.repoPath,
+            gitClean: input.gitClean,
+            fixLFS: input.fixLFS,
+            initializeSubmodules: input.initializeSubmodules
         )
 
-        let files = findFiles(of: filetype, in: repoPath)
+        let files = findFiles(of: input.filetype, in: input.repoPath)
 
         return Result(
-            filetype: filetype,
+            filetype: input.filetype,
             files: files
         )
     }
@@ -53,33 +65,19 @@ public struct FilesSDK: Sendable {
     /// Checks out a commit and counts files with the specified extension.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - repoPath: Path to the repository
-    ///   - filetype: File extension to count (without dot)
-    ///   - gitClean: Run `git clean -ffdx && git reset --hard HEAD` before analysis
-    ///   - fixLFS: Fix broken LFS pointers by committing modified files
-    ///   - initializeSubmodules: Whether to initialize git submodules
+    ///   - input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching files
     public func analyzeCommit(
         hash: String,
-        repoPath: URL,
-        filetype: String,
-        gitClean: Bool = false,
-        fixLFS: Bool = false,
-        initializeSubmodules: Bool = false
+        input: FilesInput
     ) async throws -> Result {
         try await Shell.execute(
             "git",
             arguments: ["checkout", hash],
-            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+            workingDirectory: FilePath(input.repoPath.path(percentEncoded: false))
         )
 
-        return try await countFiles(
-            of: filetype,
-            in: repoPath,
-            gitClean: gitClean,
-            fixLFS: fixLFS,
-            initializeSubmodules: initializeSubmodules
-        )
+        return try await countFiles(input: input)
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL] {

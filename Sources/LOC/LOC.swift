@@ -106,14 +106,14 @@ public struct LOC: AsyncParsableCommand {
 
             var lastResult: LOCSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
-                    hash: hash,
+                let input = LOCInput(
                     repoPath: repoPathURL,
                     configuration: sdkConfig,
                     gitClean: gitClean,
                     fixLFS: fixLfs,
                     initializeSubmodules: initializeSubmodules
                 )
+                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(
                     "Found \(lastResult!.linesOfCode) lines of '\(locConfig.languages)' code at \(hash)"

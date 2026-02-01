@@ -128,8 +128,7 @@ public struct Pattern: AsyncParsableCommand {
 
             var lastResult: PatternSDK.Result?
             for hash in commitHashes {
-                lastResult = try await sdk.analyzeCommit(
-                    hash: hash,
+                let input = PatternInput(
                     repoPath: repoPathURL,
                     pattern: pattern,
                     extensions: fileExtensions,
@@ -137,6 +136,7 @@ public struct Pattern: AsyncParsableCommand {
                     fixLFS: fixLfs,
                     initializeSubmodules: initializeSubmodules
                 )
+                lastResult = try await sdk.analyzeCommit(hash: hash, input: input)
 
                 Self.logger.notice(
                     "Found \(lastResult!.matches.count) matches for '\(pattern)' at \(hash)"

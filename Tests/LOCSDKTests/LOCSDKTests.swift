@@ -13,8 +13,9 @@ struct LOCSDKTests {
             include: ["Sources"],
             exclude: []
         )
+        let input = LOCInput(repoPath: samplesURL, configuration: config)
 
-        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+        let result = try await sut.countLOC(input: input)
 
         #expect(result.linesOfCode == 16)
     }
@@ -27,8 +28,9 @@ struct LOCSDKTests {
             include: ["Sources", "Vendor"],
             exclude: ["Vendor"]
         )
+        let input = LOCInput(repoPath: samplesURL, configuration: configWithExclude)
 
-        let result = try await sut.countLOC(in: samplesURL, configuration: configWithExclude)
+        let result = try await sut.countLOC(input: input)
 
         #expect(result.linesOfCode == 16)
     }
@@ -41,8 +43,9 @@ struct LOCSDKTests {
             include: ["Sources", "Vendor"],
             exclude: []
         )
+        let input = LOCInput(repoPath: samplesURL, configuration: config)
 
-        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+        let result = try await sut.countLOC(input: input)
 
         #expect(result.linesOfCode == 22)
     }
@@ -55,8 +58,9 @@ struct LOCSDKTests {
             include: ["NonExistentFolder"],
             exclude: []
         )
+        let input = LOCInput(repoPath: samplesURL, configuration: config)
 
-        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+        let result = try await sut.countLOC(input: input)
 
         #expect(result.linesOfCode == 0)
     }
@@ -69,8 +73,9 @@ struct LOCSDKTests {
             include: ["Sources"],
             exclude: []
         )
+        let input = LOCInput(repoPath: samplesURL, configuration: config)
 
-        let result = try await sut.countLOC(in: samplesURL, configuration: config)
+        let result = try await sut.countLOC(input: input)
 
         #expect(result.linesOfCode == 0)
     }

@@ -8,12 +8,13 @@ struct BuildSettingsSDKTests {
     @Test
     func `When extracting build settings, should return targets with settings`() async throws {
         let samplesURL = try samplesDirectory()
-
-        let result = try await sut.extractBuildSettings(
-            in: samplesURL,
+        let input = BuildSettingsInput(
+            repoPath: samplesURL,
             setupCommands: [],
             configuration: "Debug"
         )
+
+        let result = try await sut.extractBuildSettings(input: input)
 
         #expect(result.count == 1)
         let target = try #require(result.first)
@@ -25,30 +26,32 @@ struct BuildSettingsSDKTests {
     @Test
     func `When setup command fails, should throw error`() async throws {
         let samplesURL = try samplesDirectory()
-        let failingCommand = BuildSettingsSDK.SetupCommand(command: "exit 1")
+        let failingCommand = SetupCommand(command: "exit 1")
+        let input = BuildSettingsInput(
+            repoPath: samplesURL,
+            setupCommands: [failingCommand],
+            configuration: "Debug"
+        )
 
         await #expect(throws: BuildSettingsSDK.AnalysisError.self) {
-            _ = try await sut.extractBuildSettings(
-                in: samplesURL,
-                setupCommands: [failingCommand],
-                configuration: "Debug"
-            )
+            _ = try await sut.extractBuildSettings(input: input)
         }
     }
 
     @Test
     func `When optional setup command fails, should continue`() async throws {
         let samplesURL = try samplesDirectory()
-        let optionalFailingCommand = BuildSettingsSDK.SetupCommand(
+        let optionalFailingCommand = SetupCommand(
             command: "exit 1",
             optional: true
         )
-
-        let result = try await sut.extractBuildSettings(
-            in: samplesURL,
+        let input = BuildSettingsInput(
+            repoPath: samplesURL,
             setupCommands: [optionalFailingCommand],
             configuration: "Debug"
         )
+
+        let result = try await sut.extractBuildSettings(input: input)
 
         #expect(result.count == 1)
     }
