@@ -1,6 +1,7 @@
-import BuildSettings
 import Foundation
 import Testing
+
+@testable import BuildSettings
 
 @Suite("CommandParser")
 struct CommandParserTests {
