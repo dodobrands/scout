@@ -5,14 +5,21 @@ Count lines of code using `cloc`.
 ## Usage
 
 ```bash
-# Use config file (required for LOC configurations)
+# Specify languages directly
+scout loc Swift Objective-C
+
+# Or use config file
 scout loc --config loc-config.json
 
 # Analyze specific commits
-scout loc --config loc-config.json --commits abc123 def456
+scout loc Swift --commits abc123 def456
 ```
 
 ## Arguments
+
+### Positional
+
+- `<languages>` — Programming languages to count (e.g., Swift Objective-C)
 
 ### Optional
 
@@ -25,14 +32,21 @@ scout loc --config loc-config.json --commits abc123 def456
 - `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
 - `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
 
-## Configuration
+## Configuration (Optional)
 
-LOC tool requires a config file to specify languages and paths.
+Configuration file is optional. Use it when you need advanced options like include/exclude paths.
 
 > **Note:** CLI flags take priority over config values.
 
 ```bash
+# Arguments only (counts all files)
+scout loc Swift Objective-C
+
+# Config only (with include/exclude paths)
 scout loc --config loc-config.json
+
+# Arguments override config
+scout loc Swift --config loc-config.json
 ```
 
 ### JSON Format
