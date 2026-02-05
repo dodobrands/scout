@@ -5,14 +5,17 @@ Extract build settings from Xcode projects.
 ## Usage
 
 ```bash
-# Specify parameters directly
-scout build-settings SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
+# Specify project and parameters directly
+scout build-settings --project MyApp.xcworkspace SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
 
 # Or use config file
 scout build-settings --config build-settings-config.json
 
+# CLI overrides config
+scout build-settings --project Other.xcodeproj --config build-settings-config.json
+
 # Analyze specific commits
-scout build-settings SWIFT_VERSION --commits abc123 def456
+scout build-settings --project MyApp.xcworkspace SWIFT_VERSION --commits abc123 def456
 ```
 
 ## Arguments
@@ -20,6 +23,10 @@ scout build-settings SWIFT_VERSION --commits abc123 def456
 ### Positional
 
 - `<build-settings-parameters>` — Build settings parameters to extract (e.g., SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET)
+
+### Required
+
+- `--project, -p <path>` — Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Can be relative to repo root or absolute. Required via CLI or config file.
 
 ### Optional
 
@@ -32,30 +39,38 @@ scout build-settings SWIFT_VERSION --commits abc123 def456
 - `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
 - `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
 
-## Configuration (Optional)
+## Configuration
 
-Configuration file is optional for basic usage, but required for setup commands.
+Configuration file is optional if `--project` is provided via CLI.
 
 > **Note:** CLI flags take priority over config values.
 
 ```bash
-# Arguments only
-scout build-settings SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
+# CLI only (no config needed)
+scout build-settings --project MyApp.xcworkspace SWIFT_VERSION
 
 # Config only
 scout build-settings --config build-settings-config.json
 
-# Arguments override config
-scout build-settings SWIFT_VERSION --config build-settings-config.json
+# CLI overrides config
+scout build-settings --project Other.xcodeproj --config build-settings-config.json
 ```
 
 ### JSON Format
 
-**Minimal (no setup commands):**
+**Minimal:**
 
 ```json
 {
-  "workspaceName": "MyApp",
+  "project": "MyApp.xcworkspace"
+}
+```
+
+**With build settings parameters:**
+
+```json
+{
+  "project": "MyApp.xcworkspace",
   "configuration": "Debug",
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"]
 }
@@ -65,7 +80,7 @@ scout build-settings SWIFT_VERSION --config build-settings-config.json
 
 ```json
 {
-  "workspaceName": "MyApp",
+  "project": "App/MyApp.xcworkspace",
   "configuration": "Debug",
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
   "setupCommands": [
@@ -80,7 +95,7 @@ scout build-settings SWIFT_VERSION --config build-settings-config.json
 
 ```json
 {
-  "workspaceName": "MyApp",
+  "project": "MyApp.xcodeproj",
   "configuration": "Debug",
   "buildSettingsParameters": ["SWIFT_VERSION"],
   "git": {
@@ -93,16 +108,16 @@ scout build-settings SWIFT_VERSION --config build-settings-config.json
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `workspaceName` | `String` | Xcode workspace/project name (without extension) |
-| `configuration` | `String` | Build configuration (Debug, Release, etc.) |
-| `buildSettingsParameters` | `[String]` | Build settings to extract |
-| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional) |
-| `setupCommands[].command` | `String` | Shell command to execute |
-| `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
-| `setupCommands[].optional` | `Bool` | If `true`, analysis continues even if command fails (default: `false`) |
-| `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `project` | `String` | **Yes*** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. *Can be provided via `--project` CLI flag instead. |
+| `configuration` | `String` | No | Build configuration (default: "Debug") |
+| `buildSettingsParameters` | `[String]` | No | Build settings to extract |
+| `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit |
+| `setupCommands[].command` | `String` | Yes | Shell command to execute |
+| `setupCommands[].workingDirectory` | `String` | No | Directory relative to repo root |
+| `setupCommands[].optional` | `Bool` | No | If `true`, analysis continues even if command fails (default: `false`) |
+| `git` | `Object` | No | [Git configuration](../Common/GitConfiguration.md) |
 
 ## Output Format
 

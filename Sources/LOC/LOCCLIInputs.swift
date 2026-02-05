@@ -4,21 +4,21 @@ import Foundation
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
 struct LOCCLIInputs: Sendable {
     /// Programming languages to count (e.g., ["Swift", "Objective-C"])
-    public let languages: [String]?
+    let languages: [String]?
 
     /// Paths to include
-    public let include: [String]?
+    let include: [String]?
 
     /// Paths to exclude
-    public let exclude: [String]?
+    let exclude: [String]?
 
     /// Commit hashes to analyze
-    public let commits: [String]?
+    let commits: [String]?
 
     /// Git configuration from CLI flags
-    public let git: GitCLIInputs
+    let git: GitCLIInputs
 
-    public init(
+    init(
         languages: [String]?,
         include: [String]?,
         exclude: [String]?,
@@ -38,19 +38,5 @@ struct LOCCLIInputs: Sendable {
             fixLFS: fixLfs,
             initializeSubmodules: initializeSubmodules
         )
-    }
-
-    public init(
-        languages: [String]?,
-        include: [String]?,
-        exclude: [String]?,
-        commits: [String]?,
-        git: GitCLIInputs
-    ) {
-        self.languages = languages
-        self.include = include
-        self.exclude = exclude
-        self.commits = commits
-        self.git = git
     }
 }

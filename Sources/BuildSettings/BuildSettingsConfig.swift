@@ -10,49 +10,43 @@ struct BuildSettingsConfig: Sendable {
     /// Represents a single setup command with optional working directory.
     struct SetupCommand: Sendable, Decodable {
         /// Command to execute
-        public let command: String
+        let command: String
 
         /// Optional working directory relative to repo root (e.g., "project").
         /// If not provided, command executes in repo root.
-        public let workingDirectory: String?
+        let workingDirectory: String?
 
         /// If true, analysis continues even if this command fails.
-        public let optional: Bool?
-
-        /// Initialize setup command
-        public init(command: String, workingDirectory: String?, optional: Bool?) {
-            self.command = command
-            self.workingDirectory = workingDirectory
-            self.optional = optional
-        }
+        let optional: Bool?
     }
 
     /// Commands to setup project, executed sequentially.
-    public let setupCommands: [SetupCommand]?
+    let setupCommands: [SetupCommand]?
 
     /// Build settings parameters to collect (e.g., ["SWIFT_VERSION"])
-    public let buildSettingsParameters: [String]?
+    let buildSettingsParameters: [String]?
 
-    /// Xcode workspace or project name (without extension)
-    public let workspaceName: String?
+    /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj).
+    /// Can be relative to repo root or absolute.
+    let project: String?
 
     /// Build configuration name (e.g., "Debug", "Release")
-    public let configuration: String?
+    let configuration: String?
 
     /// Git operations configuration (file layer - all fields optional)
-    public let git: GitFileConfig?
+    let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(
+    init(
         setupCommands: [SetupCommand]?,
         buildSettingsParameters: [String]?,
-        workspaceName: String?,
+        project: String?,
         configuration: String?,
         git: GitFileConfig? = nil
     ) {
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
-        self.workspaceName = workspaceName
+        self.project = project
         self.configuration = configuration
         self.git = git
     }
@@ -79,7 +73,7 @@ struct BuildSettingsConfig: Sendable {
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with ExtractBuildSettings configuration (required)
     /// - Throws: `BuildSettingsConfigError` if JSON file is malformed or missing required fields
-    public init(configFilePath: FilePath) async throws {
+    init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
@@ -94,7 +88,7 @@ struct BuildSettingsConfig: Sendable {
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.setupCommands = variables.setupCommands
             self.buildSettingsParameters = variables.buildSettingsParameters
-            self.workspaceName = variables.workspaceName
+            self.project = variables.project
             self.configuration = variables.configuration
             self.git = variables.git
         } catch let decodingError as DecodingError {
@@ -113,21 +107,21 @@ struct BuildSettingsConfig: Sendable {
     private struct Variables: Decodable {
         let setupCommands: [SetupCommand]?
         let buildSettingsParameters: [String]?
-        let workspaceName: String?
+        let project: String?
         let configuration: String?
         let git: GitFileConfig?
     }
 }
 
 /// Errors related to ExtractBuildSettings configuration.
-public enum BuildSettingsConfigError: Error {
+enum BuildSettingsConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
 extension BuildSettingsConfigError: LocalizedError {
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .missingFile(let path):
             return "Configuration file not found at: \(path)"

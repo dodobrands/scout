@@ -58,6 +58,7 @@ public struct BuildSettingsInput: Sendable {
     public let git: GitConfiguration
     public let setupCommands: [SetupCommand]
     public let buildSettingsParameters: [String]
+    public let project: String
     public let configuration: String
     public let commits: [String]
 
@@ -65,12 +66,14 @@ public struct BuildSettingsInput: Sendable {
         git: GitConfiguration,
         setupCommands: [SetupCommand],
         buildSettingsParameters: [String] = [],
+        project: String,
         configuration: String,
         commits: [String] = ["HEAD"]
     ) {
         self.git = git
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
+        self.project = project
         self.configuration = configuration
         self.commits = commits
     }
@@ -113,7 +116,11 @@ public struct BuildSettingsSDK: Sendable {
 
         try await executeSetupCommands(input.setupCommands, in: repoPath)
 
-        let foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
+        let foundProjectsAndWorkspaces = try resolveProject(
+            path: input.project,
+            repoPath: repoPath
+        )
+
         let projectsWithTargets = try await getTargetsForAllProjects(
             foundProjectsAndWorkspaces: foundProjectsAndWorkspaces
         )
@@ -206,35 +213,30 @@ public struct BuildSettingsSDK: Sendable {
 
     // MARK: - Project Discovery
 
-    private func findAllProjectsAndWorkspaces(in repoPath: URL) throws -> [ProjectOrWorkspace] {
+    private func resolveProject(
+        path: String,
+        repoPath: URL
+    ) throws -> [ProjectOrWorkspace] {
         let fileManager = FileManager.default
-        var projects: [ProjectOrWorkspace] = []
 
-        guard
-            let enumerator = fileManager.enumerator(
-                at: repoPath,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: [.skipsHiddenFiles],
-                errorHandler: nil
+        // Resolve path: if relative, join with repoPath; if absolute, use as-is
+        let resolvedPath: String
+        if path.hasPrefix("/") {
+            resolvedPath = path
+        } else {
+            resolvedPath = repoPath.appendingPathComponent(path).path(percentEncoded: false)
+        }
+
+        guard fileManager.fileExists(atPath: resolvedPath) else {
+            Self.logger.warning(
+                "Project or workspace not found",
+                metadata: ["path": "\(resolvedPath)"]
             )
-        else {
             return []
         }
 
-        while let element = enumerator.nextObject() as? URL {
-            let pathString = element.path(percentEncoded: false)
-            if pathString.contains("/project.xcworkspace") {
-                continue
-            }
-
-            if element.pathExtension == "xcworkspace" {
-                projects.append(ProjectOrWorkspace(path: pathString, isWorkspace: true))
-            } else if element.pathExtension == "xcodeproj" {
-                projects.append(ProjectOrWorkspace(path: pathString, isWorkspace: false))
-            }
-        }
-
-        return projects
+        let isWorkspace = resolvedPath.hasSuffix(".xcworkspace")
+        return [ProjectOrWorkspace(path: resolvedPath, isWorkspace: isWorkspace)]
     }
 
     private func getTargetsForAllProjects(

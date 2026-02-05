@@ -13,6 +13,7 @@ struct BuildSettingsSDKTests {
         let input = BuildSettingsInput(
             git: gitConfig,
             setupCommands: [],
+            project: "TestApp.xcodeproj",
             configuration: "Debug"
         )
 
@@ -33,6 +34,7 @@ struct BuildSettingsSDKTests {
         let input = BuildSettingsInput(
             git: gitConfig,
             setupCommands: [failingCommand],
+            project: "TestApp.xcodeproj",
             configuration: "Debug"
         )
 
@@ -52,6 +54,7 @@ struct BuildSettingsSDKTests {
         let input = BuildSettingsInput(
             git: gitConfig,
             setupCommands: [optionalFailingCommand],
+            project: "TestApp.xcodeproj",
             configuration: "Debug"
         )
 
