@@ -27,6 +27,12 @@ public struct BuildSettings: AsyncParsableCommand {
     @Option(help: "Path to configuration JSON file")
     public var config: String?
 
+    @Argument(
+        help:
+            "Build settings parameters to extract (e.g., SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET)"
+    )
+    public var buildSettingsParameters: [String] = []
+
     @Option(
         name: [.long, .short],
         parsing: .upToNextOption,
@@ -61,6 +67,7 @@ public struct BuildSettings: AsyncParsableCommand {
 
         // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = BuildSettingsCLIInputs(
+            buildSettingsParameters: buildSettingsParameters.nilIfEmpty,
             repoPath: repoPath,
             commits: commits.nilIfEmpty,
             gitClean: gitClean ? true : nil,

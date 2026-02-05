@@ -13,6 +13,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `CLI repoPath overrides config repoPath`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: "/cli/path",
             commits: nil,
             gitClean: false,
@@ -34,6 +35,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to config repoPath when CLI is nil`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -55,6 +57,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to current directory when both repoPath nil`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -71,6 +74,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `CLI commits override default`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: ["abc123", "def456"],
             gitClean: false,
@@ -85,6 +89,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to HEAD when CLI commits nil`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -101,6 +106,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `config configuration is used`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -122,6 +128,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to Debug when configuration nil`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -138,6 +145,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `setupCommands from config are converted`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -167,6 +175,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `setupCommands defaults to empty array when config nil`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -179,10 +188,33 @@ struct BuildSettingsInputPriorityTests {
         #expect(input.setupCommands.isEmpty)
     }
 
-    // MARK: - buildSettingsParameters from config
+    // MARK: - buildSettingsParameters priority
 
-    @Test func `buildSettingsParameters from config are used`() {
+    @Test func `CLI buildSettingsParameters override config buildSettingsParameters`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: ["CLI_PARAM"],
+            repoPath: nil,
+            commits: nil,
+            gitClean: false,
+            fixLfs: false,
+            initializeSubmodules: false
+        )
+        let config = BuildSettingsConfig(
+            setupCommands: nil,
+            buildSettingsParameters: ["CONFIG_PARAM"],
+            workspaceName: nil,
+            configuration: nil,
+            git: nil
+        )
+
+        let input = BuildSettingsInput(cli: cli, config: config)
+
+        #expect(input.buildSettingsParameters == ["CLI_PARAM"])
+    }
+
+    @Test func `buildSettingsParameters from config are used when CLI is nil`() {
+        let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -202,8 +234,9 @@ struct BuildSettingsInputPriorityTests {
         #expect(input.buildSettingsParameters == ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"])
     }
 
-    @Test func `buildSettingsParameters defaults to empty when config nil`() {
+    @Test func `buildSettingsParameters defaults to empty when both nil`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -220,6 +253,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `git flags from CLI are applied`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: "/test/path",
             commits: nil,
             gitClean: true,
@@ -236,6 +270,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `git flags default to false`() {
         let cli = BuildSettingsCLIInputs(
+            buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
             gitClean: false,
