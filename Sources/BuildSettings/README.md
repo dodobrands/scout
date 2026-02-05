@@ -32,30 +32,35 @@ scout build-settings SWIFT_VERSION --commits abc123 def456
 - `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
 - `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
 
-## Configuration (Optional)
+## Configuration
 
-Configuration file is optional for basic usage, but required for setup commands.
+Configuration file is **required** for the `project` field. Other fields are optional.
 
 > **Note:** CLI flags take priority over config values.
 
 ```bash
-# Arguments only
-scout build-settings SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
-
-# Config only
+# Config required for project path
 scout build-settings --config build-settings-config.json
 
-# Arguments override config
+# Arguments override config buildSettingsParameters
 scout build-settings SWIFT_VERSION --config build-settings-config.json
 ```
 
 ### JSON Format
 
-**Minimal (no setup commands):**
+**Minimal:**
 
 ```json
 {
-  "workspaceName": "MyApp",
+  "project": "MyApp.xcworkspace"
+}
+```
+
+**With build settings parameters:**
+
+```json
+{
+  "project": "MyApp.xcworkspace",
   "configuration": "Debug",
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"]
 }
@@ -65,7 +70,7 @@ scout build-settings SWIFT_VERSION --config build-settings-config.json
 
 ```json
 {
-  "workspaceName": "MyApp",
+  "project": "App/MyApp.xcworkspace",
   "configuration": "Debug",
   "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
   "setupCommands": [
@@ -80,7 +85,7 @@ scout build-settings SWIFT_VERSION --config build-settings-config.json
 
 ```json
 {
-  "workspaceName": "MyApp",
+  "project": "MyApp.xcodeproj",
   "configuration": "Debug",
   "buildSettingsParameters": ["SWIFT_VERSION"],
   "git": {
@@ -93,16 +98,16 @@ scout build-settings SWIFT_VERSION --config build-settings-config.json
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `workspaceName` | `String` | Xcode workspace/project name (without extension) |
-| `configuration` | `String` | Build configuration (Debug, Release, etc.) |
-| `buildSettingsParameters` | `[String]` | Build settings to extract |
-| `setupCommands` | `[SetupCommand]?` | Commands to execute before analyzing each commit (optional) |
-| `setupCommands[].command` | `String` | Shell command to execute |
-| `setupCommands[].workingDirectory` | `String?` | Directory relative to repo root (optional) |
-| `setupCommands[].optional` | `Bool` | If `true`, analysis continues even if command fails (default: `false`) |
-| `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `project` | `String` | **Yes** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. |
+| `configuration` | `String` | No | Build configuration (default: "Debug") |
+| `buildSettingsParameters` | `[String]` | No | Build settings to extract |
+| `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit |
+| `setupCommands[].command` | `String` | Yes | Shell command to execute |
+| `setupCommands[].workingDirectory` | `String` | No | Directory relative to repo root |
+| `setupCommands[].optional` | `Bool` | No | If `true`, analysis continues even if command fails (default: `false`) |
+| `git` | `Object` | No | [Git configuration](../Common/GitConfiguration.md) |
 
 ## Output Format
 
