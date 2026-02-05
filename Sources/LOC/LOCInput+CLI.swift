@@ -20,7 +20,20 @@ extension LOCInput {
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
     init(cli: LOCCLIInputs, config: LOCConfig?) {
-        let configurations = config?.configurations?.map(LOCConfiguration.init) ?? []
+        // CLI languages create a single configuration; include/exclude default to empty
+        let configurations: [LOCConfiguration]
+        if let cliLanguages = cli.languages {
+            configurations = [
+                LOCConfiguration(
+                    languages: cliLanguages,
+                    include: cli.include ?? [],
+                    exclude: cli.exclude ?? []
+                )
+            ]
+        } else {
+            configurations = config?.configurations?.map(LOCConfiguration.init) ?? []
+        }
+
         let commits = cli.commits ?? ["HEAD"]
 
         // Git configuration merges CLI > FileConfig > Default

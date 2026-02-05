@@ -26,6 +26,23 @@ public struct LOC: AsyncParsableCommand {
     @Option(help: "Path to configuration JSON file")
     public var config: String?
 
+    @Argument(help: "Programming languages to count (e.g., Swift Objective-C)")
+    public var languages: [String] = []
+
+    @Option(
+        name: [.long, .short],
+        parsing: .upToNextOption,
+        help: "Paths to include (e.g., Sources App)"
+    )
+    public var include: [String] = []
+
+    @Option(
+        name: [.long, .short],
+        parsing: .upToNextOption,
+        help: "Paths to exclude (e.g., Tests Vendor)"
+    )
+    public var exclude: [String] = []
+
     @Option(
         name: [.long, .short],
         parsing: .upToNextOption,
@@ -61,6 +78,9 @@ public struct LOC: AsyncParsableCommand {
 
         // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = LOCCLIInputs(
+            languages: languages.nilIfEmpty,
+            include: include.nilIfEmpty,
+            exclude: exclude.nilIfEmpty,
             repoPath: repoPath,
             commits: commits.nilIfEmpty,
             gitClean: gitClean ? true : nil,
