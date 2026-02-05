@@ -76,7 +76,7 @@ public struct BuildSettings: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default
-        let input = BuildSettingsInput(cli: cliInputs, config: fileConfig)
+        let input = try BuildSettingsInput(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
             try URL(string: input.git.repoPath)

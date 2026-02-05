@@ -58,7 +58,7 @@ public struct BuildSettingsInput: Sendable {
     public let git: GitConfiguration
     public let setupCommands: [SetupCommand]
     public let buildSettingsParameters: [String]
-    public let workspaceName: String?
+    public let project: String
     public let configuration: String
     public let commits: [String]
 
@@ -66,14 +66,14 @@ public struct BuildSettingsInput: Sendable {
         git: GitConfiguration,
         setupCommands: [SetupCommand],
         buildSettingsParameters: [String] = [],
-        workspaceName: String? = nil,
+        project: String,
         configuration: String,
         commits: [String] = ["HEAD"]
     ) {
         self.git = git
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
-        self.workspaceName = workspaceName
+        self.project = project
         self.configuration = configuration
         self.commits = commits
     }
@@ -116,15 +116,10 @@ public struct BuildSettingsSDK: Sendable {
 
         try await executeSetupCommands(input.setupCommands, in: repoPath)
 
-        let foundProjectsAndWorkspaces: [ProjectOrWorkspace]
-        if let workspaceName = input.workspaceName {
-            foundProjectsAndWorkspaces = try findProjectOrWorkspace(
-                named: workspaceName,
-                in: repoPath
-            )
-        } else {
-            foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
-        }
+        let foundProjectsAndWorkspaces = try resolveProject(
+            path: input.project,
+            repoPath: repoPath
+        )
 
         let projectsWithTargets = try await getTargetsForAllProjects(
             foundProjectsAndWorkspaces: foundProjectsAndWorkspaces
@@ -218,70 +213,30 @@ public struct BuildSettingsSDK: Sendable {
 
     // MARK: - Project Discovery
 
-    private func findProjectOrWorkspace(
-        named name: String,
-        in repoPath: URL
+    private func resolveProject(
+        path: String,
+        repoPath: URL
     ) throws -> [ProjectOrWorkspace] {
         let fileManager = FileManager.default
 
-        // Try workspace first
-        let workspacePath = repoPath.appendingPathComponent("\(name).xcworkspace")
-        if fileManager.fileExists(atPath: workspacePath.path(percentEncoded: false)) {
-            return [
-                ProjectOrWorkspace(
-                    path: workspacePath.path(percentEncoded: false),
-                    isWorkspace: true
-                )
-            ]
+        // Resolve path: if relative, join with repoPath; if absolute, use as-is
+        let resolvedPath: String
+        if path.hasPrefix("/") {
+            resolvedPath = path
+        } else {
+            resolvedPath = repoPath.appendingPathComponent(path).path(percentEncoded: false)
         }
 
-        // Try project
-        let projectPath = repoPath.appendingPathComponent("\(name).xcodeproj")
-        if fileManager.fileExists(atPath: projectPath.path(percentEncoded: false)) {
-            return [
-                ProjectOrWorkspace(
-                    path: projectPath.path(percentEncoded: false),
-                    isWorkspace: false
-                )
-            ]
-        }
-
-        Self.logger.warning(
-            "Workspace or project not found",
-            metadata: ["name": "\(name)"]
-        )
-        return []
-    }
-
-    private func findAllProjectsAndWorkspaces(in repoPath: URL) throws -> [ProjectOrWorkspace] {
-        let fileManager = FileManager.default
-        var projects: [ProjectOrWorkspace] = []
-
-        guard
-            let enumerator = fileManager.enumerator(
-                at: repoPath,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: [.skipsHiddenFiles],
-                errorHandler: nil
+        guard fileManager.fileExists(atPath: resolvedPath) else {
+            Self.logger.warning(
+                "Project or workspace not found",
+                metadata: ["path": "\(resolvedPath)"]
             )
-        else {
             return []
         }
 
-        while let element = enumerator.nextObject() as? URL {
-            let pathString = element.path(percentEncoded: false)
-            if pathString.contains("/project.xcworkspace") {
-                continue
-            }
-
-            if element.pathExtension == "xcworkspace" {
-                projects.append(ProjectOrWorkspace(path: pathString, isWorkspace: true))
-            } else if element.pathExtension == "xcodeproj" {
-                projects.append(ProjectOrWorkspace(path: pathString, isWorkspace: false))
-            }
-        }
-
-        return projects
+        let isWorkspace = resolvedPath.hasSuffix(".xcworkspace")
+        return [ProjectOrWorkspace(path: resolvedPath, isWorkspace: isWorkspace)]
     }
 
     private func getTargetsForAllProjects(

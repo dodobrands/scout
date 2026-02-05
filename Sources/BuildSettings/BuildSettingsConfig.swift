@@ -26,8 +26,9 @@ struct BuildSettingsConfig: Sendable {
     /// Build settings parameters to collect (e.g., ["SWIFT_VERSION"])
     let buildSettingsParameters: [String]?
 
-    /// Xcode workspace or project name (without extension)
-    let workspaceName: String?
+    /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj).
+    /// Can be relative to repo root or absolute.
+    let project: String?
 
     /// Build configuration name (e.g., "Debug", "Release")
     let configuration: String?
@@ -39,13 +40,13 @@ struct BuildSettingsConfig: Sendable {
     init(
         setupCommands: [SetupCommand]?,
         buildSettingsParameters: [String]?,
-        workspaceName: String?,
+        project: String?,
         configuration: String?,
         git: GitFileConfig? = nil
     ) {
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
-        self.workspaceName = workspaceName
+        self.project = project
         self.configuration = configuration
         self.git = git
     }
@@ -87,7 +88,7 @@ struct BuildSettingsConfig: Sendable {
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.setupCommands = variables.setupCommands
             self.buildSettingsParameters = variables.buildSettingsParameters
-            self.workspaceName = variables.workspaceName
+            self.project = variables.project
             self.configuration = variables.configuration
             self.git = variables.git
         } catch let decodingError as DecodingError {
@@ -106,7 +107,7 @@ struct BuildSettingsConfig: Sendable {
     private struct Variables: Decodable {
         let setupCommands: [SetupCommand]?
         let buildSettingsParameters: [String]?
-        let workspaceName: String?
+        let project: String?
         let configuration: String?
         let git: GitFileConfig?
     }
