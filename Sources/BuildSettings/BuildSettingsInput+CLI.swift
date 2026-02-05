@@ -21,7 +21,8 @@ extension BuildSettingsInput {
     ///   - config: Configuration loaded from JSON file (optional)
     init(cli: BuildSettingsCLIInputs, config: BuildSettingsConfig?) {
         let setupCommands = config?.setupCommands?.map(SetupCommand.init) ?? []
-        let buildSettingsParameters = config?.buildSettingsParameters ?? []
+        let buildSettingsParameters =
+            cli.buildSettingsParameters ?? config?.buildSettingsParameters ?? []
         let configuration = config?.configuration ?? "Debug"
         let commits = cli.commits ?? ["HEAD"]
 

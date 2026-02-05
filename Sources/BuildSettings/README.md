@@ -5,14 +5,21 @@ Extract build settings from Xcode projects.
 ## Usage
 
 ```bash
-# Use config file (required for setup commands and parameters)
+# Specify parameters directly
+scout build-settings SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
+
+# Or use config file
 scout build-settings --config build-settings-config.json
 
 # Analyze specific commits
-scout build-settings --config build-settings-config.json --commits abc123 def456
+scout build-settings SWIFT_VERSION --commits abc123 def456
 ```
 
 ## Arguments
+
+### Positional
+
+- `<build-settings-parameters>` — Build settings parameters to extract (e.g., SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET)
 
 ### Optional
 
@@ -25,14 +32,21 @@ scout build-settings --config build-settings-config.json --commits abc123 def456
 - `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
 - `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
 
-## Configuration
+## Configuration (Optional)
 
-Build settings tool requires a config file to specify setup commands and parameters.
+Configuration file is optional for basic usage, but required for setup commands.
 
 > **Note:** CLI flags take priority over config values.
 
 ```bash
+# Arguments only
+scout build-settings SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
+
+# Config only
 scout build-settings --config build-settings-config.json
+
+# Arguments override config
+scout build-settings SWIFT_VERSION --config build-settings-config.json
 ```
 
 ### JSON Format
