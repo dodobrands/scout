@@ -24,6 +24,12 @@ public struct BuildSettings: AsyncParsableCommand {
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
     public var repoPath: String?
 
+    @Option(
+        name: [.long, .short],
+        help: "Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)"
+    )
+    public var project: String?
+
     @Option(help: "Path to configuration JSON file")
     public var config: String?
 
@@ -67,6 +73,7 @@ public struct BuildSettings: AsyncParsableCommand {
 
         // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = BuildSettingsCLIInputs(
+            project: project,
             buildSettingsParameters: buildSettingsParameters.nilIfEmpty,
             repoPath: repoPath,
             commits: commits.nilIfEmpty,

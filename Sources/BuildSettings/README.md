@@ -5,14 +5,17 @@ Extract build settings from Xcode projects.
 ## Usage
 
 ```bash
-# Specify parameters directly
-scout build-settings SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
+# Specify project and parameters directly
+scout build-settings --project MyApp.xcworkspace SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
 
 # Or use config file
 scout build-settings --config build-settings-config.json
 
+# CLI overrides config
+scout build-settings --project Other.xcodeproj --config build-settings-config.json
+
 # Analyze specific commits
-scout build-settings SWIFT_VERSION --commits abc123 def456
+scout build-settings --project MyApp.xcworkspace SWIFT_VERSION --commits abc123 def456
 ```
 
 ## Arguments
@@ -20,6 +23,10 @@ scout build-settings SWIFT_VERSION --commits abc123 def456
 ### Positional
 
 - `<build-settings-parameters>` — Build settings parameters to extract (e.g., SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET)
+
+### Required
+
+- `--project, -p <path>` — Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Can be relative to repo root or absolute. Required via CLI or config file.
 
 ### Optional
 
@@ -34,16 +41,19 @@ scout build-settings SWIFT_VERSION --commits abc123 def456
 
 ## Configuration
 
-Configuration file is **required** for the `project` field. Other fields are optional.
+Configuration file is optional if `--project` is provided via CLI.
 
 > **Note:** CLI flags take priority over config values.
 
 ```bash
-# Config required for project path
+# CLI only (no config needed)
+scout build-settings --project MyApp.xcworkspace SWIFT_VERSION
+
+# Config only
 scout build-settings --config build-settings-config.json
 
-# Arguments override config buildSettingsParameters
-scout build-settings SWIFT_VERSION --config build-settings-config.json
+# CLI overrides config
+scout build-settings --project Other.xcodeproj --config build-settings-config.json
 ```
 
 ### JSON Format
@@ -100,7 +110,7 @@ scout build-settings SWIFT_VERSION --config build-settings-config.json
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `project` | `String` | **Yes** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. |
+| `project` | `String` | **Yes*** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. *Can be provided via `--project` CLI flag instead. |
 | `configuration` | `String` | No | Build configuration (default: "Debug") |
 | `buildSettingsParameters` | `[String]` | No | Build settings to extract |
 | `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit |

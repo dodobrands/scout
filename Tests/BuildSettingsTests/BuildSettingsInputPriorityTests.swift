@@ -13,6 +13,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `throws error when project is missing`() {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -30,6 +31,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `CLI repoPath overrides config repoPath`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: "/cli/path",
             commits: nil,
@@ -52,6 +54,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to config repoPath when CLI is nil`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -74,6 +77,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to current directory when both repoPath nil`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -98,6 +102,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `CLI commits override default`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: ["abc123", "def456"],
@@ -120,6 +125,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to HEAD when CLI commits nil`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -144,6 +150,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `config configuration is used`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -166,6 +173,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `falls back to Debug when configuration nil`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -190,6 +198,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `setupCommands from config are converted`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -220,6 +229,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `setupCommands defaults to empty array when config setupCommands nil`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -244,6 +254,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `CLI buildSettingsParameters override config buildSettingsParameters`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: ["CLI_PARAM"],
             repoPath: nil,
             commits: nil,
@@ -266,6 +277,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `buildSettingsParameters from config are used when CLI is nil`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -288,6 +300,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `buildSettingsParameters defaults to empty when both nil`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -312,6 +325,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `git flags from CLI are applied`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: "/test/path",
             commits: nil,
@@ -336,6 +350,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `git flags default to false`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -362,6 +377,7 @@ struct BuildSettingsInputPriorityTests {
 
     @Test func `project from config is passed to input`() throws {
         let cli = BuildSettingsCLIInputs(
+            project: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -378,6 +394,45 @@ struct BuildSettingsInputPriorityTests {
         )
 
         let input = try BuildSettingsInput(cli: cli, config: config)
+
+        #expect(input.project == "MyApp.xcworkspace")
+    }
+
+    @Test func `CLI project overrides config project`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: "CLIApp.xcodeproj",
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil,
+            gitClean: false,
+            fixLfs: false,
+            initializeSubmodules: false
+        )
+        let config = BuildSettingsConfig(
+            setupCommands: nil,
+            buildSettingsParameters: nil,
+            project: "ConfigApp.xcworkspace",
+            configuration: nil,
+            git: nil
+        )
+
+        let input = try BuildSettingsInput(cli: cli, config: config)
+
+        #expect(input.project == "CLIApp.xcodeproj")
+    }
+
+    @Test func `CLI project works without config`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: "MyApp.xcworkspace",
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil,
+            gitClean: false,
+            fixLfs: false,
+            initializeSubmodules: false
+        )
+
+        let input = try BuildSettingsInput(cli: cli, config: nil)
 
         #expect(input.project == "MyApp.xcworkspace")
     }

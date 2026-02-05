@@ -20,7 +20,7 @@ enum BuildSettingsInputError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingProject:
-            return "project is required in configuration file"
+            return "project is required (via --project or in configuration file)"
         }
     }
 }
@@ -33,7 +33,7 @@ extension BuildSettingsInput {
     ///   - config: Configuration loaded from JSON file (optional)
     /// - Throws: `BuildSettingsInputError.missingProject` if project not provided
     init(cli: BuildSettingsCLIInputs, config: BuildSettingsConfig?) throws {
-        guard let project = config?.project else {
+        guard let project = cli.project ?? config?.project else {
             throw BuildSettingsInputError.missingProject
         }
 
