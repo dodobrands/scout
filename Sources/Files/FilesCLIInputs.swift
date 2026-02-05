@@ -4,15 +4,15 @@ import Foundation
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
 struct FilesCLIInputs: Sendable {
     /// File extensions to count (e.g., ["swift", "storyboard"])
-    public let filetypes: [String]?
+    let filetypes: [String]?
 
     /// Commit hashes to analyze
-    public let commits: [String]?
+    let commits: [String]?
 
     /// Git configuration from CLI flags
-    public let git: GitCLIInputs
+    let git: GitCLIInputs
 
-    public init(
+    init(
         filetypes: [String]?,
         repoPath: String?,
         commits: [String]?,
@@ -28,11 +28,5 @@ struct FilesCLIInputs: Sendable {
             fixLFS: fixLfs,
             initializeSubmodules: initializeSubmodules
         )
-    }
-
-    public init(filetypes: [String]?, commits: [String]?, git: GitCLIInputs) {
-        self.filetypes = filetypes
-        self.commits = commits
-        self.git = git
     }
 }

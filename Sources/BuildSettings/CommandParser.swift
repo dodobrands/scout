@@ -14,13 +14,8 @@ extension CommandParserError: LocalizedError {
 }
 
 struct ParsedCommand {
-    public let executable: String
-    public let arguments: [String]
-
-    public init(executable: String, arguments: [String]) {
-        self.executable = executable
-        self.arguments = arguments
-    }
+    let executable: String
+    let arguments: [String]
 }
 
 struct CommandParser {
@@ -35,7 +30,7 @@ struct CommandParser {
     ///
     /// Example: `sed -i '' -n '1p; /tuist/p' .tool-versions`
     /// Returns: executable: "sed", arguments: ["-i", "''", "-n", "'1p; /tuist/p'", ".tool-versions"]
-    public static func parse(_ command: String) throws -> ParsedCommand {
+    static func parse(_ command: String) throws -> ParsedCommand {
         let trimmed = command.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else {
             throw CommandParserError.invalidCommand(command)
@@ -90,17 +85,12 @@ struct CommandParser {
     }
 
     /// Represents a command prepared for execution with executable and arguments.
-    public struct PreparedCommand {
+    struct PreparedCommand {
         /// Executable to run (e.g., "/bin/sh" for shell commands, or "mise" for direct commands)
-        public let executable: String
+        let executable: String
 
         /// Arguments to pass to executable
-        public let arguments: [String]
-
-        public init(executable: String, arguments: [String]) {
-            self.executable = executable
-            self.arguments = arguments
-        }
+        let arguments: [String]
     }
 
     /// Prepares a command string for execution, determining whether to use shell or direct execution.
@@ -108,7 +98,7 @@ struct CommandParser {
     /// - Parameter command: Command string to prepare
     /// - Returns: PreparedCommand with executable and arguments ready to execute
     /// - Throws: CommandParserError if command is invalid
-    public static func prepareExecution(_ command: String) throws -> PreparedCommand {
+    static func prepareExecution(_ command: String) throws -> PreparedCommand {
         // Check if command contains shell operators (pipes, redirects, etc.)
         if requiresShellExecution(command) {
             // Execute through shell for commands with pipes, redirects, etc.

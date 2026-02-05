@@ -4,15 +4,15 @@ import Foundation
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
 struct TypesCLIInputs: Sendable {
     /// Type names to count (e.g., ["UIView", "UIViewController"])
-    public let types: [String]?
+    let types: [String]?
 
     /// Commit hashes to analyze
-    public let commits: [String]?
+    let commits: [String]?
 
     /// Git configuration from CLI flags
-    public let git: GitCLIInputs
+    let git: GitCLIInputs
 
-    public init(
+    init(
         types: [String]?,
         repoPath: String?,
         commits: [String]?,
@@ -28,11 +28,5 @@ struct TypesCLIInputs: Sendable {
             fixLFS: fixLfs,
             initializeSubmodules: initializeSubmodules
         )
-    }
-
-    public init(types: [String]?, commits: [String]?, git: GitCLIInputs) {
-        self.types = types
-        self.commits = commits
-        self.git = git
     }
 }

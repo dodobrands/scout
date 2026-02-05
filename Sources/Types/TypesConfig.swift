@@ -8,10 +8,10 @@ struct TypesConfig: Sendable {
     static let defaultFileName = ".scout-types.json"
 
     /// Types to count (e.g., ["UIView", "UIViewController", "View", "XCTestCase"])
-    public let types: [String]?
+    let types: [String]?
 
     /// Git operations configuration (file layer - all fields optional)
-    public let git: GitFileConfig?
+    let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
     init(types: [String]?, git: GitFileConfig? = nil) {
@@ -25,7 +25,7 @@ struct TypesConfig: Sendable {
     /// - Parameters:
     ///   - configPath: Optional path to JSON file. If nil, looks for default file
     /// - Throws: `TypesConfigError` if JSON file is malformed or missing required fields
-    public init?(configPath: String?) async throws {
+    init?(configPath: String?) async throws {
         let path = configPath ?? Self.defaultFileName
         guard FileManager.default.fileExists(atPath: path) else {
             if configPath != nil {
@@ -41,7 +41,7 @@ struct TypesConfig: Sendable {
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with CountTypes configuration (required)
     /// - Throws: `TypesConfigError` if JSON file is malformed or missing required fields
-    public init(configFilePath: FilePath) async throws {
+    init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
@@ -76,14 +76,14 @@ struct TypesConfig: Sendable {
 }
 
 /// Errors related to CountTypes configuration.
-public enum TypesConfigError: Error {
+enum TypesConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
 extension TypesConfigError: LocalizedError {
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .missingFile(let path):
             return "Configuration file not found at: \(path)"

@@ -10,40 +10,33 @@ struct BuildSettingsConfig: Sendable {
     /// Represents a single setup command with optional working directory.
     struct SetupCommand: Sendable, Decodable {
         /// Command to execute
-        public let command: String
+        let command: String
 
         /// Optional working directory relative to repo root (e.g., "project").
         /// If not provided, command executes in repo root.
-        public let workingDirectory: String?
+        let workingDirectory: String?
 
         /// If true, analysis continues even if this command fails.
-        public let optional: Bool?
-
-        /// Initialize setup command
-        public init(command: String, workingDirectory: String?, optional: Bool?) {
-            self.command = command
-            self.workingDirectory = workingDirectory
-            self.optional = optional
-        }
+        let optional: Bool?
     }
 
     /// Commands to setup project, executed sequentially.
-    public let setupCommands: [SetupCommand]?
+    let setupCommands: [SetupCommand]?
 
     /// Build settings parameters to collect (e.g., ["SWIFT_VERSION"])
-    public let buildSettingsParameters: [String]?
+    let buildSettingsParameters: [String]?
 
     /// Xcode workspace or project name (without extension)
-    public let workspaceName: String?
+    let workspaceName: String?
 
     /// Build configuration name (e.g., "Debug", "Release")
-    public let configuration: String?
+    let configuration: String?
 
     /// Git operations configuration (file layer - all fields optional)
-    public let git: GitFileConfig?
+    let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(
+    init(
         setupCommands: [SetupCommand]?,
         buildSettingsParameters: [String]?,
         workspaceName: String?,
@@ -79,7 +72,7 @@ struct BuildSettingsConfig: Sendable {
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with ExtractBuildSettings configuration (required)
     /// - Throws: `BuildSettingsConfigError` if JSON file is malformed or missing required fields
-    public init(configFilePath: FilePath) async throws {
+    init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
@@ -120,14 +113,14 @@ struct BuildSettingsConfig: Sendable {
 }
 
 /// Errors related to ExtractBuildSettings configuration.
-public enum BuildSettingsConfigError: Error {
+enum BuildSettingsConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
 extension BuildSettingsConfigError: LocalizedError {
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .missingFile(let path):
             return "Configuration file not found at: \(path)"

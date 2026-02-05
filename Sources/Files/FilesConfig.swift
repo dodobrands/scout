@@ -8,10 +8,10 @@ struct FilesConfig: Sendable {
     static let defaultFileName = ".scout-files.json"
 
     /// File extensions to count (without dot, e.g., ["storyboard", "xib"])
-    public let filetypes: [String]?
+    let filetypes: [String]?
 
     /// Git operations configuration (file layer - all fields optional)
-    public let git: GitFileConfig?
+    let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
     init(filetypes: [String]?, git: GitFileConfig? = nil) {
@@ -41,7 +41,7 @@ struct FilesConfig: Sendable {
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with CountFiles configuration (required)
     /// - Throws: `FilesConfigError` if JSON file is malformed or missing required fields
-    public init(configFilePath: FilePath) async throws {
+    init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
@@ -76,14 +76,14 @@ struct FilesConfig: Sendable {
 }
 
 /// Errors related to CountFiles configuration.
-public enum FilesConfigError: Error {
+enum FilesConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
 extension FilesConfigError: LocalizedError {
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .missingFile(let path):
             return "Configuration file not found at: \(path)"

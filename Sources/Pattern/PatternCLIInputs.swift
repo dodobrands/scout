@@ -4,18 +4,18 @@ import Foundation
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
 struct PatternCLIInputs: Sendable {
     /// Patterns to search for
-    public let patterns: [String]?
+    let patterns: [String]?
 
     /// Commit hashes to analyze
-    public let commits: [String]?
+    let commits: [String]?
 
     /// File extensions to search (comma-separated string from CLI)
-    public let extensions: [String]?
+    let extensions: [String]?
 
     /// Git configuration from CLI flags
-    public let git: GitCLIInputs
+    let git: GitCLIInputs
 
-    public init(
+    init(
         patterns: [String]?,
         repoPath: String?,
         commits: [String]?,
@@ -33,17 +33,5 @@ struct PatternCLIInputs: Sendable {
             fixLFS: fixLfs,
             initializeSubmodules: initializeSubmodules
         )
-    }
-
-    public init(
-        patterns: [String]?,
-        commits: [String]?,
-        extensions: [String]?,
-        git: GitCLIInputs
-    ) {
-        self.patterns = patterns
-        self.commits = commits
-        self.extensions = extensions
-        self.git = git
     }
 }

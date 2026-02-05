@@ -5,21 +5,16 @@ import Logging
 import System
 
 /// Error that occurred during setup command execution.
-public struct SetupCommandExecutionError: Error {
+struct SetupCommandExecutionError: Error {
     /// The command that failed
-    public let command: SetupCommand
+    let command: SetupCommand
 
     /// The underlying error that occurred
-    public let underlyingError: Error
-
-    public init(command: SetupCommand, underlyingError: Error) {
-        self.command = command
-        self.underlyingError = underlyingError
-    }
+    let underlyingError: Error
 }
 
 extension SetupCommandExecutionError: LocalizedError {
-    public var errorDescription: String? {
+    var errorDescription: String? {
         let commandString = command.command
         let workingDirString = command.workingDirectory ?? "repo root"
         let underlyingDescription =
@@ -32,7 +27,7 @@ extension SetupCommandExecutionError: LocalizedError {
 }
 
 /// Executes setup commands in a repository.
-public struct SetupCommandExecutor {
+struct SetupCommandExecutor {
     private static let logger = Logger(label: "scout.SetupCommandExecutor")
 
     /// Executes setup commands sequentially in the specified repository.
@@ -41,7 +36,7 @@ public struct SetupCommandExecutor {
     ///   - commands: Array of setup commands from config
     ///   - repoPath: Path to the repository root
     /// - Throws: `CommandParserError` if a command cannot be prepared
-    public static func execute(
+    static func execute(
         _ commands: [SetupCommand],
         in repoPath: URL
     ) async throws {

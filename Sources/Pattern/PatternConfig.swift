@@ -8,16 +8,16 @@ struct PatternConfig: Sendable {
     static let defaultFileName = ".scout-pattern.json"
 
     /// Patterns to search for (e.g., ["// periphery:ignore", "TODO:"])
-    public let patterns: [String]?
+    let patterns: [String]?
 
     /// File extensions to search in (e.g., ["swift", "m"])
-    public let extensions: [String]?
+    let extensions: [String]?
 
     /// Git operations configuration (file layer - all fields optional)
-    public let git: GitFileConfig?
+    let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    public init(
+    init(
         patterns: [String]?,
         extensions: [String]? = nil,
         git: GitFileConfig? = nil
@@ -49,7 +49,7 @@ struct PatternConfig: Sendable {
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with Search configuration (required)
     /// - Throws: `PatternConfigError` if JSON file is malformed or missing required fields
-    public init(configFilePath: FilePath) async throws {
+    init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
@@ -86,14 +86,14 @@ struct PatternConfig: Sendable {
 }
 
 /// Errors related to Search configuration.
-public enum PatternConfigError: Error {
+enum PatternConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
 extension PatternConfigError: LocalizedError {
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .missingFile(let path):
             return "Configuration file not found at: \(path)"

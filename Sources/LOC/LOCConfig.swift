@@ -10,27 +10,20 @@ struct LOCConfig: Sendable {
     /// Single LOC configuration entry
     struct LOCConfiguration: Sendable, Decodable {
         /// Programming languages to count (array of strings)
-        public let languages: [String]
+        let languages: [String]
 
         /// Include paths (array of strings)
-        public let include: [String]
+        let include: [String]
 
         /// Exclude paths (array of strings)
-        public let exclude: [String]
-
-        /// Initialize LOC configuration
-        public init(languages: [String], include: [String], exclude: [String]) {
-            self.languages = languages
-            self.include = include
-            self.exclude = exclude
-        }
+        let exclude: [String]
     }
 
     /// LOC configurations to process
-    public let configurations: [LOCConfiguration]?
+    let configurations: [LOCConfiguration]?
 
     /// Git operations configuration (file layer - all fields optional)
-    public let git: GitFileConfig?
+    let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
     init(configurations: [LOCConfiguration]?, git: GitFileConfig? = nil) {
@@ -60,7 +53,7 @@ struct LOCConfig: Sendable {
     /// - Parameters:
     ///   - configFilePath: Path to JSON file with CountLOC configuration (required)
     /// - Throws: `LOCConfigError` if JSON file is malformed or missing required fields
-    public init(configFilePath: FilePath) async throws {
+    init(configFilePath: FilePath) async throws {
         let configPathString = configFilePath.string
 
         let configFileManager = FileManager.default
@@ -95,14 +88,14 @@ struct LOCConfig: Sendable {
 }
 
 /// Errors related to CountLOC configuration.
-public enum LOCConfigError: Error {
+enum LOCConfigError: Error {
     case missingFile(path: String)
     case invalidJSON(path: String, reason: String)
     case readFailed(path: String, reason: String)
 }
 
 extension LOCConfigError: LocalizedError {
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .missingFile(let path):
             return "Configuration file not found at: \(path)"
