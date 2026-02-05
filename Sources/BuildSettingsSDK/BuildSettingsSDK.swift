@@ -58,6 +58,7 @@ public struct BuildSettingsInput: Sendable {
     public let git: GitConfiguration
     public let setupCommands: [SetupCommand]
     public let buildSettingsParameters: [String]
+    public let workspaceName: String?
     public let configuration: String
     public let commits: [String]
 
@@ -65,12 +66,14 @@ public struct BuildSettingsInput: Sendable {
         git: GitConfiguration,
         setupCommands: [SetupCommand],
         buildSettingsParameters: [String] = [],
+        workspaceName: String? = nil,
         configuration: String,
         commits: [String] = ["HEAD"]
     ) {
         self.git = git
         self.setupCommands = setupCommands
         self.buildSettingsParameters = buildSettingsParameters
+        self.workspaceName = workspaceName
         self.configuration = configuration
         self.commits = commits
     }
@@ -113,7 +116,16 @@ public struct BuildSettingsSDK: Sendable {
 
         try await executeSetupCommands(input.setupCommands, in: repoPath)
 
-        let foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
+        let foundProjectsAndWorkspaces: [ProjectOrWorkspace]
+        if let workspaceName = input.workspaceName {
+            foundProjectsAndWorkspaces = try findProjectOrWorkspace(
+                named: workspaceName,
+                in: repoPath
+            )
+        } else {
+            foundProjectsAndWorkspaces = try findAllProjectsAndWorkspaces(in: repoPath)
+        }
+
         let projectsWithTargets = try await getTargetsForAllProjects(
             foundProjectsAndWorkspaces: foundProjectsAndWorkspaces
         )
@@ -205,6 +217,41 @@ public struct BuildSettingsSDK: Sendable {
     }
 
     // MARK: - Project Discovery
+
+    private func findProjectOrWorkspace(
+        named name: String,
+        in repoPath: URL
+    ) throws -> [ProjectOrWorkspace] {
+        let fileManager = FileManager.default
+
+        // Try workspace first
+        let workspacePath = repoPath.appendingPathComponent("\(name).xcworkspace")
+        if fileManager.fileExists(atPath: workspacePath.path(percentEncoded: false)) {
+            return [
+                ProjectOrWorkspace(
+                    path: workspacePath.path(percentEncoded: false),
+                    isWorkspace: true
+                )
+            ]
+        }
+
+        // Try project
+        let projectPath = repoPath.appendingPathComponent("\(name).xcodeproj")
+        if fileManager.fileExists(atPath: projectPath.path(percentEncoded: false)) {
+            return [
+                ProjectOrWorkspace(
+                    path: projectPath.path(percentEncoded: false),
+                    isWorkspace: false
+                )
+            ]
+        }
+
+        Self.logger.warning(
+            "Workspace or project not found",
+            metadata: ["name": "\(name)"]
+        )
+        return []
+    }
 
     private func findAllProjectsAndWorkspaces(in repoPath: URL) throws -> [ProjectOrWorkspace] {
         let fileManager = FileManager.default

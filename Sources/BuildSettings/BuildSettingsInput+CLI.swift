@@ -23,6 +23,7 @@ extension BuildSettingsInput {
         let setupCommands = config?.setupCommands?.map(SetupCommand.init) ?? []
         let buildSettingsParameters =
             cli.buildSettingsParameters ?? config?.buildSettingsParameters ?? []
+        let workspaceName = config?.workspaceName
         let configuration = config?.configuration ?? "Debug"
         let commits = cli.commits ?? ["HEAD"]
 
@@ -33,6 +34,7 @@ extension BuildSettingsInput {
             git: gitConfig,
             setupCommands: setupCommands,
             buildSettingsParameters: buildSettingsParameters,
+            workspaceName: workspaceName,
             configuration: configuration,
             commits: commits
         )
