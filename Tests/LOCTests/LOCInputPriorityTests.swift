@@ -11,7 +11,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `CLI repoPath overrides config repoPath`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: "/cli/path", commits: nil)
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: "/cli/path",
+            commits: nil
+        )
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = LOCConfig(configurations: nil, git: gitConfig)
 
@@ -22,7 +28,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `falls back to config repoPath when CLI repoPath is nil`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: nil, commits: nil)
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil
+        )
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = LOCConfig(configurations: nil, git: gitConfig)
 
@@ -33,7 +45,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `falls back to current directory when both CLI and config repoPath are nil`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: nil, commits: nil)
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil
+        )
         let config = LOCConfig(configurations: nil, git: nil)
 
         let input = LOCInput(cli: cli, config: config)
@@ -45,7 +63,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `CLI commits override default`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: nil, commits: ["abc123", "def456"])
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: ["abc123", "def456"]
+        )
 
         let input = LOCInput(cli: cli, config: nil)
 
@@ -54,7 +78,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `falls back to HEAD when CLI commits is nil`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: nil, commits: nil)
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil
+        )
 
         let input = LOCInput(cli: cli, config: nil)
 
@@ -65,7 +95,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `CLI languages override config configurations`() {
-        let cli = LOCCLIInputs(languages: ["Kotlin"], repoPath: nil, commits: nil)
+        let cli = LOCCLIInputs(
+            languages: ["Kotlin"],
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil
+        )
         let locConfig = LOCConfig.LOCConfiguration(
             languages: ["Swift"],
             include: ["Sources"],
@@ -82,8 +118,32 @@ struct LOCInputPriorityTests {
     }
 
     @Test
+    func `CLI languages with include and exclude`() {
+        let cli = LOCCLIInputs(
+            languages: ["Swift"],
+            include: ["Sources", "App"],
+            exclude: ["Tests"],
+            repoPath: nil,
+            commits: nil
+        )
+
+        let input = LOCInput(cli: cli, config: nil)
+
+        #expect(input.configurations.count == 1)
+        #expect(input.configurations[0].languages == ["Swift"])
+        #expect(input.configurations[0].include == ["Sources", "App"])
+        #expect(input.configurations[0].exclude == ["Tests"])
+    }
+
+    @Test
     func `configurations from config are used when CLI languages is nil`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: nil, commits: nil)
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil
+        )
         let locConfig = LOCConfig.LOCConfiguration(
             languages: ["Swift"],
             include: ["Sources"],
@@ -101,7 +161,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `falls back to empty configurations when both nil`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: nil, commits: nil)
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil
+        )
 
         let input = LOCInput(cli: cli, config: nil)
 
@@ -114,6 +180,8 @@ struct LOCInputPriorityTests {
     func `git flags from CLI are applied`() {
         let cli = LOCCLIInputs(
             languages: nil,
+            include: nil,
+            exclude: nil,
             repoPath: nil,
             commits: nil,
             gitClean: true,
@@ -132,7 +200,13 @@ struct LOCInputPriorityTests {
 
     @Test
     func `full priority chain CLI then Config then Default`() {
-        let cli = LOCCLIInputs(languages: nil, repoPath: nil, commits: ["abc123"])
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: ["abc123"]
+        )
         let gitConfig = GitFileConfig(repoPath: "/from/config")
         let locConfig = LOCConfig.LOCConfiguration(
             languages: ["Swift"],

@@ -8,6 +8,9 @@ Count lines of code using `cloc`.
 # Specify languages directly
 scout loc Swift Objective-C
 
+# With include/exclude paths
+scout loc Swift --include Sources App --exclude Tests Vendor
+
 # Or use config file
 scout loc --config loc-config.json
 
@@ -23,6 +26,8 @@ scout loc Swift --commits abc123 def456
 
 ### Optional
 
+- `--include, -i <paths>` — Paths to include (e.g., Sources App)
+- `--exclude, -e <paths>` — Paths to exclude (e.g., Tests Vendor)
 - `--config <path>` — Path to configuration JSON file
 - `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
 - `--output, -o <path>` — Path to save JSON results
@@ -34,7 +39,7 @@ scout loc Swift --commits abc123 def456
 
 ## Configuration (Optional)
 
-Configuration file is optional. Use it when you need advanced options like include/exclude paths.
+Configuration file is optional. Use it when you need multiple configurations with different include/exclude paths.
 
 > **Note:** CLI flags take priority over config values.
 
@@ -42,7 +47,10 @@ Configuration file is optional. Use it when you need advanced options like inclu
 # Arguments only (counts all files)
 scout loc Swift Objective-C
 
-# Config only (with include/exclude paths)
+# Arguments with paths
+scout loc Swift --include Sources --exclude Tests
+
+# Config only (multiple configurations)
 scout loc --config loc-config.json
 
 # Arguments override config

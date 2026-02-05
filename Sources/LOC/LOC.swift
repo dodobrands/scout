@@ -32,6 +32,20 @@ public struct LOC: AsyncParsableCommand {
     @Option(
         name: [.long, .short],
         parsing: .upToNextOption,
+        help: "Paths to include (e.g., Sources App)"
+    )
+    public var include: [String] = []
+
+    @Option(
+        name: [.long, .short],
+        parsing: .upToNextOption,
+        help: "Paths to exclude (e.g., Tests Vendor)"
+    )
+    public var exclude: [String] = []
+
+    @Option(
+        name: [.long, .short],
+        parsing: .upToNextOption,
         help: "Commit hashes to analyze (default: HEAD)"
     )
     public var commits: [String] = []
@@ -65,6 +79,8 @@ public struct LOC: AsyncParsableCommand {
         // Build CLI inputs (git flags are nil when not explicitly set on CLI)
         let cliInputs = LOCCLIInputs(
             languages: languages.nilIfEmpty,
+            include: include.nilIfEmpty,
+            exclude: exclude.nilIfEmpty,
             repoPath: repoPath,
             commits: commits.nilIfEmpty,
             gitClean: gitClean ? true : nil,

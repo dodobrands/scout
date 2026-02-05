@@ -20,10 +20,16 @@ extension LOCInput {
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
     init(cli: LOCCLIInputs, config: LOCConfig?) {
-        // CLI languages create a single configuration with empty include/exclude
+        // CLI languages create a single configuration; include/exclude default to empty
         let configurations: [LOCConfiguration]
         if let cliLanguages = cli.languages {
-            configurations = [LOCConfiguration(languages: cliLanguages, include: [], exclude: [])]
+            configurations = [
+                LOCConfiguration(
+                    languages: cliLanguages,
+                    include: cli.include ?? [],
+                    exclude: cli.exclude ?? []
+                )
+            ]
         } else {
             configurations = config?.configurations?.map(LOCConfiguration.init) ?? []
         }
