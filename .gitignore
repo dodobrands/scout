@@ -3,6 +3,3 @@
 DerivedData/
 *.xcodeproj
 *.xcworkspace
-
-# Generated files
-Sources/Scout/Version.generated.swift
