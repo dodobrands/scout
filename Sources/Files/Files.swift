@@ -108,11 +108,11 @@ public struct Files: AsyncParsableCommand {
         for (hash, filetypes) in commitToFiletypes {
             Self.logger.info("Processing commit: \(hash) for filetypes: \(filetypes)")
 
-            let results = try await sdk.analyzeCommit(
-                hash: hash,
-                filetypes: filetypes,
-                input: input
+            let commitInput = FilesInput(
+                git: input.git,
+                metrics: filetypes.map { FileMetricInput(extension: $0) }
             )
+            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: [String]] = [:]

@@ -73,17 +73,12 @@ public struct FilesSDK: Sendable {
         }
     }
 
-    /// Checks out a commit and counts files for specified extensions.
+    /// Checks out a commit and counts files for all metrics in input.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - filetypes: File extensions to count
-    ///   - input: Input parameters for the operation
-    /// - Returns: Array of results, one for each filetype
-    public func analyzeCommit(
-        hash: String,
-        filetypes: [String],
-        input: FilesInput
-    ) async throws -> [Result] {
+    ///   - input: Input parameters containing metrics and git configuration
+    /// - Returns: Array of results, one for each metric
+    public func analyzeCommit(hash: String, input: FilesInput) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
@@ -94,9 +89,9 @@ public struct FilesSDK: Sendable {
 
         try await GitFix.prepareRepository(git: input.git)
 
-        return filetypes.map { filetype in
-            let files = findFiles(of: filetype, in: repoPath)
-            return Result(commit: hash, filetype: filetype, files: files)
+        return input.metrics.map { metric in
+            let files = findFiles(of: metric.extension, in: repoPath)
+            return Result(commit: hash, filetype: metric.extension, files: files)
         }
     }
 
