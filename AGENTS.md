@@ -92,6 +92,17 @@ let item = try #require(array.first)
 #expect(item.value == expected)
 ```
 
+Check array count before accessing by index:
+
+```swift
+// Bad
+#expect(results[0].value == expected)
+
+// Good
+#expect(results.count == 1)
+#expect(results[0].value == expected)
+```
+
 ## Documentation Updates
 
 When changing public APIs of any tool, update all relevant READMEs in `Sources/*/README.md`.
