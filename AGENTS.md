@@ -79,6 +79,30 @@ Use specific protocols instead of `Codable`:
 
 Only use `Codable` when both encoding and decoding are actually needed.
 
+### SDK API Design
+
+1. **Single source of truth for parameters** — if data is in `input` (e.g., `input.metrics`), don't pass it as a separate parameter:
+
+```swift
+// Bad
+func countFiles(filetype: String, input: FilesInput) -> Result
+
+// Good
+func countFiles(input: FilesInput) -> [Result]  // reads from input.metrics
+```
+
+2. **Minimize public API** — only methods used by CLI should be public. Internal methods accessed via `@testable import` in tests:
+
+```swift
+// SDK
+public func analyzeCommit(hash: String, input: Input) -> [Result]  // used by CLI
+func count(input: Input) -> [Result]  // internal, for tests
+
+// Tests
+@testable import MySDK
+let results = try await sut.count(input: input)
+```
+
 ### Safe Array Access
 
 Use `[safe: index]` subscript instead of direct index access:
