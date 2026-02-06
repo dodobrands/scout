@@ -57,6 +57,18 @@ periphery scan --skip-build --strict
 
 **Never force push (`git push --force` or `--force-with-lease`) without explicit user request.**
 
+## Commits
+
+Make a commit after each logical unit of work:
+
+- After completing a task or todo item
+- Before switching from coding to validation (linting, testing, static analysis)
+- After fixing issues found during validation
+- Before switching to documentation updates
+- After documentation updates
+
+Each commit should represent a single coherent change that can be understood in isolation.
+
 ## Coding Conventions
 
 ### Protocol Conformance
