@@ -53,29 +53,40 @@ public struct SetupCommand: Sendable {
     }
 }
 
+/// A single build setting metric with its commits to analyze.
+public struct SettingMetricInput: Sendable {
+    /// Build setting name (e.g., "SWIFT_VERSION")
+    public let setting: String
+
+    /// Commits to analyze for this setting
+    public let commits: [String]
+
+    public init(setting: String, commits: [String] = ["HEAD"]) {
+        self.setting = setting
+        self.commits = commits
+    }
+}
+
 /// Input parameters for BuildSettingsSDK operations.
 public struct BuildSettingsInput: Sendable {
     public let git: GitConfiguration
     public let setupCommands: [SetupCommand]
-    public let buildSettingsParameters: [String]
+    public let metrics: [SettingMetricInput]
     public let project: String
     public let configuration: String
-    public let commits: [String]
 
     public init(
         git: GitConfiguration,
         setupCommands: [SetupCommand],
-        buildSettingsParameters: [String] = [],
+        metrics: [SettingMetricInput] = [],
         project: String,
-        configuration: String,
-        commits: [String] = ["HEAD"]
+        configuration: String
     ) {
         self.git = git
         self.setupCommands = setupCommands
-        self.buildSettingsParameters = buildSettingsParameters
+        self.metrics = metrics
         self.project = project
         self.configuration = configuration
-        self.commits = commits
     }
 }
 

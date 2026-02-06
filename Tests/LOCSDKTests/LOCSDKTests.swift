@@ -15,7 +15,10 @@ struct LOCSDKTests {
             include: ["Sources"],
             exclude: []
         )
-        let input = LOCInput(git: gitConfig, configuration: config)
+        let input = LOCInput(
+            git: gitConfig,
+            metrics: [LOCMetricInput(languages: ["Swift"], include: ["Sources"], exclude: [])]
+        )
 
         let result = try await sut.countLOC(configuration: config, input: input)
 
@@ -31,7 +34,16 @@ struct LOCSDKTests {
             include: ["Sources", "Vendor"],
             exclude: ["Vendor"]
         )
-        let input = LOCInput(git: gitConfig, configuration: configWithExclude)
+        let input = LOCInput(
+            git: gitConfig,
+            metrics: [
+                LOCMetricInput(
+                    languages: ["Swift"],
+                    include: ["Sources", "Vendor"],
+                    exclude: ["Vendor"]
+                )
+            ]
+        )
 
         let result = try await sut.countLOC(configuration: configWithExclude, input: input)
 
@@ -47,7 +59,12 @@ struct LOCSDKTests {
             include: ["Sources", "Vendor"],
             exclude: []
         )
-        let input = LOCInput(git: gitConfig, configuration: config)
+        let input = LOCInput(
+            git: gitConfig,
+            metrics: [
+                LOCMetricInput(languages: ["Swift"], include: ["Sources", "Vendor"], exclude: [])
+            ]
+        )
 
         let result = try await sut.countLOC(configuration: config, input: input)
 
@@ -63,7 +80,12 @@ struct LOCSDKTests {
             include: ["NonExistentFolder"],
             exclude: []
         )
-        let input = LOCInput(git: gitConfig, configuration: config)
+        let input = LOCInput(
+            git: gitConfig,
+            metrics: [
+                LOCMetricInput(languages: ["Swift"], include: ["NonExistentFolder"], exclude: [])
+            ]
+        )
 
         let result = try await sut.countLOC(configuration: config, input: input)
 
@@ -79,7 +101,10 @@ struct LOCSDKTests {
             include: ["Sources"],
             exclude: []
         )
-        let input = LOCInput(git: gitConfig, configuration: config)
+        let input = LOCInput(
+            git: gitConfig,
+            metrics: [LOCMetricInput(languages: ["Rust"], include: ["Sources"], exclude: [])]
+        )
 
         let result = try await sut.countLOC(configuration: config, input: input)
 
@@ -100,9 +125,15 @@ struct LOCSDKTests {
             include: ["Vendor"],
             exclude: []
         )
-        let input = LOCInput(git: gitConfig, configurations: [config1, config2])
+        let input = LOCInput(
+            git: gitConfig,
+            metrics: [
+                LOCMetricInput(languages: ["Swift"], include: ["Sources"], exclude: []),
+                LOCMetricInput(languages: ["Swift"], include: ["Vendor"], exclude: []),
+            ]
+        )
 
-        let results = try await sut.countLOC(input: input)
+        let results = try await sut.countLOC(configurations: [config1, config2], input: input)
 
         #expect(results.count == 2)
         #expect(results[0].linesOfCode == 16)

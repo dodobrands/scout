@@ -3,20 +3,31 @@ import Foundation
 import Logging
 import System
 
+/// A single file extension metric with its commits to analyze.
+public struct FileMetricInput: Sendable {
+    /// File extension to count (e.g., "swift", "storyboard")
+    public let `extension`: String
+
+    /// Commits to analyze for this extension
+    public let commits: [String]
+
+    public init(extension: String, commits: [String] = ["HEAD"]) {
+        self.extension = `extension`
+        self.commits = commits
+    }
+}
+
 /// Input parameters for FilesSDK operations.
 public struct FilesInput: Sendable {
     public let git: GitConfiguration
-    public let filetypes: [String]
-    public let commits: [String]
+    public let metrics: [FileMetricInput]
 
     public init(
         git: GitConfiguration,
-        filetypes: [String],
-        commits: [String] = ["HEAD"]
+        metrics: [FileMetricInput]
     ) {
         self.git = git
-        self.filetypes = filetypes
-        self.commits = commits
+        self.metrics = metrics
     }
 }
 
@@ -64,11 +75,13 @@ public struct FilesSDK: Sendable {
     }
 
     /// Counts files with all specified extensions in the repository.
-    /// - Parameter input: Input parameters including array of filetypes
+    /// - Parameters:
+    ///   - input: Input parameters for the operation
+    ///   - filetypes: File extensions to count
     /// - Returns: Array of results, one for each filetype
-    public func countFiles(input: FilesInput) async throws -> [Result] {
+    public func countFiles(input: FilesInput, filetypes: [String]) async throws -> [Result] {
         var results: [Result] = []
-        for filetype in input.filetypes {
+        for filetype in filetypes {
             let result = try await countFiles(filetype: filetype, input: input)
             results.append(result)
         }
@@ -100,10 +113,12 @@ public struct FilesSDK: Sendable {
     /// Checks out a commit and counts files with all specified extensions.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters including array of filetypes
+    ///   - filetypes: File extensions to count
+    ///   - input: Input parameters for the operation
     /// - Returns: Array of results, one for each filetype
     public func analyzeCommit(
         hash: String,
+        filetypes: [String],
         input: FilesInput
     ) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
@@ -114,7 +129,7 @@ public struct FilesSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countFiles(input: input).map {
+        return try await countFiles(input: input, filetypes: filetypes).map {
             Result(commit: hash, filetype: $0.filetype, files: $0.files)
         }
     }

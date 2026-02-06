@@ -41,7 +41,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: GitFileConfig(repoPath: "/config/path")
@@ -64,7 +64,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: GitFileConfig(repoPath: "/config/path")
@@ -87,7 +87,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -103,7 +103,7 @@ struct BuildSettingsInputPriorityTests {
     @Test func `CLI commits override default`() throws {
         let cli = BuildSettingsCLIInputs(
             project: nil,
-            buildSettingsParameters: nil,
+            buildSettingsParameters: ["SWIFT_VERSION"],
             repoPath: nil,
             commits: ["abc123", "def456"],
             gitClean: false,
@@ -112,7 +112,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -120,13 +120,13 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.commits == ["abc123", "def456"])
+        #expect(input.metrics.first?.commits == ["abc123", "def456"])
     }
 
     @Test func `falls back to HEAD when CLI commits nil`() throws {
         let cli = BuildSettingsCLIInputs(
             project: nil,
-            buildSettingsParameters: nil,
+            buildSettingsParameters: ["SWIFT_VERSION"],
             repoPath: nil,
             commits: nil,
             gitClean: false,
@@ -135,7 +135,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -143,7 +143,7 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.commits == ["HEAD"])
+        #expect(input.metrics.first?.commits == ["HEAD"])
     }
 
     // MARK: - configuration priority
@@ -160,7 +160,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: "Release",
             git: nil
@@ -183,7 +183,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -213,7 +213,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: [setupCommand],
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -239,7 +239,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -250,9 +250,9 @@ struct BuildSettingsInputPriorityTests {
         #expect(input.setupCommands.isEmpty)
     }
 
-    // MARK: - buildSettingsParameters priority
+    // MARK: - metrics priority
 
-    @Test func `CLI buildSettingsParameters override config buildSettingsParameters`() throws {
+    @Test func `CLI buildSettingsParameters override config metrics`() throws {
         let cli = BuildSettingsCLIInputs(
             project: nil,
             buildSettingsParameters: ["CLI_PARAM"],
@@ -264,7 +264,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: ["CONFIG_PARAM"],
+            metrics: [SettingMetric(setting: "CONFIG_PARAM", commits: nil)],
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -272,10 +272,10 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.buildSettingsParameters == ["CLI_PARAM"])
+        #expect(input.metrics.map { $0.setting } == ["CLI_PARAM"])
     }
 
-    @Test func `buildSettingsParameters from config are used when CLI is nil`() throws {
+    @Test func `metrics from config are used when CLI is nil`() throws {
         let cli = BuildSettingsCLIInputs(
             project: nil,
             buildSettingsParameters: nil,
@@ -287,7 +287,10 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"],
+            metrics: [
+                SettingMetric(setting: "SWIFT_VERSION", commits: nil),
+                SettingMetric(setting: "TARGETED_DEVICE_FAMILY", commits: nil),
+            ],
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -295,10 +298,10 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.buildSettingsParameters == ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"])
+        #expect(input.metrics.map { $0.setting } == ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"])
     }
 
-    @Test func `buildSettingsParameters defaults to empty when both nil`() throws {
+    @Test func `metrics defaults to empty when both nil`() throws {
         let cli = BuildSettingsCLIInputs(
             project: nil,
             buildSettingsParameters: nil,
@@ -310,7 +313,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -318,7 +321,118 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.buildSettingsParameters.isEmpty)
+        #expect(input.metrics.isEmpty)
+    }
+
+    // MARK: - Per-Metric Commits Tests
+
+    @Test func `config metrics use per-metric commits`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: nil,
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil,
+            gitClean: false,
+            fixLfs: false,
+            initializeSubmodules: false
+        )
+        let config = BuildSettingsConfig(
+            setupCommands: nil,
+            metrics: [
+                SettingMetric(setting: "SWIFT_VERSION", commits: ["abc123", "def456"]),
+                SettingMetric(setting: "DEPLOYMENT_TARGET", commits: ["ghi789"]),
+            ],
+            project: "App.xcworkspace",
+            configuration: nil,
+            git: nil
+        )
+
+        let input = try BuildSettingsInput(cli: cli, config: config)
+
+        #expect(input.metrics.count == 2)
+        #expect(input.metrics[0].setting == "SWIFT_VERSION")
+        #expect(input.metrics[0].commits == ["abc123", "def456"])
+        #expect(input.metrics[1].setting == "DEPLOYMENT_TARGET")
+        #expect(input.metrics[1].commits == ["ghi789"])
+    }
+
+    @Test func `CLI commits override all config per-metric commits`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: nil,
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: ["override123"],
+            gitClean: false,
+            fixLfs: false,
+            initializeSubmodules: false
+        )
+        let config = BuildSettingsConfig(
+            setupCommands: nil,
+            metrics: [
+                SettingMetric(setting: "SWIFT_VERSION", commits: ["abc123"]),
+                SettingMetric(setting: "DEPLOYMENT_TARGET", commits: ["def456"]),
+            ],
+            project: "App.xcworkspace",
+            configuration: nil,
+            git: nil
+        )
+
+        let input = try BuildSettingsInput(cli: cli, config: config)
+
+        #expect(input.metrics.count == 2)
+        #expect(input.metrics[0].commits == ["override123"])
+        #expect(input.metrics[1].commits == ["override123"])
+    }
+
+    @Test func `config metrics with nil commits default to HEAD`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: nil,
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil,
+            gitClean: false,
+            fixLfs: false,
+            initializeSubmodules: false
+        )
+        let config = BuildSettingsConfig(
+            setupCommands: nil,
+            metrics: [SettingMetric(setting: "SWIFT_VERSION", commits: nil)],
+            project: "App.xcworkspace",
+            configuration: nil,
+            git: nil
+        )
+
+        let input = try BuildSettingsInput(cli: cli, config: config)
+
+        #expect(input.metrics.first?.commits == ["HEAD"])
+    }
+
+    @Test func `config metrics with empty commits array are skipped`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: nil,
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil,
+            gitClean: false,
+            fixLfs: false,
+            initializeSubmodules: false
+        )
+        let config = BuildSettingsConfig(
+            setupCommands: nil,
+            metrics: [
+                SettingMetric(setting: "SWIFT_VERSION", commits: ["abc123"]),
+                SettingMetric(setting: "DEPRECATED", commits: []),
+                SettingMetric(setting: "DEPLOYMENT_TARGET", commits: nil),
+            ],
+            project: "App.xcworkspace",
+            configuration: nil,
+            git: nil
+        )
+
+        let input = try BuildSettingsInput(cli: cli, config: config)
+
+        #expect(input.metrics.count == 2)
+        #expect(input.metrics.map { $0.setting } == ["SWIFT_VERSION", "DEPLOYMENT_TARGET"])
     }
 
     // MARK: - git flags from CLI
@@ -335,7 +449,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -360,7 +474,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "App.xcworkspace",
             configuration: nil,
             git: nil
@@ -387,7 +501,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "MyApp.xcworkspace",
             configuration: nil,
             git: nil
@@ -410,7 +524,7 @@ struct BuildSettingsInputPriorityTests {
         )
         let config = BuildSettingsConfig(
             setupCommands: nil,
-            buildSettingsParameters: nil,
+            metrics: nil,
             project: "ConfigApp.xcworkspace",
             configuration: nil,
             git: nil

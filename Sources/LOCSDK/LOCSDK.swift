@@ -40,30 +40,54 @@ public struct LOCConfiguration: Sendable {
     }
 }
 
-/// Input parameters for LOCSDK operations.
-public struct LOCInput: Sendable {
-    public let git: GitConfiguration
-    public let configurations: [LOCConfiguration]
+/// A single LOC metric with its commits to analyze.
+public struct LOCMetricInput: Sendable {
+    /// Languages to count
+    public let languages: [String]
+
+    /// Paths to include
+    public let include: [String]
+
+    /// Paths to exclude
+    public let exclude: [String]
+
+    /// Commits to analyze for this metric
     public let commits: [String]
 
     public init(
-        git: GitConfiguration,
-        configurations: [LOCConfiguration],
+        languages: [String],
+        include: [String],
+        exclude: [String],
         commits: [String] = ["HEAD"]
     ) {
-        self.git = git
-        self.configurations = configurations
+        self.languages = languages
+        self.include = include
+        self.exclude = exclude
         self.commits = commits
     }
 
+    /// Returns the LOCConfiguration for this metric
+    public var configuration: LOCConfiguration {
+        LOCConfiguration(languages: languages, include: include, exclude: exclude)
+    }
+
+    /// Returns a unique metric identifier for output
+    public var metricIdentifier: String {
+        "LOC \(languages) \(include)"
+    }
+}
+
+/// Input parameters for LOCSDK operations.
+public struct LOCInput: Sendable {
+    public let git: GitConfiguration
+    public let metrics: [LOCMetricInput]
+
     public init(
         git: GitConfiguration,
-        configuration: LOCConfiguration,
-        commits: [String] = ["HEAD"]
+        metrics: [LOCMetricInput]
     ) {
         self.git = git
-        self.configurations = [configuration]
-        self.commits = commits
+        self.metrics = metrics
     }
 }
 
@@ -128,11 +152,15 @@ public struct LOCSDK: Sendable {
     }
 
     /// Counts lines of code in the repository with all specified configurations.
-    /// - Parameter input: Input parameters including array of configurations
+    /// - Parameters:
+    ///   - configurations: Array of LOC configurations
+    ///   - input: Input parameters for the operation
     /// - Returns: Array of results, one for each configuration
-    public func countLOC(input: LOCInput) async throws -> [Result] {
+    public func countLOC(configurations: [LOCConfiguration], input: LOCInput) async throws
+        -> [Result]
+    {
         var results: [Result] = []
-        for configuration in input.configurations {
+        for configuration in configurations {
             let result = try await countLOC(configuration: configuration, input: input)
             results.append(result)
         }
@@ -142,32 +170,12 @@ public struct LOCSDK: Sendable {
     /// Checks out a commit and counts lines of code with the specified configuration.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - configuration: LOC configuration to use
+    ///   - configurations: LOC configurations to use
     ///   - input: Input parameters for the operation
-    /// - Returns: Result containing total LOC count
-    public func analyzeCommit(
-        hash: String,
-        configuration: LOCConfiguration,
-        input: LOCInput
-    ) async throws -> Result {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", hash],
-            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-        )
-
-        return try await countLOC(configuration: configuration, input: input)
-    }
-
-    /// Checks out a commit and counts lines of code with all specified configurations.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters including array of configurations
     /// - Returns: Array of results, one for each configuration
     public func analyzeCommit(
         hash: String,
+        configurations: [LOCConfiguration],
         input: LOCInput
     ) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
@@ -178,7 +186,7 @@ public struct LOCSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countLOC(input: input).map {
+        return try await countLOC(configurations: configurations, input: input).map {
             Result(commit: hash, metric: $0.metric, linesOfCode: $0.linesOfCode)
         }
     }

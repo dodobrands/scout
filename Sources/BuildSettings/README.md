@@ -66,13 +66,16 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 }
 ```
 
-**With build settings parameters:**
+**With build settings metrics:**
 
 ```json
 {
   "project": "MyApp.xcworkspace",
   "configuration": "Debug",
-  "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"]
+  "metrics": [
+    { "setting": "SWIFT_VERSION" },
+    { "setting": "IPHONEOS_DEPLOYMENT_TARGET" }
+  ]
 }
 ```
 
@@ -82,7 +85,10 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 {
   "project": "App/MyApp.xcworkspace",
   "configuration": "Debug",
-  "buildSettingsParameters": ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"],
+  "metrics": [
+    { "setting": "SWIFT_VERSION" },
+    { "setting": "IPHONEOS_DEPLOYMENT_TARGET" }
+  ],
   "setupCommands": [
     { "command": "mise install", "optional": true },
     { "command": "tuist install", "workingDirectory": "App" },
@@ -97,7 +103,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 {
   "project": "MyApp.xcodeproj",
   "configuration": "Debug",
-  "buildSettingsParameters": ["SWIFT_VERSION"],
+  "metrics": [
+    { "setting": "SWIFT_VERSION" }
+  ],
   "git": {
     "repoPath": "/path/to/repo",
     "clean": true,
@@ -112,12 +120,39 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 |-------|------|----------|-------------|
 | `project` | `String` | **Yes*** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. *Can be provided via `--project` CLI flag instead. |
 | `configuration` | `String` | No | Build configuration (default: "Debug") |
-| `buildSettingsParameters` | `[String]` | No | Build settings to extract |
+| `metrics` | `[Metric]` | No | Array of build setting metrics to analyze |
+| `metrics[].setting` | `String` | Yes | Build setting name (e.g., `SWIFT_VERSION`) |
+| `metrics[].commits` | `[String]?` | No | Commits for this setting (default: `["HEAD"]`) |
 | `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit |
 | `setupCommands[].command` | `String` | Yes | Shell command to execute |
 | `setupCommands[].workingDirectory` | `String` | No | Directory relative to repo root |
 | `setupCommands[].optional` | `Bool` | No | If `true`, analysis continues even if command fails (default: `false`) |
 | `git` | `Object` | No | [Git configuration](../Common/GitConfiguration.md) |
+
+### Per-Metric Commits (Config Only)
+
+Different build settings can be analyzed on different commits. This is only available via config file — CLI arguments apply the same commits to all settings.
+
+```json
+{
+  "project": "MyApp.xcworkspace",
+  "metrics": [
+    { "setting": "SWIFT_VERSION", "commits": ["abc123", "def456"] },
+    { "setting": "IPHONEOS_DEPLOYMENT_TARGET", "commits": ["ghi789"] },
+    { "setting": "MARKETING_VERSION" },
+    { "setting": "DEPRECATED_SETTING", "commits": [] }
+  ]
+}
+```
+
+| Setting | Analyzed On |
+|---------|-------------|
+| `SWIFT_VERSION` | `abc123`, `def456` |
+| `IPHONEOS_DEPLOYMENT_TARGET` | `ghi789` |
+| `MARKETING_VERSION` | `HEAD` (default) |
+| `DEPRECATED_SETTING` | skipped (empty array) |
+
+> **Note:** CLI `--commits` flag overrides all config commits and applies to every setting equally.
 
 ## Output Format
 

@@ -82,32 +82,41 @@ public struct Types: AsyncParsableCommand {
             try URL(string: input.git.repoPath)
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
-        // Resolve commits - need to fetch HEAD if not specified
-        let commitHashes: [String]
-        if !input.commits.isEmpty && input.commits != ["HEAD"] {
-            commitHashes = input.commits
-        } else {
-            let head = try await Git.headCommit(in: repoPathURL)
-            commitHashes = [head]
-            Self.logger.info("No commits specified, using HEAD: \(head)")
-        }
+        // Resolve HEAD commits
+        let resolvedMetrics: [TypeMetricInput] = try await resolveHeadCommits(
+            metrics: input.metrics,
+            repoPath: repoPathURL
+        )
 
         let sdk = TypesSDK()
         var allResults: [TypesSDK.Result] = []
         var outputResults: [TypesOutput] = []
 
+        // Group metrics by commits to minimize checkouts
+        var commitToTypes: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToTypes[commit, default: []].append(metric.type)
+            }
+        }
+
+        let allCommits = Array(commitToTypes.keys)
         Self.logger.info(
-            "Will analyze \(commitHashes.count) commits for \(input.types.count) type(s)",
+            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
             metadata: [
-                "commits": .array(commitHashes.map { .string($0) }),
-                "types": .array(input.types.map { .string($0) }),
+                "commits": .array(allCommits.map { .string($0) }),
+                "types": .array(resolvedMetrics.map { .string($0.type) }),
             ]
         )
 
-        for hash in commitHashes {
-            Self.logger.info("Processing commit: \(hash)")
+        for (hash, typeNames) in commitToTypes {
+            Self.logger.info("Processing commit: \(hash) for types: \(typeNames)")
 
-            let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let results = try await sdk.analyzeCommit(
+                hash: hash,
+                typeNames: typeNames,
+                input: input
+            )
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: [String]] = [:]
@@ -127,10 +136,28 @@ public struct Types: AsyncParsableCommand {
             try outputResults.writeJSON(to: outputPath)
         }
 
-        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
 
         let summary = TypesSummary(results: allResults)
         logSummary(summary)
+    }
+
+    /// Resolves HEAD to actual commit hash for metrics that use HEAD
+    private func resolveHeadCommits(
+        metrics: [TypeMetricInput],
+        repoPath: URL
+    ) async throws -> [TypeMetricInput] {
+        // Check if any metric uses HEAD
+        let needsHeadResolution = metrics.contains { $0.commits.contains("HEAD") }
+        guard needsHeadResolution else { return metrics }
+
+        let head = try await Git.headCommit(in: repoPath)
+        Self.logger.info("Resolved HEAD to: \(head)")
+
+        return metrics.map { metric in
+            let resolvedCommits = metric.commits.map { $0 == "HEAD" ? head : $0 }
+            return TypeMetricInput(type: metric.type, commits: resolvedCommits)
+        }
     }
 
     private func logSummary(_ summary: TypesSummary) {

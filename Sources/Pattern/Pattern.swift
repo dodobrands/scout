@@ -116,32 +116,37 @@ public struct Pattern: AsyncParsableCommand {
             try URL(string: input.git.repoPath)
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
-        // Resolve commits - need to fetch HEAD if not specified
-        let commitHashes: [String]
-        if !input.commits.isEmpty && input.commits != ["HEAD"] {
-            commitHashes = input.commits
-        } else {
-            let head = try await Git.headCommit(in: repoPathURL)
-            commitHashes = [head]
-            Self.logger.info("No commits specified, using HEAD: \(head)")
-        }
+        // Resolve HEAD commits
+        let resolvedMetrics: [PatternMetricInput] = try await resolveHeadCommits(
+            metrics: input.metrics,
+            repoPath: repoPathURL
+        )
 
         let sdk = PatternSDK()
         var patternResults: [(pattern: String, matchCount: Int)] = []
         var outputResults: [PatternOutput] = []
 
+        // Group metrics by commits to minimize checkouts
+        var commitToPatterns: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToPatterns[commit, default: []].append(metric.pattern)
+            }
+        }
+
+        let allCommits = Array(commitToPatterns.keys)
         Self.logger.info(
-            "Will analyze \(commitHashes.count) commits for \(input.patterns.count) pattern(s)",
+            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
             metadata: [
-                "commits": .array(commitHashes.map { .string($0) }),
-                "patterns": .array(input.patterns.map { .string($0) }),
+                "commits": .array(allCommits.map { .string($0) }),
+                "patterns": .array(resolvedMetrics.map { .string($0.pattern) }),
             ]
         )
 
-        for hash in commitHashes {
-            Self.logger.info("Processing commit: \(hash)")
+        for (hash, patterns) in commitToPatterns {
+            Self.logger.info("Processing commit: \(hash) for patterns: \(patterns)")
 
-            let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let results = try await sdk.analyzeCommit(hash: hash, patterns: patterns, input: input)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: [PatternSDK.Match]] = [:]
@@ -169,11 +174,29 @@ public struct Pattern: AsyncParsableCommand {
         }
 
         Self.logger.notice(
-            "Summary: analyzed \(commitHashes.count) commit(s) for \(input.patterns.count) pattern(s)"
+            "Summary: analyzed \(allCommits.count) commit(s) for \(resolvedMetrics.count) pattern(s)"
         )
 
         let summary = Summary(patternResults: patternResults)
         logSummary(summary)
+    }
+
+    /// Resolves HEAD to actual commit hash for metrics that use HEAD
+    private func resolveHeadCommits(
+        metrics: [PatternMetricInput],
+        repoPath: URL
+    ) async throws -> [PatternMetricInput] {
+        // Check if any metric uses HEAD
+        let needsHeadResolution = metrics.contains { $0.commits.contains("HEAD") }
+        guard needsHeadResolution else { return metrics }
+
+        let head = try await Git.headCommit(in: repoPath)
+        Self.logger.info("Resolved HEAD to: \(head)")
+
+        return metrics.map { metric in
+            let resolvedCommits = metric.commits.map { $0 == "HEAD" ? head : $0 }
+            return PatternMetricInput(pattern: metric.pattern, commits: resolvedCommits)
+        }
     }
 
     private func logSummary(_ summary: Summary) {

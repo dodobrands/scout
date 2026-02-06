@@ -10,7 +10,7 @@ struct TypesSDKTests {
     func `When searching for UIView types, should find all UIView subclasses`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["UIView"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "UIView", input: input)
 
@@ -22,7 +22,7 @@ struct TypesSDKTests {
     func `When searching for SwiftUI View types, should find all View conformances`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["View"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "View", input: input)
 
@@ -34,7 +34,7 @@ struct TypesSDKTests {
     func `When searching with wildcard pattern, should match all generic variants`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["JsonAsyncRequest<*>"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "JsonAsyncRequest<*>", input: input)
 
@@ -46,7 +46,7 @@ struct TypesSDKTests {
     func `When searching without wildcard, should not match generic variants`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["JsonAsyncRequest"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "JsonAsyncRequest", input: input)
 
@@ -57,7 +57,7 @@ struct TypesSDKTests {
     func `When searching for non-existent type, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["NonExistentType"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "NonExistentType", input: input)
 
@@ -68,7 +68,7 @@ struct TypesSDKTests {
     func `When searching for protocol, should find all conforming types`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["Coordinator"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "Coordinator", input: input)
 
@@ -83,7 +83,7 @@ struct TypesSDKTests {
     func `When searching for child protocol, should find only direct conformances`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["FlowCoordinator"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "FlowCoordinator", input: input)
 
@@ -94,7 +94,7 @@ struct TypesSDKTests {
     func `When type has deep inheritance chain, should find all descendants`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["BaseViewModel"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "BaseViewModel", input: input)
 
@@ -112,7 +112,7 @@ struct TypesSDKTests {
     func `When searching middle of inheritance chain, should find only descendants`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["ListViewModel"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let result = try await sut.countTypes(typeName: "ListViewModel", input: input)
 
@@ -128,7 +128,7 @@ struct TypesSDKTests {
     {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["Trackable", "Loggable"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
         let trackableResult = try await sut.countTypes(typeName: "Trackable", input: input)
         let loggableResult = try await sut.countTypes(typeName: "Loggable", input: input)
@@ -141,9 +141,9 @@ struct TypesSDKTests {
     func `When searching for multiple types, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = TypesInput(git: gitConfig, types: ["UIView", "View"])
+        let input = TypesInput(git: gitConfig, metrics: [])
 
-        let results = try await sut.countTypes(input: input)
+        let results = try await sut.countTypes(input: input, typeNames: ["UIView", "View"])
 
         #expect(results.count == 2)
         #expect(results[0].typeName == "UIView")

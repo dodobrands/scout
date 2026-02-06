@@ -9,13 +9,44 @@ extension PatternInput {
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
     init(cli: PatternCLIInputs, config: PatternConfig?) {
-        let patterns = cli.patterns ?? config?.patterns ?? []
         let extensions = cli.extensions ?? config?.extensions ?? ["swift"]
-        let commits = cli.commits ?? ["HEAD"]
 
         // Git configuration merges CLI > FileConfig > Default
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
-        self.init(git: gitConfig, patterns: patterns, extensions: extensions, commits: commits)
+        // Build metrics from CLI or config
+        let metrics: [PatternMetricInput]
+
+        if let cliPatterns = cli.patterns, !cliPatterns.isEmpty {
+            // CLI patterns provided - all use same commits (from CLI or default HEAD)
+            let commits = cli.commits ?? ["HEAD"]
+            metrics = cliPatterns.map { PatternMetricInput(pattern: $0, commits: commits) }
+        } else if let configMetrics = config?.metrics {
+            // Config metrics - each has its own commits, CLI --commits overrides all
+            if let cliCommits = cli.commits {
+                // CLI commits override all config commits
+                metrics = configMetrics.compactMap { metric in
+                    // Skip metrics with empty commits array
+                    if let commits = metric.commits, commits.isEmpty {
+                        return nil
+                    }
+                    return PatternMetricInput(pattern: metric.pattern, commits: cliCommits)
+                }
+            } else {
+                // Use per-metric commits from config
+                metrics = configMetrics.compactMap { metric in
+                    // Skip metrics with empty commits array
+                    if let commits = metric.commits, commits.isEmpty {
+                        return nil
+                    }
+                    let commits = metric.commits ?? ["HEAD"]
+                    return PatternMetricInput(pattern: metric.pattern, commits: commits)
+                }
+            }
+        } else {
+            metrics = []
+        }
+
+        self.init(git: gitConfig, metrics: metrics, extensions: extensions)
     }
 }

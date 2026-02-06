@@ -2,32 +2,35 @@ import Common
 import Foundation
 import SystemPackage
 
+/// A single LOC metric configuration with optional per-metric commits.
+struct LOCMetric: Sendable, Decodable {
+    /// Programming languages to count (array of strings)
+    let languages: [String]
+
+    /// Include paths (array of strings)
+    let include: [String]
+
+    /// Exclude paths (array of strings)
+    let exclude: [String]
+
+    /// Commits to analyze for this metric. If nil, uses HEAD. If empty, skips this metric.
+    let commits: [String]?
+}
+
 /// Configuration for CountLOC tool loaded from JSON file.
 struct LOCConfig: Sendable {
     /// Default configuration file name
     static let defaultFileName = ".scout-loc.json"
 
-    /// Single LOC configuration entry
-    struct LOCConfiguration: Sendable, Decodable {
-        /// Programming languages to count (array of strings)
-        let languages: [String]
-
-        /// Include paths (array of strings)
-        let include: [String]
-
-        /// Exclude paths (array of strings)
-        let exclude: [String]
-    }
-
-    /// LOC configurations to process
-    let configurations: [LOCConfiguration]?
+    /// LOC metrics to process with optional per-metric commits
+    let metrics: [LOCMetric]?
 
     /// Git operations configuration (file layer - all fields optional)
     let git: GitFileConfig?
 
     /// Initialize configuration directly (for testing)
-    init(configurations: [LOCConfiguration]?, git: GitFileConfig? = nil) {
-        self.configurations = configurations
+    init(metrics: [LOCMetric]?, git: GitFileConfig? = nil) {
+        self.metrics = metrics
         self.git = git
     }
 
@@ -66,7 +69,7 @@ struct LOCConfig: Sendable {
             let fileData = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
-            self.configurations = variables.configurations
+            self.metrics = variables.metrics
             self.git = variables.git
         } catch let decodingError as DecodingError {
             throw LOCConfigError.invalidJSON(
@@ -82,7 +85,7 @@ struct LOCConfig: Sendable {
     }
 
     private struct Variables: Decodable {
-        let configurations: [LOCConfiguration]?
+        let metrics: [LOCMetric]?
         let git: GitFileConfig?
     }
 }

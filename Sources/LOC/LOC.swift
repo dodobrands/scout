@@ -95,31 +95,40 @@ public struct LOC: AsyncParsableCommand {
             try URL(string: input.git.repoPath)
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
-        // Resolve commits - need to fetch HEAD if not specified
-        let commitHashes: [String]
-        if !input.commits.isEmpty && input.commits != ["HEAD"] {
-            commitHashes = input.commits
-        } else {
-            let head = try await Git.headCommit(in: repoPathURL)
-            commitHashes = [head]
-            Self.logger.info("No commits specified, using HEAD: \(head)")
-        }
+        // Resolve HEAD commits
+        let resolvedMetrics: [LOCMetricInput] = try await resolveHeadCommits(
+            metrics: input.metrics,
+            repoPath: repoPathURL
+        )
 
         let sdk = LOCSDK()
         var allResults: [LOCSDK.Result] = []
         var outputResults: [LOCOutput] = []
 
+        // Group metrics by commits to minimize checkouts
+        var commitToConfigurations: [String: [LOCConfiguration]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToConfigurations[commit, default: []].append(metric.configuration)
+            }
+        }
+
+        let allCommits = Array(commitToConfigurations.keys)
         Self.logger.info(
-            "Will analyze \(commitHashes.count) commits for \(input.configurations.count) configuration(s)",
+            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
             metadata: [
-                "commits": .array(commitHashes.map { .string($0) })
+                "commits": .array(allCommits.map { .string($0) })
             ]
         )
 
-        for hash in commitHashes {
+        for (hash, configurations) in commitToConfigurations {
             Self.logger.info("Processing commit: \(hash)")
 
-            let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let results = try await sdk.analyzeCommit(
+                hash: hash,
+                configurations: configurations,
+                input: input
+            )
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: Int] = [:]
@@ -139,10 +148,33 @@ public struct LOC: AsyncParsableCommand {
             try outputResults.writeJSON(to: outputPath)
         }
 
-        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
 
         let summary = LOCSummary(results: allResults)
         logSummary(summary)
+    }
+
+    /// Resolves HEAD to actual commit hash for metrics that use HEAD
+    private func resolveHeadCommits(
+        metrics: [LOCMetricInput],
+        repoPath: URL
+    ) async throws -> [LOCMetricInput] {
+        // Check if any metric uses HEAD
+        let needsHeadResolution = metrics.contains { $0.commits.contains("HEAD") }
+        guard needsHeadResolution else { return metrics }
+
+        let head = try await Git.headCommit(in: repoPath)
+        Self.logger.info("Resolved HEAD to: \(head)")
+
+        return metrics.map { metric in
+            let resolvedCommits = metric.commits.map { $0 == "HEAD" ? head : $0 }
+            return LOCMetricInput(
+                languages: metric.languages,
+                include: metric.include,
+                exclude: metric.exclude,
+                commits: resolvedCommits
+            )
+        }
     }
 
     private func logSummary(_ summary: LOCSummary) {

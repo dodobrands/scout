@@ -61,7 +61,7 @@ scout loc Swift --config loc-config.json
 
 ```json
 {
-  "configurations": [
+  "metrics": [
     {
       "languages": ["Swift"],
       "include": ["Sources"],
@@ -80,7 +80,7 @@ scout loc Swift --config loc-config.json
 
 ```json
 {
-  "configurations": [
+  "metrics": [
     {
       "languages": ["Swift"],
       "include": ["Sources"],
@@ -99,11 +99,48 @@ scout loc Swift --config loc-config.json
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `configurations` | `[Configuration]` | Array of LOC configurations |
-| `configurations[].languages` | `[String]` | Programming languages to count |
-| `configurations[].include` | `[String]` | Paths to include |
-| `configurations[].exclude` | `[String]` | Paths to exclude |
+| `metrics` | `[Metric]` | Array of LOC metrics to analyze |
+| `metrics[].languages` | `[String]` | Programming languages to count |
+| `metrics[].include` | `[String]` | Paths to include |
+| `metrics[].exclude` | `[String]` | Paths to exclude |
+| `metrics[].commits` | `[String]?` | Commits for this metric (default: `["HEAD"]`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
+
+### Per-Metric Commits (Config Only)
+
+Different metrics can be analyzed on different commits. This is only available via config file — CLI arguments apply the same commits to all metrics.
+
+```json
+{
+  "metrics": [
+    {
+      "languages": ["Swift"],
+      "include": ["Sources"],
+      "exclude": ["Tests"],
+      "commits": ["abc123", "def456"]
+    },
+    {
+      "languages": ["Swift", "Objective-C"],
+      "include": ["LegacyModule"],
+      "exclude": [],
+      "commits": ["ghi789"]
+    },
+    {
+      "languages": ["JSON"],
+      "include": ["."],
+      "exclude": []
+    }
+  ]
+}
+```
+
+| Metric | Analyzed On |
+|--------|-------------|
+| `Swift in Sources` | `abc123`, `def456` |
+| `Swift+ObjC in LegacyModule` | `ghi789` |
+| `JSON` | `HEAD` (default) |
+
+> **Note:** CLI `--commits` flag overrides all config commits and applies to every metric equally.
 
 ## Output Format
 
