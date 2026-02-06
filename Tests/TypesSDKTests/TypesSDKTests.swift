@@ -146,10 +146,12 @@ struct TypesSDKTests {
         let results = try await sut.countTypes(input: input, typeNames: ["UIView", "View"])
 
         #expect(results.count == 2)
-        #expect(results[0].typeName == "UIView")
-        #expect(results[0].types == ["AwesomeView", "DodoView"])
-        #expect(results[1].typeName == "View")
-        #expect(results[1].types == ["HelloView"])
+        let result0 = try #require(results[safe: 0])
+        let result1 = try #require(results[safe: 1])
+        #expect(result0.typeName == "UIView")
+        #expect(result0.types == ["AwesomeView", "DodoView"])
+        #expect(result1.typeName == "View")
+        #expect(result1.types == ["HelloView"])
     }
 }
 

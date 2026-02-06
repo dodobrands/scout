@@ -110,10 +110,12 @@ struct PatternSDKTests {
         let results = try await sut.search(patterns: ["// TODO:", "// FIXME:"], input: input)
 
         #expect(results.count == 2)
-        #expect(results[0].pattern == "// TODO:")
-        #expect(results[0].matches.count == 2)
-        #expect(results[1].pattern == "// FIXME:")
-        #expect(results[1].matches.count == 2)
+        let result0 = try #require(results[safe: 0])
+        let result1 = try #require(results[safe: 1])
+        #expect(result0.pattern == "// TODO:")
+        #expect(result0.matches.count == 2)
+        #expect(result1.pattern == "// FIXME:")
+        #expect(result1.matches.count == 2)
     }
 }
 

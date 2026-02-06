@@ -80,10 +80,12 @@ struct FilesSDKTests {
         let results = try await sut.countFiles(input: input, filetypes: ["swift", "storyboard"])
 
         #expect(results.count == 2)
-        #expect(results[0].filetype == "swift")
-        #expect(results[0].files.count == 2)
-        #expect(results[1].filetype == "storyboard")
-        #expect(results[1].files.count == 1)
+        let result0 = try #require(results[safe: 0])
+        let result1 = try #require(results[safe: 1])
+        #expect(result0.filetype == "swift")
+        #expect(result0.files.count == 2)
+        #expect(result1.filetype == "storyboard")
+        #expect(result1.files.count == 1)
     }
 }
 

@@ -10,29 +10,31 @@ struct TypesInputPriorityTests {
     // MARK: - Metrics Priority Tests
 
     @Test
-    func `CLI types create metrics with CLI commits`() {
+    func `CLI types create metrics with CLI commits`() throws {
         let cli = TypesCLIInputs(types: ["UIView"], repoPath: nil, commits: ["abc123"])
 
         let input = TypesInput(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
-        #expect(input.metrics[0].type == "UIView")
-        #expect(input.metrics[0].commits == ["abc123"])
+        let metric = try #require(input.metrics[safe: 0])
+        #expect(metric.type == "UIView")
+        #expect(metric.commits == ["abc123"])
     }
 
     @Test
-    func `CLI types use HEAD when commits not specified`() {
+    func `CLI types use HEAD when commits not specified`() throws {
         let cli = TypesCLIInputs(types: ["UIView"], repoPath: nil, commits: nil)
 
         let input = TypesInput(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
-        #expect(input.metrics[0].type == "UIView")
-        #expect(input.metrics[0].commits == ["HEAD"])
+        let metric = try #require(input.metrics[safe: 0])
+        #expect(metric.type == "UIView")
+        #expect(metric.commits == ["HEAD"])
     }
 
     @Test
-    func `falls back to config metrics when CLI types is nil`() {
+    func `falls back to config metrics when CLI types is nil`() throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(
             metrics: [TypeMetric(type: "UIViewController", commits: ["def456"])],
@@ -42,12 +44,13 @@ struct TypesInputPriorityTests {
         let input = TypesInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
-        #expect(input.metrics[0].type == "UIViewController")
-        #expect(input.metrics[0].commits == ["def456"])
+        let metric = try #require(input.metrics[safe: 0])
+        #expect(metric.type == "UIViewController")
+        #expect(metric.commits == ["def456"])
     }
 
     @Test
-    func `config metrics without commits use HEAD`() {
+    func `config metrics without commits use HEAD`() throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(
             metrics: [TypeMetric(type: "UIView", commits: nil)],
@@ -57,11 +60,12 @@ struct TypesInputPriorityTests {
         let input = TypesInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
-        #expect(input.metrics[0].commits == ["HEAD"])
+        let metric = try #require(input.metrics[safe: 0])
+        #expect(metric.commits == ["HEAD"])
     }
 
     @Test
-    func `CLI commits override all config per-metric commits`() {
+    func `CLI commits override all config per-metric commits`() throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: ["cli-commit"])
         let config = TypesConfig(
             metrics: [
@@ -74,12 +78,14 @@ struct TypesInputPriorityTests {
         let input = TypesInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
-        #expect(input.metrics[0].commits == ["cli-commit"])
-        #expect(input.metrics[1].commits == ["cli-commit"])
+        let metric0 = try #require(input.metrics[safe: 0])
+        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(metric0.commits == ["cli-commit"])
+        #expect(metric1.commits == ["cli-commit"])
     }
 
     @Test
-    func `config metrics with empty commits array are skipped`() {
+    func `config metrics with empty commits array are skipped`() throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(
             metrics: [
@@ -93,8 +99,10 @@ struct TypesInputPriorityTests {
         let input = TypesInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
-        #expect(input.metrics[0].type == "UIView")
-        #expect(input.metrics[1].type == "View")
+        let metric0 = try #require(input.metrics[safe: 0])
+        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(metric0.type == "UIView")
+        #expect(metric1.type == "View")
     }
 
     @Test
@@ -207,7 +215,7 @@ struct TypesInputPriorityTests {
     // MARK: - Combined Priority Tests
 
     @Test
-    func `full priority chain CLI then Config then Default`() {
+    func `full priority chain CLI then Config then Default`() throws {
         // CLI has types, config has repoPath
         let cli = TypesCLIInputs(types: ["UIView", "View"], repoPath: nil, commits: nil)
         let gitConfig = GitFileConfig(repoPath: "/from/config")
@@ -219,9 +227,11 @@ struct TypesInputPriorityTests {
         let input = TypesInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)  // from CLI
-        #expect(input.metrics[0].type == "UIView")
-        #expect(input.metrics[1].type == "View")
+        let metric0 = try #require(input.metrics[safe: 0])
+        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(metric0.type == "UIView")
+        #expect(metric1.type == "View")
         #expect(input.git.repoPath == "/from/config")  // from config
-        #expect(input.metrics[0].commits == ["HEAD"])  // default
+        #expect(metric0.commits == ["HEAD"])  // default
     }
 }

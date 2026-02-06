@@ -96,7 +96,7 @@ struct LOCInputPriorityTests {
     // MARK: - Languages/Metrics Priority Tests
 
     @Test
-    func `CLI languages override config metrics`() {
+    func `CLI languages override config metrics`() throws {
         let cli = LOCCLIInputs(
             languages: ["Kotlin"],
             include: nil,
@@ -115,13 +115,14 @@ struct LOCInputPriorityTests {
         let input = LOCInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
-        #expect(input.metrics[0].languages == ["Kotlin"])
-        #expect(input.metrics[0].include == [])
-        #expect(input.metrics[0].exclude == [])
+        let metric = try #require(input.metrics[safe: 0])
+        #expect(metric.languages == ["Kotlin"])
+        #expect(metric.include == [])
+        #expect(metric.exclude == [])
     }
 
     @Test
-    func `CLI languages with include and exclude`() {
+    func `CLI languages with include and exclude`() throws {
         let cli = LOCCLIInputs(
             languages: ["Swift"],
             include: ["Sources", "App"],
@@ -133,13 +134,14 @@ struct LOCInputPriorityTests {
         let input = LOCInput(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
-        #expect(input.metrics[0].languages == ["Swift"])
-        #expect(input.metrics[0].include == ["Sources", "App"])
-        #expect(input.metrics[0].exclude == ["Tests"])
+        let metric = try #require(input.metrics[safe: 0])
+        #expect(metric.languages == ["Swift"])
+        #expect(metric.include == ["Sources", "App"])
+        #expect(metric.exclude == ["Tests"])
     }
 
     @Test
-    func `metrics from config are used when CLI languages is nil`() {
+    func `metrics from config are used when CLI languages is nil`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -158,9 +160,10 @@ struct LOCInputPriorityTests {
         let input = LOCInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
-        #expect(input.metrics[0].languages == ["Swift"])
-        #expect(input.metrics[0].include == ["Sources"])
-        #expect(input.metrics[0].exclude == ["Vendor"])
+        let metric = try #require(input.metrics[safe: 0])
+        #expect(metric.languages == ["Swift"])
+        #expect(metric.include == ["Sources"])
+        #expect(metric.exclude == ["Vendor"])
     }
 
     @Test
@@ -181,7 +184,7 @@ struct LOCInputPriorityTests {
     // MARK: - Per-Metric Commits Tests
 
     @Test
-    func `config metrics use per-metric commits`() {
+    func `config metrics use per-metric commits`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -210,14 +213,16 @@ struct LOCInputPriorityTests {
         let input = LOCInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
-        #expect(input.metrics[0].languages == ["Swift"])
-        #expect(input.metrics[0].commits == ["abc123", "def456"])
-        #expect(input.metrics[1].languages == ["Objective-C"])
-        #expect(input.metrics[1].commits == ["ghi789"])
+        let metric0 = try #require(input.metrics[safe: 0])
+        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(metric0.languages == ["Swift"])
+        #expect(metric0.commits == ["abc123", "def456"])
+        #expect(metric1.languages == ["Objective-C"])
+        #expect(metric1.commits == ["ghi789"])
     }
 
     @Test
-    func `CLI commits override all config per-metric commits`() {
+    func `CLI commits override all config per-metric commits`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -246,8 +251,10 @@ struct LOCInputPriorityTests {
         let input = LOCInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
-        #expect(input.metrics[0].commits == ["override123"])
-        #expect(input.metrics[1].commits == ["override123"])
+        let metric0 = try #require(input.metrics[safe: 0])
+        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(metric0.commits == ["override123"])
+        #expect(metric1.commits == ["override123"])
     }
 
     @Test

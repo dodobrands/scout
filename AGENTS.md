@@ -99,8 +99,8 @@ Check array count before accessing by index:
 #expect(results[0].value == expected)
 
 // Good
-#expect(results.count == 1)
-#expect(results[0].value == expected)
+let item = try #require(results[safe: 0])
+#expect(item.value == expected)
 ```
 
 ## Documentation Updates

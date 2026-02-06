@@ -136,8 +136,10 @@ struct LOCSDKTests {
         let results = try await sut.countLOC(configurations: [config1, config2], input: input)
 
         #expect(results.count == 2)
-        #expect(results[0].linesOfCode == 16)
-        #expect(results[1].linesOfCode == 6)
+        let result0 = try #require(results[safe: 0])
+        let result1 = try #require(results[safe: 1])
+        #expect(result0.linesOfCode == 16)
+        #expect(result1.linesOfCode == 6)
     }
 }
 

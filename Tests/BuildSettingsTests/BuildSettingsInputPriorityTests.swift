@@ -224,9 +224,10 @@ struct BuildSettingsInputPriorityTests {
         let input = try BuildSettingsInput(cli: cli, config: config)
 
         #expect(input.setupCommands.count == 1)
-        #expect(input.setupCommands[0].command == "bundle install")
-        #expect(input.setupCommands[0].workingDirectory == "ios")
-        #expect(input.setupCommands[0].optional == true)
+        let command = try #require(input.setupCommands[safe: 0])
+        #expect(command.command == "bundle install")
+        #expect(command.workingDirectory == "ios")
+        #expect(command.optional == true)
     }
 
     @Test func `setupCommands defaults to empty array when config setupCommands nil`() throws {
@@ -352,10 +353,12 @@ struct BuildSettingsInputPriorityTests {
         let input = try BuildSettingsInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
-        #expect(input.metrics[0].setting == "SWIFT_VERSION")
-        #expect(input.metrics[0].commits == ["abc123", "def456"])
-        #expect(input.metrics[1].setting == "DEPLOYMENT_TARGET")
-        #expect(input.metrics[1].commits == ["ghi789"])
+        let metric0 = try #require(input.metrics[safe: 0])
+        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(metric0.setting == "SWIFT_VERSION")
+        #expect(metric0.commits == ["abc123", "def456"])
+        #expect(metric1.setting == "DEPLOYMENT_TARGET")
+        #expect(metric1.commits == ["ghi789"])
     }
 
     @Test func `CLI commits override all config per-metric commits`() throws {
@@ -382,8 +385,10 @@ struct BuildSettingsInputPriorityTests {
         let input = try BuildSettingsInput(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
-        #expect(input.metrics[0].commits == ["override123"])
-        #expect(input.metrics[1].commits == ["override123"])
+        let metric0 = try #require(input.metrics[safe: 0])
+        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(metric0.commits == ["override123"])
+        #expect(metric1.commits == ["override123"])
     }
 
     @Test func `config metrics with nil commits default to HEAD`() throws {
