@@ -79,6 +79,19 @@ Use specific protocols instead of `Codable`:
 
 Only use `Codable` when both encoding and decoding are actually needed.
 
+### Testing
+
+Use `try #require` instead of `#expect` with optionals:
+
+```swift
+// Bad
+#expect(array.first?.value == expected)
+
+// Good
+let item = try #require(array.first)
+#expect(item.value == expected)
+```
+
 ## Documentation Updates
 
 When changing public APIs of any tool, update all relevant READMEs in `Sources/*/README.md`.
