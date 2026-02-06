@@ -10,6 +10,7 @@ struct Scout: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "scout",
         abstract: "Code analysis toolkit for mobile repositories",
+        version: scoutVersion,
         subcommands: [
             Types.self,
             Files.self,
