@@ -25,6 +25,9 @@ jobs:
         with:
           xcode-version: ${{ steps.xcode-version.outputs.version }}
 
+      - name: Generate version
+        run: sh scripts/generate-version.sh "${{ github.ref_name }}"
+
       - name: Build release binary
         id: build
         run: |
