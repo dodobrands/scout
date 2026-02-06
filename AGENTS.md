@@ -79,6 +79,18 @@ Use specific protocols instead of `Codable`:
 
 Only use `Codable` when both encoding and decoding are actually needed.
 
+### Safe Array Access
+
+Use `[safe: index]` subscript instead of direct index access:
+
+```swift
+// Bad
+let item = array[0]
+
+// Good
+guard let item = array[safe: 0] else { return }
+```
+
 ### Testing
 
 Use `try #require` instead of `#expect` with optionals:
@@ -92,7 +104,7 @@ let item = try #require(array.first)
 #expect(item.value == expected)
 ```
 
-Check array count before accessing by index:
+Use `try #require` with safe subscript for index access:
 
 ```swift
 // Bad
