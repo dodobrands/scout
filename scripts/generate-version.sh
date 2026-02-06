@@ -7,7 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-OUTPUT_FILE="$REPO_ROOT/Sources/Scout/Version.generated.swift"
+OUTPUT_FILE="$REPO_ROOT/Sources/Scout/Version.swift"
 
 if [[ $# -ge 1 && -n "$1" ]]; then
     VERSION="$1"
