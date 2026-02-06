@@ -87,12 +87,8 @@ public struct FilesSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        try await GitFix.prepareRepository(git: input.git)
-
-        return input.metrics.map { metric in
-            let files = findFiles(of: metric.extension, in: repoPath)
-            return Result(commit: hash, filetype: metric.extension, files: files)
-        }
+        let results = try await countFiles(input: input)
+        return results.map { Result(commit: hash, filetype: $0.filetype, files: $0.files) }
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL] {
