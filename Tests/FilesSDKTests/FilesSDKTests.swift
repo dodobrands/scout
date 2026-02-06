@@ -1,7 +1,8 @@
 import Common
-import FilesSDK
 import Foundation
 import Testing
+
+@testable import FilesSDK
 
 struct FilesSDKTests {
     let sut = FilesSDK()

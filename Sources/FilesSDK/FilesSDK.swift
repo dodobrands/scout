@@ -63,7 +63,7 @@ public struct FilesSDK: Sendable {
     /// Counts files for all metrics in the input.
     /// - Parameter input: Input parameters containing metrics and git configuration
     /// - Returns: Array of results, one for each metric
-    public func countFiles(input: FilesInput) async throws -> [Result] {
+    func countFiles(input: FilesInput) async throws -> [Result] {
         try await GitFix.prepareRepository(git: input.git)
 
         let repoPath = URL(filePath: input.git.repoPath)
