@@ -4,7 +4,7 @@ import Logging
 import System
 
 /// A single type metric with its commits to analyze.
-public struct TypeMetricInput: Sendable {
+public struct TypeMetricInput: Sendable, CommitResolvable {
     /// Type name to count (e.g., "UIView")
     public let type: String
 
@@ -14,6 +14,10 @@ public struct TypeMetricInput: Sendable {
     public init(type: String, commits: [String] = ["HEAD"]) {
         self.type = type
         self.commits = commits
+    }
+
+    public func withResolvedCommits(_ commits: [String]) -> TypeMetricInput {
+        TypeMetricInput(type: type, commits: commits)
     }
 }
 

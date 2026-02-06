@@ -4,7 +4,7 @@ import Logging
 import System
 
 /// A single file extension metric with its commits to analyze.
-public struct FileMetricInput: Sendable {
+public struct FileMetricInput: Sendable, CommitResolvable {
     /// File extension to count (e.g., "swift", "storyboard")
     public let `extension`: String
 
@@ -14,6 +14,10 @@ public struct FileMetricInput: Sendable {
     public init(extension: String, commits: [String] = ["HEAD"]) {
         self.extension = `extension`
         self.commits = commits
+    }
+
+    public func withResolvedCommits(_ commits: [String]) -> FileMetricInput {
+        FileMetricInput(extension: `extension`, commits: commits)
     }
 }
 

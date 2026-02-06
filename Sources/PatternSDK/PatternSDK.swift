@@ -4,7 +4,7 @@ import Logging
 import System
 
 /// A single pattern metric with its commits to analyze.
-public struct PatternMetricInput: Sendable {
+public struct PatternMetricInput: Sendable, CommitResolvable {
     /// Pattern to search for (e.g., "// TODO:")
     public let pattern: String
 
@@ -14,6 +14,10 @@ public struct PatternMetricInput: Sendable {
     public init(pattern: String, commits: [String] = ["HEAD"]) {
         self.pattern = pattern
         self.commits = commits
+    }
+
+    public func withResolvedCommits(_ commits: [String]) -> PatternMetricInput {
+        PatternMetricInput(pattern: pattern, commits: commits)
     }
 }
 

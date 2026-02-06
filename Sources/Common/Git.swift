@@ -1,7 +1,19 @@
 import Foundation
 import System
 
-package enum Git {
+public enum Git {
+    /// Returns the current HEAD commit hash in the specified repository.
+    /// - Parameter repoPath: Path to the repository as string
+    /// - Returns: The HEAD commit hash
+    public static func headCommit(repoPath: String) async throws -> String {
+        let result = try await Shell.execute(
+            "git",
+            arguments: ["rev-parse", "HEAD"],
+            workingDirectory: FilePath(repoPath)
+        )
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// Returns the current HEAD commit hash in the specified repository.
     /// - Parameter repoPath: Path to the repository
     /// - Returns: The HEAD commit hash

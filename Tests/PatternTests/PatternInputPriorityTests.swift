@@ -121,7 +121,7 @@ struct PatternInputPriorityTests {
     // MARK: - Commits Priority Tests
 
     @Test
-    func `CLI commits override default`() {
+    func `CLI commits override default`() throws {
         let cli = PatternCLIInputs(
             patterns: ["TODO:"],
             repoPath: nil,
@@ -131,11 +131,12 @@ struct PatternInputPriorityTests {
 
         let input = PatternInput(cli: cli, config: nil)
 
-        #expect(input.metrics.first?.commits == ["abc123"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["abc123"])
     }
 
     @Test
-    func `falls back to HEAD when CLI commits is nil`() {
+    func `falls back to HEAD when CLI commits is nil`() throws {
         let cli = PatternCLIInputs(
             patterns: ["TODO:"],
             repoPath: nil,
@@ -145,7 +146,8 @@ struct PatternInputPriorityTests {
 
         let input = PatternInput(cli: cli, config: nil)
 
-        #expect(input.metrics.first?.commits == ["HEAD"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["HEAD"])
     }
 
     // MARK: - Per-Metric Commits Tests
@@ -196,7 +198,7 @@ struct PatternInputPriorityTests {
     }
 
     @Test
-    func `config metrics with nil commits default to HEAD`() {
+    func `config metrics with nil commits default to HEAD`() throws {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
         let config = PatternConfig(
             metrics: [
@@ -208,11 +210,12 @@ struct PatternInputPriorityTests {
 
         let input = PatternInput(cli: cli, config: config)
 
-        #expect(input.metrics.first?.commits == ["HEAD"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["HEAD"])
     }
 
     @Test
-    func `config metrics with empty commits array are skipped`() {
+    func `config metrics with empty commits array are skipped`() throws {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
         let config = PatternConfig(
             metrics: [
@@ -254,7 +257,7 @@ struct PatternInputPriorityTests {
     // MARK: - Combined Priority Tests
 
     @Test
-    func `full priority chain CLI then Config then Default`() {
+    func `full priority chain CLI then Config then Default`() throws {
         let cli = PatternCLIInputs(
             patterns: ["TODO:"],
             repoPath: nil,
@@ -273,6 +276,7 @@ struct PatternInputPriorityTests {
         #expect(input.metrics.map { $0.pattern } == ["TODO:"])  // from CLI
         #expect(input.git.repoPath == "/from/config")  // from config
         #expect(input.extensions == ["m"])  // from config
-        #expect(input.metrics.first?.commits == ["HEAD"])  // default
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["HEAD"])  // default
     }
 }

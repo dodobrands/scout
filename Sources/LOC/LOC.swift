@@ -96,9 +96,8 @@ public struct LOC: AsyncParsableCommand {
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics: [LOCMetricInput] = try await resolveHeadCommits(
-            metrics: input.metrics,
-            repoPath: repoPathURL
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: repoPathURL.path
         )
 
         let sdk = LOCSDK()
@@ -152,29 +151,6 @@ public struct LOC: AsyncParsableCommand {
 
         let summary = LOCSummary(results: allResults)
         logSummary(summary)
-    }
-
-    /// Resolves HEAD to actual commit hash for metrics that use HEAD
-    private func resolveHeadCommits(
-        metrics: [LOCMetricInput],
-        repoPath: URL
-    ) async throws -> [LOCMetricInput] {
-        // Check if any metric uses HEAD
-        let needsHeadResolution = metrics.contains { $0.commits.contains("HEAD") }
-        guard needsHeadResolution else { return metrics }
-
-        let head = try await Git.headCommit(in: repoPath)
-        Self.logger.info("Resolved HEAD to: \(head)")
-
-        return metrics.map { metric in
-            let resolvedCommits = metric.commits.map { $0 == "HEAD" ? head : $0 }
-            return LOCMetricInput(
-                languages: metric.languages,
-                include: metric.include,
-                exclude: metric.exclude,
-                commits: resolvedCommits
-            )
-        }
     }
 
     private func logSummary(_ summary: LOCSummary) {

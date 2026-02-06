@@ -75,7 +75,8 @@ struct PatternSDKTests {
         let result = try await sut.search(pattern: "swiftlint:disable", input: input)
 
         #expect(result.matches.count == 1)
-        #expect(result.matches.first?.line == 4)
+        let match = try #require(result.matches.first)
+        #expect(match.line == 4)
     }
 
     @Test

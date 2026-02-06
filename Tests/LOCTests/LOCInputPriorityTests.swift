@@ -62,7 +62,7 @@ struct LOCInputPriorityTests {
     // MARK: - Commits Priority Tests
 
     @Test
-    func `CLI commits override default`() {
+    func `CLI commits override default`() throws {
         let cli = LOCCLIInputs(
             languages: ["Swift"],
             include: nil,
@@ -73,11 +73,12 @@ struct LOCInputPriorityTests {
 
         let input = LOCInput(cli: cli, config: nil)
 
-        #expect(input.metrics.first?.commits == ["abc123", "def456"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["abc123", "def456"])
     }
 
     @Test
-    func `falls back to HEAD when CLI commits is nil`() {
+    func `falls back to HEAD when CLI commits is nil`() throws {
         let cli = LOCCLIInputs(
             languages: ["Swift"],
             include: nil,
@@ -88,7 +89,8 @@ struct LOCInputPriorityTests {
 
         let input = LOCInput(cli: cli, config: nil)
 
-        #expect(input.metrics.first?.commits == ["HEAD"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["HEAD"])
     }
 
     // MARK: - Languages/Metrics Priority Tests
@@ -249,7 +251,7 @@ struct LOCInputPriorityTests {
     }
 
     @Test
-    func `config metrics with nil commits default to HEAD`() {
+    func `config metrics with nil commits default to HEAD`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -271,11 +273,12 @@ struct LOCInputPriorityTests {
 
         let input = LOCInput(cli: cli, config: config)
 
-        #expect(input.metrics.first?.commits == ["HEAD"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["HEAD"])
     }
 
     @Test
-    func `config metrics with empty commits array are skipped`() {
+    func `config metrics with empty commits array are skipped`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -338,7 +341,7 @@ struct LOCInputPriorityTests {
     // MARK: - Combined Priority Tests
 
     @Test
-    func `full priority chain CLI then Config then Default`() {
+    func `full priority chain CLI then Config then Default`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -359,6 +362,7 @@ struct LOCInputPriorityTests {
 
         #expect(input.metrics.count == 1)  // from config
         #expect(input.git.repoPath == "/from/config")  // from config
-        #expect(input.metrics.first?.commits == ["abc123"])  // from CLI
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["abc123"])  // from CLI
     }
 }

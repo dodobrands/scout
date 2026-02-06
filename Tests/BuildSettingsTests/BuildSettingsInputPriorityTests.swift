@@ -120,7 +120,8 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.metrics.first?.commits == ["abc123", "def456"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["abc123", "def456"])
     }
 
     @Test func `falls back to HEAD when CLI commits nil`() throws {
@@ -143,7 +144,8 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.metrics.first?.commits == ["HEAD"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["HEAD"])
     }
 
     // MARK: - configuration priority
@@ -404,7 +406,8 @@ struct BuildSettingsInputPriorityTests {
 
         let input = try BuildSettingsInput(cli: cli, config: config)
 
-        #expect(input.metrics.first?.commits == ["HEAD"])
+        let metric = try #require(input.metrics.first)
+        #expect(metric.commits == ["HEAD"])
     }
 
     @Test func `config metrics with empty commits array are skipped`() throws {

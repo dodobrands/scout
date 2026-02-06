@@ -83,9 +83,8 @@ public struct Types: AsyncParsableCommand {
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics: [TypeMetricInput] = try await resolveHeadCommits(
-            metrics: input.metrics,
-            repoPath: repoPathURL
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: repoPathURL.path
         )
 
         let sdk = TypesSDK()
@@ -140,24 +139,6 @@ public struct Types: AsyncParsableCommand {
 
         let summary = TypesSummary(results: allResults)
         logSummary(summary)
-    }
-
-    /// Resolves HEAD to actual commit hash for metrics that use HEAD
-    private func resolveHeadCommits(
-        metrics: [TypeMetricInput],
-        repoPath: URL
-    ) async throws -> [TypeMetricInput] {
-        // Check if any metric uses HEAD
-        let needsHeadResolution = metrics.contains { $0.commits.contains("HEAD") }
-        guard needsHeadResolution else { return metrics }
-
-        let head = try await Git.headCommit(in: repoPath)
-        Self.logger.info("Resolved HEAD to: \(head)")
-
-        return metrics.map { metric in
-            let resolvedCommits = metric.commits.map { $0 == "HEAD" ? head : $0 }
-            return TypeMetricInput(type: metric.type, commits: resolvedCommits)
-        }
     }
 
     private func logSummary(_ summary: TypesSummary) {

@@ -90,9 +90,8 @@ public struct BuildSettings: AsyncParsableCommand {
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics: [SettingMetricInput] = try await resolveHeadCommits(
-            metrics: input.metrics,
-            repoPath: repoPathURL
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: repoPathURL.path
         )
 
         var outputResults: [BuildSettingsOutput] = []
@@ -162,23 +161,5 @@ public struct BuildSettings: AsyncParsableCommand {
         GitHubActionsLogHandler.writeSummary(summary)
 
         Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
-    }
-
-    /// Resolves HEAD to actual commit hash for metrics that use HEAD
-    private func resolveHeadCommits(
-        metrics: [SettingMetricInput],
-        repoPath: URL
-    ) async throws -> [SettingMetricInput] {
-        // Check if any metric uses HEAD
-        let needsHeadResolution = metrics.contains { $0.commits.contains("HEAD") }
-        guard needsHeadResolution else { return metrics }
-
-        let head = try await Git.headCommit(in: repoPath)
-        Self.logger.info("Resolved HEAD to: \(head)")
-
-        return metrics.map { metric in
-            let resolvedCommits = metric.commits.map { $0 == "HEAD" ? head : $0 }
-            return SettingMetricInput(setting: metric.setting, commits: resolvedCommits)
-        }
     }
 }

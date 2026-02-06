@@ -41,7 +41,7 @@ public struct LOCConfiguration: Sendable {
 }
 
 /// A single LOC metric with its commits to analyze.
-public struct LOCMetricInput: Sendable {
+public struct LOCMetricInput: Sendable, CommitResolvable {
     /// Languages to count
     public let languages: [String]
 
@@ -64,6 +64,10 @@ public struct LOCMetricInput: Sendable {
         self.include = include
         self.exclude = exclude
         self.commits = commits
+    }
+
+    public func withResolvedCommits(_ commits: [String]) -> LOCMetricInput {
+        LOCMetricInput(languages: languages, include: include, exclude: exclude, commits: commits)
     }
 
     /// Returns the LOCConfiguration for this metric

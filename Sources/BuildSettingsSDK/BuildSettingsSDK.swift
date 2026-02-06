@@ -54,7 +54,7 @@ public struct SetupCommand: Sendable {
 }
 
 /// A single build setting metric with its commits to analyze.
-public struct SettingMetricInput: Sendable {
+public struct SettingMetricInput: Sendable, CommitResolvable {
     /// Build setting name (e.g., "SWIFT_VERSION")
     public let setting: String
 
@@ -64,6 +64,10 @@ public struct SettingMetricInput: Sendable {
     public init(setting: String, commits: [String] = ["HEAD"]) {
         self.setting = setting
         self.commits = commits
+    }
+
+    public func withResolvedCommits(_ commits: [String]) -> SettingMetricInput {
+        SettingMetricInput(setting: setting, commits: commits)
     }
 }
 

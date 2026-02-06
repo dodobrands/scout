@@ -30,7 +30,8 @@ struct FilesSDKTests {
 
         #expect(result.filetype == "storyboard")
         #expect(result.files.count == 1)
-        #expect(result.files.first?.hasSuffix("view.storyboard") == true)
+        let file = try #require(result.files.first)
+        #expect(file.hasSuffix("view.storyboard"))
     }
 
     @Test
@@ -43,7 +44,8 @@ struct FilesSDKTests {
 
         #expect(result.filetype == "xib")
         #expect(result.files.count == 1)
-        #expect(result.files.first?.hasSuffix("cell.xib") == true)
+        let file = try #require(result.files.first)
+        #expect(file.hasSuffix("cell.xib"))
     }
 
     @Test
