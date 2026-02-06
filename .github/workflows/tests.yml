@@ -32,6 +32,9 @@ jobs:
       - name: Lint
         run: sh scripts/lint.sh
 
+      - name: Generate version
+        run: sh scripts/generate-version.sh
+
       - name: Resolve dependencies
         run: swift package resolve
 
