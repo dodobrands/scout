@@ -111,11 +111,11 @@ public struct Types: AsyncParsableCommand {
         for (hash, typeNames) in commitToTypes {
             Self.logger.info("Processing commit: \(hash) for types: \(typeNames)")
 
-            let results = try await sdk.analyzeCommit(
-                hash: hash,
-                typeNames: typeNames,
-                input: input
+            let commitInput = TypesInput(
+                git: input.git,
+                metrics: typeNames.map { TypeMetricInput(type: $0) }
             )
+            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: [String]] = [:]

@@ -59,7 +59,7 @@ public struct TypesSDK: Sendable {
     ///   - typeName: Base type name to search for
     ///   - input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching types
-    public func countTypes(typeName: String, input: TypesInput) async throws -> Result {
+    func countTypes(typeName: String, input: TypesInput) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
         let parser = SwiftParser()
 
@@ -86,51 +86,24 @@ public struct TypesSDK: Sendable {
         )
     }
 
-    /// Counts types inherited from all specified base types in the repository.
+    /// Counts types inherited from all base types in input.metrics.
     /// - Parameter input: Input parameters including array of metrics
     /// - Returns: Array of results, one for each type
-    public func countTypes(input: TypesInput, typeNames: [String]) async throws -> [Result] {
+    func countTypes(input: TypesInput) async throws -> [Result] {
         var results: [Result] = []
-        for typeName in typeNames {
-            let result = try await countTypes(typeName: typeName, input: input)
+        for metric in input.metrics {
+            let result = try await countTypes(typeName: metric.type, input: input)
             results.append(result)
         }
         return results
     }
 
-    /// Checks out a commit and counts types inherited from the specified base type.
+    /// Checks out a commit and counts types inherited from all base types in input.metrics.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - typeName: Base type name to search for
-    ///   - input: Input parameters for the operation
-    /// - Returns: Result containing count and list of matching types
-    public func analyzeCommit(
-        hash: String,
-        typeName: String,
-        input: TypesInput
-    ) async throws -> Result {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", hash],
-            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-        )
-
-        return try await countTypes(typeName: typeName, input: input)
-    }
-
-    /// Checks out a commit and counts types inherited from specified base types.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - typeNames: Type names to search for
     ///   - input: Input parameters for the operation
     /// - Returns: Array of results, one for each type
-    public func analyzeCommit(
-        hash: String,
-        typeNames: [String],
-        input: TypesInput
-    ) async throws -> [Result] {
+    public func analyzeCommit(hash: String, input: TypesInput) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
@@ -139,9 +112,8 @@ public struct TypesSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countTypes(input: input, typeNames: typeNames).map {
-            Result(commit: hash, typeName: $0.typeName, types: $0.types)
-        }
+        let results = try await countTypes(input: input)
+        return results.map { Result(commit: hash, typeName: $0.typeName, types: $0.types) }
     }
 
     private func findSwiftFiles(in directory: URL) -> [URL] {

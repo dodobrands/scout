@@ -145,7 +145,12 @@ public struct Pattern: AsyncParsableCommand {
         for (hash, patterns) in commitToPatterns {
             Self.logger.info("Processing commit: \(hash) for patterns: \(patterns)")
 
-            let results = try await sdk.analyzeCommit(hash: hash, patterns: patterns, input: input)
+            let commitInput = PatternInput(
+                git: input.git,
+                metrics: patterns.map { PatternMetricInput(pattern: $0) },
+                extensions: input.extensions
+            )
+            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: [PatternSDK.Match]] = [:]

@@ -1,7 +1,8 @@
 import Common
 import Foundation
-import PatternSDK
 import Testing
+
+@testable import PatternSDK
 
 struct PatternSDKTests {
     let sut = PatternSDK()
@@ -15,8 +16,10 @@ struct PatternSDKTests {
             metrics: [PatternMetricInput(pattern: "// TODO:")]
         )
 
-        let result = try await sut.search(pattern: "// TODO:", input: input)
+        let results = try await sut.search(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.pattern == "// TODO:")
         #expect(result.matches.count == 2)
     }
@@ -30,8 +33,10 @@ struct PatternSDKTests {
             metrics: [PatternMetricInput(pattern: "// FIXME:")]
         )
 
-        let result = try await sut.search(pattern: "// FIXME:", input: input)
+        let results = try await sut.search(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.matches.count == 2)
     }
 
@@ -44,8 +49,10 @@ struct PatternSDKTests {
             metrics: [PatternMetricInput(pattern: "periphery:ignore")]
         )
 
-        let result = try await sut.search(pattern: "periphery:ignore", input: input)
+        let results = try await sut.search(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.matches.count == 2)
     }
 
@@ -58,8 +65,10 @@ struct PatternSDKTests {
             metrics: [PatternMetricInput(pattern: "THIS_PATTERN_DOES_NOT_EXIST")]
         )
 
-        let result = try await sut.search(pattern: "THIS_PATTERN_DOES_NOT_EXIST", input: input)
+        let results = try await sut.search(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.matches.isEmpty)
     }
 
@@ -72,8 +81,10 @@ struct PatternSDKTests {
             metrics: [PatternMetricInput(pattern: "swiftlint:disable")]
         )
 
-        let result = try await sut.search(pattern: "swiftlint:disable", input: input)
+        let results = try await sut.search(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.matches.count == 1)
         let match = try #require(result.matches.first)
         #expect(match.line == 4)
@@ -88,8 +99,10 @@ struct PatternSDKTests {
             metrics: [PatternMetricInput(pattern: "// TODO:")]
         )
 
-        let result = try await sut.search(pattern: "// TODO:", input: input)
+        let results = try await sut.search(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.matches.count == 2)
         let lines = result.matches.map { $0.line }.sorted()
         #expect(lines == [7, 26])
@@ -107,7 +120,7 @@ struct PatternSDKTests {
             ]
         )
 
-        let results = try await sut.search(patterns: ["// TODO:", "// FIXME:"], input: input)
+        let results = try await sut.search(input: input)
 
         #expect(results.count == 2)
         let result0 = try #require(results[safe: 0])

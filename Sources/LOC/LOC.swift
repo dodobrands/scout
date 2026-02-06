@@ -105,14 +105,14 @@ public struct LOC: AsyncParsableCommand {
         var outputResults: [LOCOutput] = []
 
         // Group metrics by commits to minimize checkouts
-        var commitToConfigurations: [String: [LOCConfiguration]] = [:]
+        var commitToMetrics: [String: [LOCMetricInput]] = [:]
         for metric in resolvedMetrics {
             for commit in metric.commits {
-                commitToConfigurations[commit, default: []].append(metric.configuration)
+                commitToMetrics[commit, default: []].append(metric)
             }
         }
 
-        let allCommits = Array(commitToConfigurations.keys)
+        let allCommits = Array(commitToMetrics.keys)
         Self.logger.info(
             "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
             metadata: [
@@ -120,14 +120,11 @@ public struct LOC: AsyncParsableCommand {
             ]
         )
 
-        for (hash, configurations) in commitToConfigurations {
+        for (hash, metrics) in commitToMetrics {
             Self.logger.info("Processing commit: \(hash)")
 
-            let results = try await sdk.analyzeCommit(
-                hash: hash,
-                configurations: configurations,
-                input: input
-            )
+            let commitInput = LOCInput(git: input.git, metrics: metrics)
+            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: Int] = [:]
