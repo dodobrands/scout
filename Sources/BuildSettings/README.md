@@ -140,7 +140,7 @@ Different build settings can be analyzed on different commits. This is only avai
     { "setting": "SWIFT_VERSION", "commits": ["abc123", "def456"] },
     { "setting": "IPHONEOS_DEPLOYMENT_TARGET", "commits": ["ghi789"] },
     { "setting": "MARKETING_VERSION" },
-    { "setting": "DEPRECATED_SETTING", "commits": [] }
+    { "setting": "CURRENT_PROJECT_VERSION", "commits": [] }
   ]
 }
 ```
@@ -150,7 +150,7 @@ Different build settings can be analyzed on different commits. This is only avai
 | `SWIFT_VERSION` | `abc123`, `def456` |
 | `IPHONEOS_DEPLOYMENT_TARGET` | `ghi789` |
 | `MARKETING_VERSION` | `HEAD` (default) |
-| `DEPRECATED_SETTING` | skipped (empty array) |
+| `CURRENT_PROJECT_VERSION` | skipped (empty array) |
 
 > **Note:** CLI `--commits` flag overrides all config commits and applies to every setting equally.
 

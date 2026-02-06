@@ -93,7 +93,7 @@ Different types can be analyzed on different commits. This is only available via
     { "type": "UIView", "commits": ["abc123", "def456"] },
     { "type": "UIViewController", "commits": ["ghi789"] },
     { "type": "XCTestCase" },
-    { "type": "DeprecatedBaseClass", "commits": [] }
+    { "type": "NSObject", "commits": [] }
   ]
 }
 ```
@@ -103,7 +103,7 @@ Different types can be analyzed on different commits. This is only available via
 | `UIView` | `abc123`, `def456` |
 | `UIViewController` | `ghi789` |
 | `XCTestCase` | `HEAD` (default) |
-| `DeprecatedBaseClass` | skipped (empty array) |
+| `NSObject` | skipped (empty array) |
 
 > **Note:** CLI `--commits` flag overrides all config commits and applies to every type equally.
 

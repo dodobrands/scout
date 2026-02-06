@@ -94,7 +94,7 @@ Different extensions can be analyzed on different commits. This is only availabl
     { "extension": "storyboard", "commits": ["abc123", "def456"] },
     { "extension": "xib", "commits": ["ghi789"] },
     { "extension": "swift" },
-    { "extension": "deprecated", "commits": [] }
+    { "extension": "plist", "commits": [] }
   ]
 }
 ```
@@ -104,7 +104,7 @@ Different extensions can be analyzed on different commits. This is only availabl
 | `storyboard` | `abc123`, `def456` |
 | `xib` | `ghi789` |
 | `swift` | `HEAD` (default) |
-| `deprecated` | skipped (empty array) |
+| `plist` | skipped (empty array) |
 
 > **Note:** CLI `--commits` flag overrides all config commits and applies to every extension equally.
 
