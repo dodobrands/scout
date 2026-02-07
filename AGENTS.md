@@ -103,6 +103,10 @@ func count(input: Input) -> [Result]  // internal, for tests
 let results = try await sut.count(input: input)
 ```
 
+### Common Module Visibility
+
+Prefer `package` over `public` in `Sources/Common/`. Use `public` only when the type is part of a public SDK API (e.g., `GitConfiguration` used in `*Input` structs).
+
 ### Safe Array Access
 
 Use `[safe: index]` subscript instead of direct index access:

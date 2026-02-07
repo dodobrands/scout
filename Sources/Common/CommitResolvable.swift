@@ -1,5 +1,5 @@
 /// Protocol for metric types that have commits which may need HEAD resolution.
-public protocol CommitResolvable {
+package protocol CommitResolvable {
     var commits: [String] { get }
     func withResolvedCommits(_ commits: [String]) -> Self
 }
@@ -7,7 +7,7 @@ public protocol CommitResolvable {
 extension Array where Element: CommitResolvable {
     /// Resolves "HEAD" strings to actual commit hashes.
     /// Only calls Git if at least one element contains "HEAD".
-    public func resolvingHeadCommits(repoPath: String) async throws -> [Element] {
+    package func resolvingHeadCommits(repoPath: String) async throws -> [Element] {
         let needsHead = contains { $0.commits.contains("HEAD") }
         guard needsHead else { return self }
 

@@ -16,7 +16,7 @@ public struct GitConfiguration: Sendable {
     public let initializeSubmodules: Bool
 
     /// Direct initializer - all fields required
-    package init(
+    public init(
         repoPath: String,
         clean: Bool,
         fixLFS: Bool,
