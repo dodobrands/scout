@@ -1,4 +1,4 @@
-import BuildSettingsSDK
+@testable import BuildSettingsSDK
 import Common
 import Foundation
 import Testing

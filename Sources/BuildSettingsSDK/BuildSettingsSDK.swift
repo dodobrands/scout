@@ -30,7 +30,7 @@ public struct BuildSettingsSDK: Sendable {
     /// Extracts build settings from Xcode projects in the repository.
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Array of targets with their build settings
-    public func extractBuildSettings(input: Input) async throws -> [TargetWithBuildSettings] {
+    func extractBuildSettings(input: Input) async throws -> [TargetWithBuildSettings] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await GitFix.prepareRepository(git: input.git)
