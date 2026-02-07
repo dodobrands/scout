@@ -61,98 +61,103 @@ public struct BuildSettings: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file (one-liner convenience init)
         let fileConfig = try await BuildSettingsConfig(configPath: config)
+        let input = try await buildInput(fileConfig: fileConfig)
 
-        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
-        let cliInputs = BuildSettingsCLIInputs(
-            project: project,
-            buildSettingsParameters: buildSettingsParameters.nilIfEmpty,
-            repoPath: repoPath,
-            commits: commits.nilIfEmpty,
-            gitClean: gitClean ? true : nil,
-            fixLfs: fixLfs ? true : nil,
-            initializeSubmodules: initializeSubmodules ? true : nil
-        )
-
-        // Merge CLI > Config > Default
-        let cliConfig = try BuildSettingsCLIConfig(cli: cliInputs, config: fileConfig)
-
-        let repoPathURL =
-            try URL(string: cliConfig.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
-            repoPath: repoPathURL.path
-        )
-
-        var outputResults: [BuildSettingsSDK.Output] = []
-
-        // Group metrics by commits to minimize checkouts
-        var commitToSettings: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToSettings[commit, default: []].append(metric.setting)
-            }
-        }
-
-        let allCommits = Array(commitToSettings.keys)
+        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
-            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
-            metadata: [
-                "commits": .array(allCommits.map { Logger.MetadataValue.string($0) }),
-                "parameters": .array(
-                    resolvedMetrics.map { Logger.MetadataValue.string($0.setting) }
-                ),
-            ]
+            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) metric(s)"
         )
 
         let sdk = BuildSettingsSDK()
+        var outputs: [BuildSettingsSDK.Output] = []
 
-        for (hash, settings) in commitToSettings {
-            Self.logger.info(
-                "Starting analysis for commit",
-                metadata: ["hash": "\(hash)", "settings": "\(settings)"]
+        do {
+            outputs = try await sdk.analyze(input: input)
+        } catch let error as BuildSettingsSDK.AnalysisError {
+            Self.logger.warning(
+                "Analysis failed",
+                metadata: ["error": "\(error.localizedDescription)"]
             )
+        }
 
-            let commitInput = BuildSettingsSDK.Input(
-                commit: hash,
-                git: cliConfig.git,
-                setupCommands: cliConfig.setupCommands,
-                metrics: settings.map { BuildSettingsSDK.MetricInput(setting: $0) },
-                project: cliConfig.project,
-                configuration: cliConfig.configuration
-            )
-
-            let commitOutput: BuildSettingsSDK.Output
-            do {
-                commitOutput = try await sdk.analyzeCommit(input: commitInput)
-            } catch let error as BuildSettingsSDK.AnalysisError {
-                Self.logger.warning(
-                    "Skipping commit due to analysis failure",
-                    metadata: [
-                        "hash": "\(hash)",
-                        "error": "\(error.localizedDescription)",
-                    ]
-                )
-                continue
-            }
-
+        for output in outputs {
             Self.logger.notice(
-                "Extracted build settings for \(commitOutput.results.count) targets at \(hash)"
+                "Extracted build settings for \(output.results.count) targets at \(output.commit)"
             )
-
-            outputResults.append(commitOutput)
         }
 
         if let outputPath = output {
-            try outputResults.writeJSON(to: outputPath)
+            try outputs.writeJSON(to: outputPath)
         }
 
-        let summary = BuildSettingsSummary(outputs: outputResults)
+        let summary = BuildSettingsSummary(outputs: outputs)
         GitHubActionsLogHandler.writeSummary(summary)
 
-        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
+    }
+
+    private func buildInput(fileConfig: BuildSettingsConfig?) async throws -> BuildSettingsSDK.Input
+    {
+        let gitConfig = GitConfiguration(
+            cli: GitCLIInputs(
+                repoPath: repoPath,
+                clean: gitClean ? true : nil,
+                fixLFS: fixLfs ? true : nil,
+                initializeSubmodules: initializeSubmodules ? true : nil
+            ),
+            fileConfig: fileConfig?.git
+        )
+
+        let repoPathURL =
+            try URL(string: gitConfig.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: gitConfig.repoPath)
+
+        // Resolve project path
+        let resolvedProject: String
+        if let project {
+            resolvedProject = project
+        } else if let configProject = fileConfig?.project {
+            resolvedProject = configProject
+        } else {
+            throw ValidationError("Project path is required")
+        }
+
+        // Resolve configuration
+        let configuration = fileConfig?.configuration ?? "Release"
+
+        // Build setup commands
+        let setupCommands: [SetupCommand] =
+            fileConfig?.setupCommands?.map {
+                SetupCommand(
+                    command: $0.command,
+                    workingDirectory: $0.workingDirectory,
+                    optional: $0.optional ?? false
+                )
+            } ?? []
+
+        // Build metrics from CLI args or config file
+        var metrics: [BuildSettingsSDK.MetricInput] = []
+        if !buildSettingsParameters.isEmpty {
+            let commitList = commits.isEmpty ? ["HEAD"] : commits
+            metrics = buildSettingsParameters.map {
+                BuildSettingsSDK.MetricInput(setting: $0, commits: commitList)
+            }
+        } else if let configMetrics = fileConfig?.metrics {
+            metrics = configMetrics.map {
+                BuildSettingsSDK.MetricInput(setting: $0.setting, commits: $0.commits ?? ["HEAD"])
+            }
+        }
+
+        // Resolve HEAD commits
+        let resolvedMetrics = try await metrics.resolvingHeadCommits(repoPath: repoPathURL.path)
+
+        return BuildSettingsSDK.Input(
+            git: gitConfig,
+            setupCommands: setupCommands,
+            metrics: resolvedMetrics,
+            project: resolvedProject,
+            configuration: configuration
+        )
     }
 }

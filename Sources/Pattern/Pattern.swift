@@ -81,92 +81,81 @@ public struct Pattern: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file (one-liner convenience init)
         let fileConfig = try await PatternConfig(configPath: config)
+        let input = try await buildInput(fileConfig: fileConfig)
 
-        // Parse extensions from CLI (comma-separated string)
-        let cliExtensions: [String]?
-        if let extensions {
-            cliExtensions = extensions.split(separator: ",").map {
-                String($0.trimmingCharacters(in: .whitespaces))
-            }
-        } else {
-            cliExtensions = nil
-        }
-
-        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
-        let cliInputs = PatternCLIInputs(
-            patterns: patterns.nilIfEmpty,
-            repoPath: repoPath,
-            commits: commits.nilIfEmpty,
-            extensions: cliExtensions,
-            gitClean: gitClean ? true : nil,
-            fixLfs: fixLfs ? true : nil,
-            initializeSubmodules: initializeSubmodules ? true : nil
-        )
-
-        // Merge CLI > Config > Default
-        let cliConfig = PatternCLIConfig(cli: cliInputs, config: fileConfig)
-
-        let repoPathURL =
-            try URL(string: cliConfig.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
-            repoPath: repoPathURL.path
+        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
+        Self.logger.info(
+            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) pattern(s)"
         )
 
         let sdk = PatternSDK()
-        var outputResults: [PatternSDK.Output] = []
+        let outputs = try await sdk.analyze(input: input)
 
-        // Group metrics by commits to minimize checkouts
-        var commitToPatterns: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToPatterns[commit, default: []].append(metric.pattern)
-            }
-        }
-
-        let allCommits = Array(commitToPatterns.keys)
-        Self.logger.info(
-            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
-            metadata: [
-                "commits": .array(allCommits.map { .string($0) }),
-                "patterns": .array(resolvedMetrics.map { .string($0.pattern) }),
-            ]
-        )
-
-        for (hash, patterns) in commitToPatterns {
-            Self.logger.info("Processing commit: \(hash) for patterns: \(patterns)")
-
-            let commitInput = PatternSDK.Input(
-                commit: hash,
-                git: cliConfig.git,
-                metrics: patterns.map { PatternSDK.MetricInput(pattern: $0) },
-                extensions: cliConfig.extensions
-            )
-            let commitOutput = try await sdk.analyzeCommit(input: commitInput)
-
-            for result in commitOutput.results {
+        for output in outputs {
+            for result in output.results {
                 Self.logger.notice(
-                    "Found \(result.matches.count) matches for '\(result.pattern)' at \(hash)"
+                    "Found \(result.matches.count) matches for '\(result.pattern)' at \(output.commit)"
                 )
             }
-
-            outputResults.append(commitOutput)
         }
 
         if let outputPath = output {
-            try outputResults.writeJSON(to: outputPath)
+            try outputs.writeJSON(to: outputPath)
         }
 
         Self.logger.notice(
-            "Summary: analyzed \(allCommits.count) commit(s) for \(resolvedMetrics.count) pattern(s)"
+            "Summary: analyzed \(outputs.count) commit(s) for \(input.metrics.count) pattern(s)"
         )
 
-        let summary = Summary(outputs: outputResults)
+        let summary = Summary(outputs: outputs)
         logSummary(summary)
+    }
+
+    private func buildInput(fileConfig: PatternConfig?) async throws -> PatternSDK.Input {
+        let gitConfig = GitConfiguration(
+            cli: GitCLIInputs(
+                repoPath: repoPath,
+                clean: gitClean ? true : nil,
+                fixLFS: fixLfs ? true : nil,
+                initializeSubmodules: initializeSubmodules ? true : nil
+            ),
+            fileConfig: fileConfig?.git
+        )
+
+        let repoPathURL =
+            try URL(string: gitConfig.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: gitConfig.repoPath)
+
+        // Parse extensions from CLI (comma-separated string)
+        var resolvedExtensions: [String] = ["swift"]
+        if let extensions {
+            resolvedExtensions = extensions.split(separator: ",").map {
+                String($0.trimmingCharacters(in: .whitespaces))
+            }
+        } else if let configExtensions = fileConfig?.extensions {
+            resolvedExtensions = configExtensions
+        }
+
+        // Build metrics from CLI args or config file
+        var metrics: [PatternSDK.MetricInput] = []
+        if !patterns.isEmpty {
+            let commitList = commits.isEmpty ? ["HEAD"] : commits
+            metrics = patterns.map { PatternSDK.MetricInput(pattern: $0, commits: commitList) }
+        } else if let configMetrics = fileConfig?.metrics {
+            metrics = configMetrics.map {
+                PatternSDK.MetricInput(pattern: $0.pattern, commits: $0.commits ?? ["HEAD"])
+            }
+        }
+
+        // Resolve HEAD commits
+        let resolvedMetrics = try await metrics.resolvingHeadCommits(repoPath: repoPathURL.path)
+
+        return PatternSDK.Input(
+            git: gitConfig,
+            metrics: resolvedMetrics,
+            extensions: resolvedExtensions
+        )
     }
 
     private func logSummary(_ summary: Summary) {

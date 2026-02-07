@@ -29,16 +29,13 @@ public struct FilesSDK: Sendable {
 
     /// Input parameters for FilesSDK operations.
     public struct Input: Sendable {
-        public let commit: String
         public let git: GitConfiguration
         public let metrics: [MetricInput]
 
         public init(
-            commit: String,
             git: GitConfiguration,
             metrics: [MetricInput]
         ) {
-            self.commit = commit
             self.git = git
             self.metrics = metrics
         }
@@ -87,9 +84,19 @@ public struct FilesSDK: Sendable {
         }
     }
 
-    /// Counts files for all metrics in the input.
-    /// - Parameter input: Input parameters containing metrics and git configuration
-    /// - Returns: Array of results, one for each metric
+    /// Counts files for specific commit (filters metrics that include this commit).
+    /// Counts files for specific commit (filters metrics that include this commit).
+    private func countFilesForCommit(_ commit: String, input: Input) async throws -> [Result] {
+        try await GitFix.prepareRepository(git: input.git)
+
+        let repoPath = URL(filePath: input.git.repoPath)
+        return input.metrics.filter { $0.commits.contains(commit) }.map { metric in
+            let files = findFiles(of: metric.extension, in: repoPath)
+            return Result(filetype: metric.extension, files: files)
+        }
+    }
+
+    /// Counts files for all metrics without checkout (for testing).
     func countFiles(input: Input) async throws -> [Result] {
         try await GitFix.prepareRepository(git: input.git)
 
@@ -100,23 +107,39 @@ public struct FilesSDK: Sendable {
         }
     }
 
-    /// Checks out a commit and counts files for all metrics in input.
-    /// - Parameter input: Input parameters containing commit, metrics and git configuration
-    /// - Returns: Output with commit info, date, and results
-    public func analyzeCommit(input: Input) async throws -> Output {
+    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Groups metrics by commit to minimize checkouts.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Array of outputs, one for each unique commit
+    public func analyze(input: Input) async throws -> [Output] {
         let repoPath = URL(filePath: input.git.repoPath)
 
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", input.commit],
-            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-        )
+        // Group metrics by commit to minimize checkouts
+        var commitToFiletypes: [String: [String]] = [:]
+        for metric in input.metrics {
+            for commit in metric.commits {
+                commitToFiletypes[commit, default: []].append(metric.extension)
+            }
+        }
 
-        let results = try await countFiles(input: input)
-        let date = try await Git.commitDate(for: input.commit, in: repoPath)
+        var outputs: [Output] = []
+        for (hash, _) in commitToFiletypes {
+            Self.logger.debug("Processing commit: \(hash)")
 
-        let resultItems = results.map { ResultItem(filetype: $0.filetype, files: $0.files) }
-        return Output(commit: input.commit, date: date, results: resultItems)
+            try await Shell.execute(
+                "git",
+                arguments: ["checkout", hash],
+                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+            )
+
+            let results = try await countFilesForCommit(hash, input: input)
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+
+            let resultItems = results.map { ResultItem(filetype: $0.filetype, files: $0.files) }
+            outputs.append(Output(commit: hash, date: date, results: resultItems))
+        }
+
+        return outputs
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL] {

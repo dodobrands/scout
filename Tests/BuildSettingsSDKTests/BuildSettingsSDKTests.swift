@@ -11,7 +11,7 @@ struct BuildSettingsSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = BuildSettingsSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             setupCommands: [],
             project: "TestApp.xcodeproj",
@@ -33,7 +33,7 @@ struct BuildSettingsSDKTests {
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let failingCommand = SetupCommand(command: "exit 1")
         let input = BuildSettingsSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             setupCommands: [failingCommand],
             project: "TestApp.xcodeproj",
@@ -54,7 +54,7 @@ struct BuildSettingsSDKTests {
             optional: true
         )
         let input = BuildSettingsSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             setupCommands: [optionalFailingCommand],
             project: "TestApp.xcodeproj",

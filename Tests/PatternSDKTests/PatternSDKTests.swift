@@ -12,7 +12,7 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = PatternSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [PatternSDK.MetricInput(pattern: "// TODO:")]
         )
@@ -30,7 +30,7 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = PatternSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [PatternSDK.MetricInput(pattern: "// FIXME:")]
         )
@@ -47,7 +47,7 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = PatternSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [PatternSDK.MetricInput(pattern: "periphery:ignore")]
         )
@@ -64,7 +64,7 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = PatternSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [PatternSDK.MetricInput(pattern: "THIS_PATTERN_DOES_NOT_EXIST")]
         )
@@ -81,7 +81,7 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = PatternSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [PatternSDK.MetricInput(pattern: "swiftlint:disable")]
         )
@@ -100,7 +100,7 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = PatternSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [PatternSDK.MetricInput(pattern: "// TODO:")]
         )
@@ -119,7 +119,7 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = PatternSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [
                 PatternSDK.MetricInput(pattern: "// TODO:"),

@@ -79,7 +79,6 @@ public struct BuildSettingsSDK: Sendable {
 
     /// Input parameters for BuildSettingsSDK operations.
     public struct Input: Sendable {
-        public let commit: String
         public let git: GitConfiguration
         public let setupCommands: [SetupCommand]
         public let metrics: [MetricInput]
@@ -87,14 +86,12 @@ public struct BuildSettingsSDK: Sendable {
         public let configuration: String
 
         public init(
-            commit: String,
             git: GitConfiguration,
             setupCommands: [SetupCommand],
             metrics: [MetricInput] = [],
             project: String,
             configuration: String
         ) {
-            self.commit = commit
             self.git = git
             self.setupCommands = setupCommands
             self.metrics = metrics
@@ -175,21 +172,88 @@ public struct BuildSettingsSDK: Sendable {
         return targetsWithBuildSettings
     }
 
+    /// Extracts build settings for a specific commit.
+    private func extractBuildSettingsForCommit(
+        _ commit: String,
+        input: Input
+    ) async throws -> [ResultItem] {
+        let targets: Result
+        do {
+            targets = try await extractBuildSettings(input: input)
+        } catch let error as AnalysisError {
+            throw error
+        } catch {
+            throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
+        }
+
+        let requestedSettings = Set(
+            input.metrics.filter { $0.commits.contains(commit) }.map { $0.setting }
+        )
+        return targets.map { target in
+            let filteredSettings = target.buildSettings
+                .filter { requestedSettings.contains($0.key) }
+                .mapValues { Optional($0) }
+            return ResultItem(target: target.target, settings: filteredSettings)
+        }
+    }
+
+    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Groups metrics by commit to minimize checkouts.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Array of outputs, one for each unique commit
+    public func analyze(input: Input) async throws -> [Output] {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        // Group metrics by commit to minimize checkouts
+        var commitToSettings: [String: [String]] = [:]
+        for metric in input.metrics {
+            for commit in metric.commits {
+                commitToSettings[commit, default: []].append(metric.setting)
+            }
+        }
+
+        var outputs: [Output] = []
+        for (hash, _) in commitToSettings {
+            Self.logger.debug("Processing commit: \(hash)")
+
+            do {
+                try await Shell.execute(
+                    "git",
+                    arguments: ["checkout", hash],
+                    workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+                )
+            } catch {
+                throw AnalysisError.checkoutFailed(
+                    hash: hash,
+                    error: error.localizedDescription
+                )
+            }
+
+            let resultItems = try await extractBuildSettingsForCommit(hash, input: input)
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+
+            outputs.append(Output(commit: hash, date: date, results: resultItems))
+        }
+
+        return outputs
+    }
+
     /// Checks out a commit and extracts build settings.
     /// - Parameter input: Input parameters for the operation including commit hash
     /// - Returns: Output with commit info, date, and results
-    public func analyzeCommit(input: Input) async throws -> Output {
+    @available(*, deprecated, message: "Use analyze(input:) instead")
+    public func analyzeCommit(commit: String, input: Input) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         do {
             try await Shell.execute(
                 "git",
-                arguments: ["checkout", input.commit],
+                arguments: ["checkout", commit],
                 workingDirectory: FilePath(repoPath.path(percentEncoded: false))
             )
         } catch {
             throw AnalysisError.checkoutFailed(
-                hash: input.commit,
+                hash: commit,
                 error: error.localizedDescription
             )
         }
@@ -203,7 +267,7 @@ public struct BuildSettingsSDK: Sendable {
             throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
         }
 
-        let date = try await Git.commitDate(for: input.commit, in: repoPath)
+        let date = try await Git.commitDate(for: commit, in: repoPath)
 
         let requestedSettings = Set(input.metrics.map { $0.setting })
         let resultItems = targets.map { target in
@@ -213,7 +277,7 @@ public struct BuildSettingsSDK: Sendable {
             return ResultItem(target: target.target, settings: filteredSettings)
         }
 
-        return Output(commit: input.commit, date: date, results: resultItems)
+        return Output(commit: commit, date: date, results: resultItems)
     }
 
     // MARK: - Setup Commands

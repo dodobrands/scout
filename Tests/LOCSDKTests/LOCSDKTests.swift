@@ -12,15 +12,14 @@ struct LOCSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = LOCSDK.Input(
-            commit: "HEAD",
             git: gitConfig,
             metrics: [LOCSDK.MetricInput(languages: ["Swift"], include: ["Sources"], exclude: [])]
         )
 
-        let results = try await sut.countLOC(input: input)
+        let outputs = try await sut.analyze(input: input)
 
-        #expect(results.count == 1)
-        let result = try #require(results[safe: 0])
+        let output = try #require(outputs[safe: 0])
+        let result = try #require(output.results[safe: 0])
         #expect(result.linesOfCode == 16)
     }
 
@@ -29,7 +28,6 @@ struct LOCSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = LOCSDK.Input(
-            commit: "HEAD",
             git: gitConfig,
             metrics: [
                 LOCSDK.MetricInput(
@@ -40,10 +38,10 @@ struct LOCSDKTests {
             ]
         )
 
-        let results = try await sut.countLOC(input: input)
+        let outputs = try await sut.analyze(input: input)
 
-        #expect(results.count == 1)
-        let result = try #require(results[safe: 0])
+        let output = try #require(outputs[safe: 0])
+        let result = try #require(output.results[safe: 0])
         #expect(result.linesOfCode == 16)
     }
 
@@ -52,7 +50,6 @@ struct LOCSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = LOCSDK.Input(
-            commit: "HEAD",
             git: gitConfig,
             metrics: [
                 LOCSDK.MetricInput(
@@ -63,10 +60,10 @@ struct LOCSDKTests {
             ]
         )
 
-        let results = try await sut.countLOC(input: input)
+        let outputs = try await sut.analyze(input: input)
 
-        #expect(results.count == 1)
-        let result = try #require(results[safe: 0])
+        let output = try #require(outputs[safe: 0])
+        let result = try #require(output.results[safe: 0])
         #expect(result.linesOfCode == 22)
     }
 
@@ -75,7 +72,6 @@ struct LOCSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = LOCSDK.Input(
-            commit: "HEAD",
             git: gitConfig,
             metrics: [
                 LOCSDK.MetricInput(
@@ -86,10 +82,10 @@ struct LOCSDKTests {
             ]
         )
 
-        let results = try await sut.countLOC(input: input)
+        let outputs = try await sut.analyze(input: input)
 
-        #expect(results.count == 1)
-        let result = try #require(results[safe: 0])
+        let output = try #require(outputs[safe: 0])
+        let result = try #require(output.results[safe: 0])
         #expect(result.linesOfCode == 0)
     }
 
@@ -98,15 +94,14 @@ struct LOCSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = LOCSDK.Input(
-            commit: "HEAD",
             git: gitConfig,
             metrics: [LOCSDK.MetricInput(languages: ["Rust"], include: ["Sources"], exclude: [])]
         )
 
-        let results = try await sut.countLOC(input: input)
+        let outputs = try await sut.analyze(input: input)
 
-        #expect(results.count == 1)
-        let result = try #require(results[safe: 0])
+        let output = try #require(outputs[safe: 0])
+        let result = try #require(output.results[safe: 0])
         #expect(result.linesOfCode == 0)
     }
 
@@ -115,7 +110,6 @@ struct LOCSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = LOCSDK.Input(
-            commit: "HEAD",
             git: gitConfig,
             metrics: [
                 LOCSDK.MetricInput(languages: ["Swift"], include: ["Sources"], exclude: []),
@@ -123,11 +117,12 @@ struct LOCSDKTests {
             ]
         )
 
-        let results = try await sut.countLOC(input: input)
+        let outputs = try await sut.analyze(input: input)
 
-        #expect(results.count == 2)
-        let result0 = try #require(results[safe: 0])
-        let result1 = try #require(results[safe: 1])
+        let output = try #require(outputs[safe: 0])
+        #expect(output.results.count == 2)
+        let result0 = try #require(output.results[safe: 0])
+        let result1 = try #require(output.results[safe: 1])
         #expect(result0.linesOfCode == 16)
         #expect(result1.linesOfCode == 6)
     }

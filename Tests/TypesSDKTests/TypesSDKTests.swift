@@ -12,7 +12,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "UIView")]
         )
@@ -30,7 +30,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "View")]
         )
@@ -49,7 +49,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "JsonAsyncRequest<*>")]
         )
@@ -67,7 +67,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "JsonAsyncRequest")]
         )
@@ -84,7 +84,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "NonExistentType")]
         )
@@ -101,7 +101,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Coordinator")]
         )
@@ -122,7 +122,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "FlowCoordinator")]
         )
@@ -139,7 +139,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "BaseViewModel")]
         )
@@ -163,7 +163,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "ListViewModel")]
         )
@@ -185,12 +185,12 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let trackableInput = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Trackable")]
         )
         let loggableInput = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Loggable")]
         )
@@ -209,7 +209,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [
                 TypesSDK.MetricInput(type: "UIView"),
@@ -233,7 +233,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "AnalyticsEvent")]
         )
@@ -251,7 +251,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Component")]
         )
@@ -270,7 +270,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Formatter")]
         )
@@ -288,7 +288,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "EventProtocol")]
         )
@@ -310,7 +310,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Component")]
         )
@@ -330,7 +330,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "UIView")]
         )
@@ -348,7 +348,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "UIView")]
         )
@@ -366,7 +366,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "AnalyticsEvent")]
         )
@@ -386,7 +386,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Screen")]
         )
@@ -404,7 +404,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "DataProvider")]
         )
@@ -422,7 +422,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Action")]
         )
@@ -440,7 +440,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Repository")]
         )
@@ -460,7 +460,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "InternalProtocol")]
         )
@@ -482,7 +482,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "WidgetProtocol")]
         )
@@ -501,7 +501,7 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Wrapper")]
         )
@@ -519,12 +519,12 @@ struct TypesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let identifiableInput = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Identifiable")]
         )
         let nameableInput = TypesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [TypesSDK.MetricInput(type: "Nameable")]
         )

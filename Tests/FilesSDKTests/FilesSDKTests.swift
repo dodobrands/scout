@@ -12,7 +12,7 @@ struct FilesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = FilesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [FilesSDK.MetricInput(extension: "swift")]
         )
@@ -32,7 +32,7 @@ struct FilesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = FilesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [FilesSDK.MetricInput(extension: "storyboard")]
         )
@@ -52,7 +52,7 @@ struct FilesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = FilesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [FilesSDK.MetricInput(extension: "xib")]
         )
@@ -72,7 +72,7 @@ struct FilesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = FilesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [FilesSDK.MetricInput(extension: "json")]
         )
@@ -90,7 +90,7 @@ struct FilesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = FilesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [FilesSDK.MetricInput(extension: "xyz")]
         )
@@ -107,7 +107,7 @@ struct FilesSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let input = FilesSDK.Input(
-            commit: "HEAD",
+
             git: gitConfig,
             metrics: [
                 FilesSDK.MetricInput(extension: "swift"),

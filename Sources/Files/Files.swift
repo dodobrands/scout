@@ -52,78 +52,65 @@ public struct Files: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file (one-liner convenience init)
         let fileConfig = try await FilesConfig(configPath: config)
+        let input = try await buildInput(fileConfig: fileConfig)
 
-        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
-        let cliInputs = FilesCLIInputs(
-            filetypes: filetypes.nilIfEmpty,
-            repoPath: repoPath,
-            commits: commits.nilIfEmpty,
-            gitClean: gitClean ? true : nil,
-            fixLfs: fixLfs ? true : nil,
-            initializeSubmodules: initializeSubmodules ? true : nil
-        )
-
-        // Merge CLI > Config > Default
-        let cliConfig = FilesCLIConfig(cli: cliInputs, config: fileConfig)
-
-        let repoPathURL =
-            try URL(string: cliConfig.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
-            repoPath: repoPathURL.path
+        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
+        Self.logger.info(
+            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) file type(s)"
         )
 
         let sdk = FilesSDK()
-        var outputResults: [FilesSDK.Output] = []
+        let outputs = try await sdk.analyze(input: input)
 
-        // Group metrics by commits to minimize checkouts
-        var commitToFiletypes: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToFiletypes[commit, default: []].append(metric.extension)
-            }
-        }
-
-        let allCommits = Array(commitToFiletypes.keys)
-        Self.logger.info(
-            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) file type(s)",
-            metadata: [
-                "commits": .array(allCommits.map { .string($0) }),
-                "filetypes": .array(resolvedMetrics.map { .string($0.extension) }),
-            ]
-        )
-
-        for (hash, filetypes) in commitToFiletypes {
-            Self.logger.info("Processing commit: \(hash) for filetypes: \(filetypes)")
-
-            let commitInput = FilesSDK.Input(
-                commit: hash,
-                git: cliConfig.git,
-                metrics: filetypes.map { FilesSDK.MetricInput(extension: $0) }
-            )
-            let commitOutput = try await sdk.analyzeCommit(input: commitInput)
-
-            for result in commitOutput.results {
+        for output in outputs {
+            for result in output.results {
                 Self.logger.notice(
-                    "Found \(result.files.count) files of type '\(result.filetype)' at \(hash)"
+                    "Found \(result.files.count) files of type '\(result.filetype)' at \(output.commit)"
                 )
             }
-
-            outputResults.append(commitOutput)
         }
 
         if let outputPath = output {
-            try outputResults.writeJSON(to: outputPath)
+            try outputs.writeJSON(to: outputPath)
         }
 
-        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
 
-        let summary = FilesSummary(outputs: outputResults)
+        let summary = FilesSummary(outputs: outputs)
         logSummary(summary)
+    }
+
+    private func buildInput(fileConfig: FilesConfig?) async throws -> FilesSDK.Input {
+        let gitConfig = GitConfiguration(
+            cli: GitCLIInputs(
+                repoPath: repoPath,
+                clean: gitClean ? true : nil,
+                fixLFS: fixLfs ? true : nil,
+                initializeSubmodules: initializeSubmodules ? true : nil
+            ),
+            fileConfig: fileConfig?.git
+        )
+
+        let repoPathURL =
+            try URL(string: gitConfig.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: gitConfig.repoPath)
+
+        // Build metrics from CLI args or config file
+        var metrics: [FilesSDK.MetricInput] = []
+        if !filetypes.isEmpty {
+            let commitList = commits.isEmpty ? ["HEAD"] : commits
+            metrics = filetypes.map { FilesSDK.MetricInput(extension: $0, commits: commitList) }
+        } else if let configMetrics = fileConfig?.metrics {
+            metrics = configMetrics.map {
+                FilesSDK.MetricInput(extension: $0.extension, commits: $0.commits ?? ["HEAD"])
+            }
+        }
+
+        // Resolve HEAD commits
+        let resolvedMetrics = try await metrics.resolvingHeadCommits(repoPath: repoPathURL.path)
+
+        return FilesSDK.Input(git: gitConfig, metrics: resolvedMetrics)
     }
 
     private func logSummary(_ summary: FilesSummary) {
