@@ -25,21 +25,29 @@ struct SwiftParser {
             throw ParseError.invalidStructure(key: "key.substructure")
         }
 
-        let parsedStructs: [ObjectFromCode] = substructure.compactMap { item in
-            guard
-                let name = item["key.name"] as? String,
+        return parseSubstructure(substructure)
+    }
+
+    /// Recursively parses substructure to extract all type definitions including nested types.
+    private func parseSubstructure(_ substructure: [[String: Any]]) -> [ObjectFromCode] {
+        var results: [ObjectFromCode] = []
+
+        for item in substructure {
+            // Try to parse current item as a type definition
+            if let name = item["key.name"] as? String,
                 let inheritedTypes = item["key.inheritedtypes"] as? [[String: String]]
-            else { return nil }
+            {
+                let inheritances = inheritedTypes.compactMap { $0["key.name"] }
+                results.append(ObjectFromCode(name: name, inheritedTypes: inheritances))
+            }
 
-            let inheritances = inheritedTypes.compactMap { $0["key.name"] }
-
-            return ObjectFromCode(
-                name: name,
-                inheritedTypes: inheritances
-            )
+            // Recursively parse nested substructure (extensions, nested types, etc.)
+            if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
+                results.append(contentsOf: parseSubstructure(nestedSubstructure))
+            }
         }
 
-        return parsedStructs
+        return results
     }
 
     /// Checks if a code object inherits from the specified base type.
@@ -60,8 +68,8 @@ struct SwiftParser {
             return true
         }
 
-        // Check indirect inheritance through parent types
-        let child = objectFromCode.inheritedTypes.first { className in
+        // Check indirect inheritance through ALL parent types (not just first)
+        return objectFromCode.inheritedTypes.contains { className in
             // Extract base type name from generic type (e.g., "JsonAsyncRequest<DTO>" -> "JsonAsyncRequest")
             let baseTypeName = extractBaseTypeName(from: className)
 
@@ -75,8 +83,6 @@ struct SwiftParser {
                 allObjects: allObjects
             )
         }
-
-        return child != nil
     }
 
     /// Checks if an inherited type matches the base type pattern.
