@@ -1,7 +1,8 @@
-@testable import BuildSettingsSDK
 import Common
 import Foundation
 import Testing
+
+@testable import BuildSettingsSDK
 
 struct BuildSettingsSDKTests {
     let sut = BuildSettingsSDK()
@@ -9,10 +10,8 @@ struct BuildSettingsSDKTests {
     @Test
     func `When extracting build settings, should return targets with settings`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = BuildSettingsSDK.Input(
-
-            git: gitConfig,
+        let input = BuildSettingsSDK.AnalysisInput(
+            repoPath: samplesURL.path,
             setupCommands: [],
             project: "TestApp.xcodeproj",
             configuration: "Debug"
@@ -30,11 +29,9 @@ struct BuildSettingsSDKTests {
     @Test
     func `When setup command fails, should throw error`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let failingCommand = SetupCommand(command: "exit 1")
-        let input = BuildSettingsSDK.Input(
-
-            git: gitConfig,
+        let input = BuildSettingsSDK.AnalysisInput(
+            repoPath: samplesURL.path,
             setupCommands: [failingCommand],
             project: "TestApp.xcodeproj",
             configuration: "Debug"
@@ -48,14 +45,12 @@ struct BuildSettingsSDKTests {
     @Test
     func `When optional setup command fails, should continue`() async throws {
         let samplesURL = try samplesDirectory()
-        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let optionalFailingCommand = SetupCommand(
             command: "exit 1",
             optional: true
         )
-        let input = BuildSettingsSDK.Input(
-
-            git: gitConfig,
+        let input = BuildSettingsSDK.AnalysisInput(
+            repoPath: samplesURL.path,
             setupCommands: [optionalFailingCommand],
             project: "TestApp.xcodeproj",
             configuration: "Debug"
@@ -72,15 +67,4 @@ private func samplesDirectory() throws -> URL {
         throw CocoaError(.fileNoSuchFile)
     }
     return url
-}
-
-extension GitConfiguration {
-    static func test(repoPath: String) -> GitConfiguration {
-        GitConfiguration(
-            repoPath: repoPath,
-            clean: false,
-            fixLFS: false,
-            initializeSubmodules: false
-        )
-    }
 }

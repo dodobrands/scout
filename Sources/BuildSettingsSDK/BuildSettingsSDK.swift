@@ -28,12 +28,11 @@ public struct BuildSettingsSDK: Sendable {
     }
 
     /// Extracts build settings from Xcode projects in the repository.
+    /// Performs analysis on current repository state without git operations.
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Array of targets with their build settings
-    func extractBuildSettings(input: Input) async throws -> [TargetWithBuildSettings] {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        try await GitFix.prepareRepository(git: input.git)
+    func extractBuildSettings(input: AnalysisInput) async throws -> [TargetWithBuildSettings] {
+        let repoPath = URL(filePath: input.repoPath)
 
         try await executeSetupCommands(input.setupCommands, in: repoPath)
 
@@ -52,31 +51,6 @@ public struct BuildSettingsSDK: Sendable {
         )
 
         return targetsWithBuildSettings
-    }
-
-    /// Extracts build settings for a specific commit.
-    private func extractBuildSettingsForCommit(
-        _ commit: String,
-        input: Input
-    ) async throws -> [ResultItem] {
-        let targets: [TargetWithBuildSettings]
-        do {
-            targets = try await extractBuildSettings(input: input)
-        } catch let error as AnalysisError {
-            throw error
-        } catch {
-            throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
-        }
-
-        let requestedSettings = Set(
-            input.metrics.filter { $0.commits.contains(commit) }.map { $0.setting }
-        )
-        return targets.map { target in
-            let filteredSettings = target.buildSettings
-                .filter { requestedSettings.contains($0.key) }
-                .mapValues { Optional($0) }
-            return ResultItem(target: target.target, settings: filteredSettings)
-        }
     }
 
     /// Analyzes all commits from metrics and returns outputs for each.
@@ -100,7 +74,7 @@ public struct BuildSettingsSDK: Sendable {
         }
 
         var outputs: [Output] = []
-        for (hash, _) in commitToSettings {
+        for (hash, requestedSettings) in commitToSettings {
             Self.logger.debug("Processing commit: \(hash)")
 
             do {
@@ -116,9 +90,33 @@ public struct BuildSettingsSDK: Sendable {
                 )
             }
 
-            let resultItems = try await extractBuildSettingsForCommit(hash, input: input)
-            let date = try await Git.commitDate(for: hash, in: repoPath)
+            try await GitFix.prepareRepository(git: input.git)
 
+            let analysisInput = AnalysisInput(
+                repoPath: input.git.repoPath,
+                setupCommands: input.setupCommands,
+                project: input.project,
+                configuration: input.configuration
+            )
+
+            let targets: [TargetWithBuildSettings]
+            do {
+                targets = try await extractBuildSettings(input: analysisInput)
+            } catch let error as AnalysisError {
+                throw error
+            } catch {
+                throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
+            }
+
+            let requestedSettingsSet = Set(requestedSettings)
+            let resultItems = targets.map { target in
+                let filteredSettings = target.buildSettings
+                    .filter { requestedSettingsSet.contains($0.key) }
+                    .mapValues { Optional($0) }
+                return ResultItem(target: target.target, settings: filteredSettings)
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
             outputs.append(Output(commit: hash, date: date, results: resultItems))
         }
 
