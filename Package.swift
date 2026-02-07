@@ -279,6 +279,10 @@ let package = Package(
                 "Types",
                 "TypesSDK",
                 "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -302,6 +306,10 @@ let package = Package(
                 "Files",
                 "FilesSDK",
                 "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -325,6 +333,10 @@ let package = Package(
                 "Pattern",
                 "PatternSDK",
                 "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -348,6 +360,10 @@ let package = Package(
                 "LOC",
                 "LOCSDK",
                 "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
