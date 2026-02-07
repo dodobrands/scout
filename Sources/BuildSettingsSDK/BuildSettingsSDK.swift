@@ -3,102 +3,11 @@ import Foundation
 import Logging
 import System
 
-// MARK: - Public Types
-
-/// Represents an Xcode project or workspace.
-public struct ProjectOrWorkspace: Sendable {
-    public let path: String
-    public let isWorkspace: Bool
-
-    public init(path: String, isWorkspace: Bool) {
-        self.path = path
-        self.isWorkspace = isWorkspace
-    }
-}
-
-/// Represents a project with its targets.
-public struct ProjectWithTargets: Sendable {
-    public let path: String
-    public let targets: [String]
-
-    public init(path: String, targets: [String]) {
-        self.path = path
-        self.targets = targets
-    }
-}
-
-/// Represents a target with its build settings.
-public struct TargetWithBuildSettings: Sendable, Encodable {
-    public let target: String
-    public let buildSettings: [String: String]
-
-    public init(target: String, buildSettings: [String: String]) {
-        self.target = target
-        self.buildSettings = buildSettings
-    }
-}
-
-// MARK: - BuildSettingsSDK
-
-/// Represents a setup command to execute before analysis.
-public struct SetupCommand: Sendable {
-    public let command: String
-    public let workingDirectory: String?
-    public let optional: Bool
-
-    public init(command: String, workingDirectory: String? = nil, optional: Bool = false) {
-        self.command = command
-        self.workingDirectory = workingDirectory
-        self.optional = optional
-    }
-}
-
 /// SDK for extracting build settings from Xcode projects.
 public struct BuildSettingsSDK: Sendable {
     private static let logger = Logger(label: "scout.BuildSettingsSDK")
 
     public init() {}
-
-    /// A single build setting metric with its commits to analyze.
-    public struct MetricInput: Sendable, CommitResolvable {
-        /// Build setting name (e.g., "SWIFT_VERSION")
-        public let setting: String
-
-        /// Commits to analyze for this setting
-        public let commits: [String]
-
-        public init(setting: String, commits: [String] = ["HEAD"]) {
-            self.setting = setting
-            self.commits = commits
-        }
-
-        public func withResolvedCommits(_ commits: [String]) -> MetricInput {
-            MetricInput(setting: setting, commits: commits)
-        }
-    }
-
-    /// Input parameters for BuildSettingsSDK operations.
-    public struct Input: Sendable {
-        public let git: GitConfiguration
-        public let setupCommands: [SetupCommand]
-        public let metrics: [MetricInput]
-        public let project: String
-        public let configuration: String
-
-        public init(
-            git: GitConfiguration,
-            setupCommands: [SetupCommand],
-            metrics: [MetricInput] = [],
-            project: String,
-            configuration: String
-        ) {
-            self.git = git
-            self.setupCommands = setupCommands
-            self.metrics = metrics
-            self.project = project
-            self.configuration = configuration
-        }
-    }
 
     /// Error that can occur during analysis.
     public enum AnalysisError: Error, LocalizedError {
@@ -118,37 +27,10 @@ public struct BuildSettingsSDK: Sendable {
         }
     }
 
-    /// A single build settings result item for a target.
-    public struct ResultItem: Sendable, Encodable {
-        public let target: String
-        public let settings: [String: String?]
-
-        public init(target: String, settings: [String: String?]) {
-            self.target = target
-            self.settings = settings
-        }
-    }
-
-    /// Output of build settings analysis for a single commit.
-    public struct Output: Sendable, Encodable {
-        public let commit: String
-        public let date: String
-        public let results: [ResultItem]
-
-        public init(commit: String, date: String, results: [ResultItem]) {
-            self.commit = commit
-            self.date = date
-            self.results = results
-        }
-    }
-
-    /// Result of build settings extraction - array of targets with their build settings.
-    public typealias Result = [TargetWithBuildSettings]
-
     /// Extracts build settings from Xcode projects in the repository.
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Array of targets with their build settings
-    public func extractBuildSettings(input: Input) async throws -> Result {
+    public func extractBuildSettings(input: Input) async throws -> [TargetWithBuildSettings] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await GitFix.prepareRepository(git: input.git)
@@ -177,7 +59,7 @@ public struct BuildSettingsSDK: Sendable {
         _ commit: String,
         input: Input
     ) async throws -> [ResultItem] {
-        let targets: Result
+        let targets: [TargetWithBuildSettings]
         do {
             targets = try await extractBuildSettings(input: input)
         } catch let error as AnalysisError {
@@ -258,7 +140,7 @@ public struct BuildSettingsSDK: Sendable {
             )
         }
 
-        let targets: Result
+        let targets: [TargetWithBuildSettings]
         do {
             targets = try await extractBuildSettings(input: input)
         } catch let error as AnalysisError {
