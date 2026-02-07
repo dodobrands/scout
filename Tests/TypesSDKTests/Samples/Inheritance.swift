@@ -128,11 +128,11 @@ public struct PublicType: InternalProtocol {}
 protocol WidgetProtocol {}
 
 enum Dashboard {
-    struct Widget: WidgetProtocol {}
+    struct Widget: Inheritance.WidgetProtocol {}
 }
 
 enum Settings {
-    struct Widget: WidgetProtocol {}
+    struct Widget: Inheritance.WidgetProtocol {}
 }
 
 // MARK: - Property wrappers
