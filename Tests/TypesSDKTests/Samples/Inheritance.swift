@@ -25,3 +25,18 @@ protocol Loggable {}
 class BaseService: Trackable, Loggable {}
 final class OrderService: BaseService {}
 final class PaymentService: BaseService, Sendable {}
+
+// MARK: - Nested types in extensions
+
+protocol AnalyticsEvent {}
+
+enum Analytics {}
+
+extension Analytics {
+    struct OpenScreenEvent: AnalyticsEvent {}
+    struct CloseScreenEvent: AnalyticsEvent {}
+}
+
+extension Analytics {
+    struct TapButtonEvent: AnalyticsEvent {}
+}

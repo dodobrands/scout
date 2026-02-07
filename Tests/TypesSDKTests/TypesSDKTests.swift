@@ -214,6 +214,23 @@ struct TypesSDKTests {
         #expect(result1.typeName == "View")
         #expect(result1.types == ["HelloView"])
     }
+
+    @Test
+    func `When searching for types inside extensions, should find nested types`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "AnalyticsEvent")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "AnalyticsEvent")
+        #expect(result.types == ["CloseScreenEvent", "OpenScreenEvent", "TapButtonEvent"])
+    }
 }
 
 private func samplesDirectory() throws -> URL {
