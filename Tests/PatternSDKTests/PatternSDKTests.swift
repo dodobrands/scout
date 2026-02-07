@@ -11,10 +11,11 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let input = PatternSDK.AnalysisInput(
             repoPath: samplesURL.path,
-            extensions: ["swift"]
+            extensions: ["swift"],
+            pattern: "// TODO:"
         )
 
-        let result = try sut.search(input: input, pattern: "// TODO:")
+        let result = try sut.search(input: input)
 
         #expect(result.pattern == "// TODO:")
         #expect(result.matches.count == 2)
@@ -25,10 +26,11 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let input = PatternSDK.AnalysisInput(
             repoPath: samplesURL.path,
-            extensions: ["swift"]
+            extensions: ["swift"],
+            pattern: "// FIXME:"
         )
 
-        let result = try sut.search(input: input, pattern: "// FIXME:")
+        let result = try sut.search(input: input)
 
         #expect(result.matches.count == 2)
     }
@@ -38,10 +40,11 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let input = PatternSDK.AnalysisInput(
             repoPath: samplesURL.path,
-            extensions: ["swift"]
+            extensions: ["swift"],
+            pattern: "periphery:ignore"
         )
 
-        let result = try sut.search(input: input, pattern: "periphery:ignore")
+        let result = try sut.search(input: input)
 
         #expect(result.matches.count == 2)
     }
@@ -51,10 +54,11 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let input = PatternSDK.AnalysisInput(
             repoPath: samplesURL.path,
-            extensions: ["swift"]
+            extensions: ["swift"],
+            pattern: "THIS_PATTERN_DOES_NOT_EXIST"
         )
 
-        let result = try sut.search(input: input, pattern: "THIS_PATTERN_DOES_NOT_EXIST")
+        let result = try sut.search(input: input)
 
         #expect(result.matches.isEmpty)
     }
@@ -64,10 +68,11 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let input = PatternSDK.AnalysisInput(
             repoPath: samplesURL.path,
-            extensions: ["swift"]
+            extensions: ["swift"],
+            pattern: "swiftlint:disable"
         )
 
-        let result = try sut.search(input: input, pattern: "swiftlint:disable")
+        let result = try sut.search(input: input)
 
         #expect(result.matches.count == 1)
         let match = try #require(result.matches.first)
@@ -79,10 +84,11 @@ struct PatternSDKTests {
         let samplesURL = try samplesDirectory()
         let input = PatternSDK.AnalysisInput(
             repoPath: samplesURL.path,
-            extensions: ["swift"]
+            extensions: ["swift"],
+            pattern: "// TODO:"
         )
 
-        let result = try sut.search(input: input, pattern: "// TODO:")
+        let result = try sut.search(input: input)
 
         #expect(result.matches.count == 2)
         let lines = result.matches.map { $0.line }.sorted()
@@ -92,13 +98,19 @@ struct PatternSDKTests {
     @Test
     func `When searching for multiple patterns, should return results for each`() throws {
         let samplesURL = try samplesDirectory()
-        let input = PatternSDK.AnalysisInput(
+        let todoInput = PatternSDK.AnalysisInput(
             repoPath: samplesURL.path,
-            extensions: ["swift"]
+            extensions: ["swift"],
+            pattern: "// TODO:"
+        )
+        let fixmeInput = PatternSDK.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "// FIXME:"
         )
 
-        let todoResult = try sut.search(input: input, pattern: "// TODO:")
-        let fixmeResult = try sut.search(input: input, pattern: "// FIXME:")
+        let todoResult = try sut.search(input: todoInput)
+        let fixmeResult = try sut.search(input: fixmeInput)
 
         #expect(todoResult.pattern == "// TODO:")
         #expect(todoResult.matches.count == 2)

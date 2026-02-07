@@ -10,25 +10,23 @@ public struct PatternSDK: Sendable {
     public init() {}
 
     /// Searches for a pattern in current repository state (no checkout).
-    /// - Parameters:
-    ///   - input: Analysis input with repository path and file extensions
-    ///   - pattern: Pattern to search for
+    /// - Parameter input: Analysis input with repository path, file extensions, and pattern
     /// - Returns: Result with list of matches
-    func search(input: AnalysisInput, pattern: String) throws -> Result {
+    func search(input: AnalysisInput) throws -> Result {
         let repoPath = URL(filePath: input.repoPath)
         var allMatches: [Match] = []
         for ext in input.extensions {
             let files = findFiles(of: ext, in: repoPath)
             for file in files {
                 let fileMatches = try searchInFile(
-                    pattern: pattern,
+                    pattern: input.pattern,
                     file: file,
                     repoPath: repoPath
                 )
                 allMatches.append(contentsOf: fileMatches)
             }
         }
-        return Result(pattern: pattern, matches: allMatches)
+        return Result(pattern: input.pattern, matches: allMatches)
     }
 
     /// Analyzes all commits from metrics and returns outputs for each.
@@ -63,14 +61,14 @@ public struct PatternSDK: Sendable {
 
             try await GitFix.prepareRepository(git: input.git)
 
-            let analysisInput = AnalysisInput(
-                repoPath: input.git.repoPath,
-                extensions: input.extensions
-            )
-
             var resultItems: [ResultItem] = []
             for pattern in patterns {
-                let result = try search(input: analysisInput, pattern: pattern)
+                let analysisInput = AnalysisInput(
+                    repoPath: input.git.repoPath,
+                    extensions: input.extensions,
+                    pattern: pattern
+                )
+                let result = try search(input: analysisInput)
                 resultItems.append(ResultItem(pattern: result.pattern, matches: result.matches))
             }
 

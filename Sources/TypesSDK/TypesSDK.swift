@@ -10,11 +10,9 @@ public struct TypesSDK: Sendable {
     public init() {}
 
     /// Counts types inherited from the specified base type in current repository state.
-    /// - Parameters:
-    ///   - input: Analysis input with repository path
-    ///   - typeName: Base type name to search for
+    /// - Parameter input: Analysis input with repository path and type name
     /// - Returns: Result containing list of matching types
-    func countTypes(input: AnalysisInput, typeName: String) async throws -> Result {
+    func countTypes(input: AnalysisInput) async throws -> Result {
         let repoPath = URL(filePath: input.repoPath)
         let repoPathString = repoPath.path(percentEncoded: false)
         let parser = SwiftParser()
@@ -27,12 +25,12 @@ public struct TypesSDK: Sendable {
         let types = objects.filter {
             parser.isInherited(
                 objectFromCode: $0,
-                from: typeName,
+                from: input.typeName,
                 allObjects: objects
             )
         }.sorted(by: { $0.name < $1.name })
 
-        Self.logger.debug("Types conforming to \(typeName): \(types.map { $0.name })")
+        Self.logger.debug("Types conforming to \(input.typeName): \(types.map { $0.name })")
 
         let typeInfos = types.map { obj in
             TypeInfo(
@@ -43,7 +41,7 @@ public struct TypesSDK: Sendable {
         }
 
         return Result(
-            typeName: typeName,
+            typeName: input.typeName,
             types: typeInfos
         )
     }
@@ -89,11 +87,10 @@ public struct TypesSDK: Sendable {
 
             try await GitFix.prepareRepository(git: input.git)
 
-            let analysisInput = AnalysisInput(repoPath: input.git.repoPath)
-
             var resultItems: [ResultItem] = []
             for typeName in typeNames {
-                let result = try await countTypes(input: analysisInput, typeName: typeName)
+                let analysisInput = AnalysisInput(repoPath: input.git.repoPath, typeName: typeName)
+                let result = try await countTypes(input: analysisInput)
                 resultItems.append(ResultItem(typeName: result.typeName, types: result.types))
             }
 

@@ -24,6 +24,7 @@ extension PatternSDK {
     struct AnalysisInput: Sendable {
         let repoPath: String
         let extensions: [String]
+        let pattern: String
     }
 
     /// Input parameters for PatternSDK operations.

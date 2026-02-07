@@ -78,8 +78,8 @@ let results = try await sut.count(input: input)
 
 **Separate git operations from analysis logic** — SDK must have two layers:
 - **Public `analyze()` method** — handles git operations (checkout, prepare repository) and orchestrates analysis across multiple commits
-- **Internal analysis method** — performs domain-specific analysis on current repository state without any git operations
-- **Simplified input type** — internal analysis method uses a separate input type without git/metrics fields
+- **Internal analysis method** — performs domain-specific analysis on current repository state without any git operations. Must accept `AnalysisInput` as its only parameter — all domain-specific fields (type name, pattern, extension, etc.) must be inside `AnalysisInput`
+- **Simplified input type** — internal analysis method uses a separate input type without git/metrics fields, but containing all parameters needed for a single analysis call
 
 ```swift
 // SDK public types

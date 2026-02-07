@@ -23,6 +23,7 @@ extension TypesSDK {
     /// Used by internal countTypes function.
     struct AnalysisInput: Sendable {
         let repoPath: String
+        let typeName: String
     }
 
     /// Input parameters for TypesSDK operations.
