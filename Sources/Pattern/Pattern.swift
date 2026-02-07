@@ -25,7 +25,7 @@ public struct Pattern: AsyncParsableCommand {
                 md += "| Commit | Pattern | Matches |\n"
                 md += "|--------|---------|--------|\n"
                 for output in outputs {
-                    let commit = output.commit.prefix(7)
+                    let commit = output.commit.prefix(Git.shortHashLength)
                     for result in output.results {
                         md += "| `\(commit)` | `\(result.pattern)` | \(result.matches.count) |\n"
                     }
@@ -172,7 +172,7 @@ public struct Pattern: AsyncParsableCommand {
         if !summary.outputs.isEmpty {
             Self.logger.info("Pattern matches:")
             for output in summary.outputs {
-                let commit = output.commit.prefix(7)
+                let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
                     Self.logger.info("  - \(commit): \(result.pattern): \(result.matches.count)")
                 }

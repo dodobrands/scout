@@ -12,7 +12,7 @@ struct TypesSummary: JobSummaryFormattable {
             md += "| Commit | Type | Count |\n"
             md += "|--------|------|-------|\n"
             for output in outputs {
-                let commit = output.commit.prefix(7)
+                let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
                     md += "| `\(commit)` | `\(result.typeName)` | \(result.types.count) |\n"
                 }

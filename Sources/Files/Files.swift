@@ -129,7 +129,7 @@ public struct Files: AsyncParsableCommand {
         if !summary.outputs.isEmpty {
             Self.logger.info("File type counts:")
             for output in summary.outputs {
-                let commit = output.commit.prefix(7)
+                let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
                     Self.logger.info("  - \(commit): \(result.filetype): \(result.files.count)")
                 }

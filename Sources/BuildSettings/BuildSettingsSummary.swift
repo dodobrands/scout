@@ -8,7 +8,7 @@ struct BuildSettingsSummary: JobSummaryFormattable {
         var md = "## BuildSettings Summary\n\n"
 
         for output in outputs {
-            md += "### Commit \(output.commit.prefix(7)) (\(output.date))\n\n"
+            md += "### Commit \(output.commit.prefix(Git.shortHashLength)) (\(output.date))\n\n"
             md += "| Target | Settings |\n"
             md += "|--------|----------|\n"
             for result in output.results.sorted(by: { $0.target < $1.target }) {

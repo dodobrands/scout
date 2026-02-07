@@ -132,7 +132,7 @@ public struct Types: AsyncParsableCommand {
         if !summary.outputs.isEmpty {
             Self.logger.info("Type counts:")
             for output in summary.outputs {
-                let commit = output.commit.prefix(7)
+                let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
                     Self.logger.info("  - \(commit): \(result.typeName): \(result.types.count)")
                 }
