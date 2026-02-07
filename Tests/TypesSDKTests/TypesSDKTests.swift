@@ -410,6 +410,103 @@ struct TypesSDKTests {
         #expect(result.typeName == "Action")
         #expect(result.types.names == ["SystemAction", "UserAction"])
     }
+
+    @Test
+    func `When searching for generic types, should find all variants`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Repository")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "Repository")
+        #expect(
+            result.types.names == ["BaseRepository", "ConstrainedRepository", "GenericRepository"]
+        )
+    }
+
+    @Test
+    func `When types have different access modifiers, should find all`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "InternalProtocol")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "InternalProtocol")
+        #expect(
+            result.types.names == [
+                "FileprivateType", "InternalType", "PrivateType", "PublicType",
+            ]
+        )
+    }
+
+    @Test
+    func `When same name types in different containers, should find both`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "WidgetProtocol")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "WidgetProtocol")
+        #expect(result.types.names == ["Widget", "Widget"])
+        #expect(result.types.map(\.fullName) == ["Dashboard.Widget", "Settings.Widget"])
+    }
+
+    @Test
+    func `When searching for property wrappers, should find all`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Wrapper")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "Wrapper")
+        #expect(result.types.names == ["BindingWrapper", "StateWrapper"])
+    }
+
+    @Test
+    func `When type conforms to multiple protocols, should be found by each`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let identifiableInput = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Identifiable")]
+        )
+        let nameableInput = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Nameable")]
+        )
+
+        let identifiableResults = try await sut.countTypes(input: identifiableInput)
+        let nameableResults = try await sut.countTypes(input: nameableInput)
+
+        let identifiableResult = try #require(identifiableResults[safe: 0])
+        let nameableResult = try #require(nameableResults[safe: 0])
+        #expect(identifiableResult.types.names == ["Company", "Person"])
+        #expect(nameableResult.types.names == ["Company", "Person"])
+    }
 }
 
 private func samplesDirectory() throws -> URL {
