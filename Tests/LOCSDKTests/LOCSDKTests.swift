@@ -16,7 +16,7 @@ struct LOCSDKTests {
             metrics: [LOCSDK.MetricInput(languages: ["Swift"], include: ["Sources"], exclude: [])]
         )
 
-        let outputs = try await sut.analyze(input: input)
+        let outputs = try await sut.countLOC(input: input)
 
         let output = try #require(outputs[safe: 0])
         let result = try #require(output.results[safe: 0])
@@ -38,7 +38,7 @@ struct LOCSDKTests {
             ]
         )
 
-        let outputs = try await sut.analyze(input: input)
+        let outputs = try await sut.countLOC(input: input)
 
         let output = try #require(outputs[safe: 0])
         let result = try #require(output.results[safe: 0])
@@ -60,7 +60,7 @@ struct LOCSDKTests {
             ]
         )
 
-        let outputs = try await sut.analyze(input: input)
+        let outputs = try await sut.countLOC(input: input)
 
         let output = try #require(outputs[safe: 0])
         let result = try #require(output.results[safe: 0])
@@ -82,7 +82,7 @@ struct LOCSDKTests {
             ]
         )
 
-        let outputs = try await sut.analyze(input: input)
+        let outputs = try await sut.countLOC(input: input)
 
         let output = try #require(outputs[safe: 0])
         let result = try #require(output.results[safe: 0])
@@ -98,7 +98,7 @@ struct LOCSDKTests {
             metrics: [LOCSDK.MetricInput(languages: ["Rust"], include: ["Sources"], exclude: [])]
         )
 
-        let outputs = try await sut.analyze(input: input)
+        let outputs = try await sut.countLOC(input: input)
 
         let output = try #require(outputs[safe: 0])
         let result = try #require(output.results[safe: 0])
@@ -117,7 +117,7 @@ struct LOCSDKTests {
             ]
         )
 
-        let outputs = try await sut.analyze(input: input)
+        let outputs = try await sut.countLOC(input: input)
 
         let output = try #require(outputs[safe: 0])
         #expect(output.results.count == 2)
