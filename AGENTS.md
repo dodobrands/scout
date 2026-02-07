@@ -4,7 +4,7 @@ This file provides guidance to LLM when working with code in this repository.
 
 ## Project Overview
 
-Scout is a Swift-based code analysis toolkit for mobile repositories. It provides executable tools for counting types, files, imports, and lines of code across git history, with optional Google Sheets integration for metrics tracking.
+Scout is a Swift-based code analysis toolkit for mobile repositories. It provides executable tools for counting types, files, imports, and lines of code across git history.
 
 ## Build Commands
 
@@ -54,6 +54,9 @@ sh scripts/lint.sh
 swift test
 periphery scan --skip-build --strict
 ```
+
+**Checklist:**
+- [ ] Update `Sources/*/README.md` if public API changed
 
 **Never force push (`git push --force` or `--force-with-lease`) without explicit user request.**
 

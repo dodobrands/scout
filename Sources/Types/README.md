@@ -158,7 +158,13 @@ Use `<*>` wildcard to match any generic variant (e.g., `BaseCoordinator<*>` matc
 
 ## Output Format
 
-When using `--output`, results are saved as JSON array:
+When using `--output`, results are saved as JSON array. Each found type includes:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Simple type name (e.g., `AddToCartEvent`) |
+| `fullName` | Qualified name with parent types (e.g., `Analytics.AddToCartEvent`) |
+| `path` | Relative file path from repository root |
 
 ```json
 [
@@ -166,8 +172,13 @@ When using `--output`, results are saved as JSON array:
     "commit": "abc1234def5678",
     "date": "2025-01-15T10:30:00+03:00",
     "results": {
-      "UIView": ["CustomButton", "HeaderView", "CardView"],
-      "UIViewController": ["HomeViewController", "SettingsViewController"]
+      "UIView": [
+        { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" },
+        { "name": "HeaderView", "fullName": "Components.HeaderView", "path": "Sources/Components/HeaderView.swift" }
+      ],
+      "UIViewController": [
+        { "name": "HomeViewController", "fullName": "HomeViewController", "path": "Sources/Screens/HomeViewController.swift" }
+      ]
     }
   }
 ]
@@ -180,16 +191,19 @@ When using `--output`, results are saved as JSON array:
     "commit": "abc1234def5678",
     "date": "2025-01-15T10:30:00+03:00",
     "results": {
-      "UIView": ["CustomButton", "HeaderView"],
-      "UIViewController": ["HomeViewController"]
+      "UIView": [
+        { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" }
+      ]
     }
   },
   {
     "commit": "def5678abc1234",
     "date": "2025-02-15T14:45:00+03:00",
     "results": {
-      "UIView": ["CustomButton", "HeaderView", "NewView"],
-      "UIViewController": ["HomeViewController", "SettingsViewController"]
+      "UIView": [
+        { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" },
+        { "name": "NewView", "fullName": "NewView", "path": "Sources/UI/NewView.swift" }
+      ]
     }
   }
 ]
