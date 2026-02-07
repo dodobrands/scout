@@ -9,9 +9,9 @@ struct FilesSDKTests {
     @Test
     func `When searching for swift files, should find all swift files`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path)
+        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path, extension: "swift")
 
-        let result = sut.countFiles(input: input, extension: "swift")
+        let result = sut.countFiles(input: input)
 
         #expect(result.filetype == "swift")
         #expect(result.files.count == 2)
@@ -22,9 +22,9 @@ struct FilesSDKTests {
     @Test
     func `When searching for storyboard files, should find all storyboards`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path)
+        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path, extension: "storyboard")
 
-        let result = sut.countFiles(input: input, extension: "storyboard")
+        let result = sut.countFiles(input: input)
 
         #expect(result.filetype == "storyboard")
         #expect(result.files.count == 1)
@@ -35,9 +35,9 @@ struct FilesSDKTests {
     @Test
     func `When searching for xib files, should find all xibs`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path)
+        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path, extension: "xib")
 
-        let result = sut.countFiles(input: input, extension: "xib")
+        let result = sut.countFiles(input: input)
 
         #expect(result.filetype == "xib")
         #expect(result.files.count == 1)
@@ -48,9 +48,9 @@ struct FilesSDKTests {
     @Test
     func `When searching for json files, should find all json files`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path)
+        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path, extension: "json")
 
-        let result = sut.countFiles(input: input, extension: "json")
+        let result = sut.countFiles(input: input)
 
         #expect(result.filetype == "json")
         #expect(result.files.count == 1)
@@ -59,9 +59,9 @@ struct FilesSDKTests {
     @Test
     func `When searching for non-existent extension, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path)
+        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path, extension: "xyz")
 
-        let result = sut.countFiles(input: input, extension: "xyz")
+        let result = sut.countFiles(input: input)
 
         #expect(result.files.isEmpty)
     }
@@ -69,10 +69,15 @@ struct FilesSDKTests {
     @Test
     func `When searching for multiple filetypes, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
-        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let swiftResult = sut.countFiles(input: input, extension: "swift")
-        let storyboardResult = sut.countFiles(input: input, extension: "storyboard")
+        let swiftInput = FilesSDK.AnalysisInput(repoPath: samplesURL.path, extension: "swift")
+        let storyboardInput = FilesSDK.AnalysisInput(
+            repoPath: samplesURL.path,
+            extension: "storyboard"
+        )
+
+        let swiftResult = sut.countFiles(input: swiftInput)
+        let storyboardResult = sut.countFiles(input: storyboardInput)
 
         #expect(swiftResult.filetype == "swift")
         #expect(swiftResult.files.count == 2)

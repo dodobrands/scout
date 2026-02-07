@@ -23,6 +23,7 @@ extension FilesSDK {
     /// Used by internal countFiles function.
     struct AnalysisInput: Sendable {
         let repoPath: String
+        let `extension`: String
     }
 
     /// Input parameters for FilesSDK operations.
