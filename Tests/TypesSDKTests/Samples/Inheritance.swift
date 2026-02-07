@@ -75,3 +75,13 @@ extension String {
 extension Int {
     struct CurrencyFormatter: Formatter {}
 }
+
+// MARK: - Type with conformance + extension with nested conforming type
+
+protocol Screen {}
+
+struct MainScreen: Screen {}
+
+extension MainScreen {
+    struct NestedScreen: Screen {}
+}

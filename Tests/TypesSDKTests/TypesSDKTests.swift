@@ -357,6 +357,25 @@ struct TypesSDKTests {
 
         #expect(openScreenEvent.fullName == "Analytics.OpenScreenEvent")
     }
+
+    @Test
+    func `When type conforms and its extension has nested conforming type, should find both`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Screen")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "Screen")
+        #expect(result.types.names == ["MainScreen", "NestedScreen"])
+    }
 }
 
 private func samplesDirectory() throws -> URL {
