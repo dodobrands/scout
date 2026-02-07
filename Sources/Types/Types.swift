@@ -55,8 +55,25 @@ public struct Types: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
+        // Load config from file
         let fileConfig = try await TypesConfig(configPath: config)
-        let input = try await buildInput(fileConfig: fileConfig)
+
+        // Build CLI inputs
+        let cliInputs = TypesCLIInputs(
+            types: types.nilIfEmpty,
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
+        )
+
+        // Merge CLI > Config > Default and resolve HEAD commits
+        let input = try await TypesSDK.Input(
+            cli: cliInputs,
+            config: fileConfig,
+            resolvingCommits: true
+        )
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
@@ -82,39 +99,6 @@ public struct Types: AsyncParsableCommand {
 
         let summary = TypesSummary(outputs: outputs)
         logSummary(summary)
-    }
-
-    private func buildInput(fileConfig: TypesConfig?) async throws -> TypesSDK.Input {
-        let gitConfig = GitConfiguration(
-            cli: GitCLIInputs(
-                repoPath: repoPath,
-                clean: gitClean ? true : nil,
-                fixLFS: fixLfs ? true : nil,
-                initializeSubmodules: initializeSubmodules ? true : nil
-            ),
-            fileConfig: fileConfig?.git
-        )
-
-        let repoPathURL =
-            try URL(string: gitConfig.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: gitConfig.repoPath)
-
-        // Build metrics from CLI args or config file
-        var metrics: [TypesSDK.MetricInput] = []
-        if !types.isEmpty {
-            // CLI args take priority
-            let commitList = commits.isEmpty ? ["HEAD"] : commits
-            metrics = types.map { TypesSDK.MetricInput(type: $0, commits: commitList) }
-        } else if let configMetrics = fileConfig?.metrics {
-            metrics = configMetrics.map {
-                TypesSDK.MetricInput(type: $0.type, commits: $0.commits ?? ["HEAD"])
-            }
-        }
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await metrics.resolvingHeadCommits(repoPath: repoPathURL.path)
-
-        return TypesSDK.Input(git: gitConfig, metrics: resolvedMetrics)
     }
 
     private func logSummary(_ summary: TypesSummary) {

@@ -81,8 +81,36 @@ public struct Pattern: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
+        // Load config from file
         let fileConfig = try await PatternConfig(configPath: config)
-        let input = try await buildInput(fileConfig: fileConfig)
+
+        // Parse extensions from CLI (comma-separated string)
+        let parsedExtensions: [String]?
+        if let extensions {
+            parsedExtensions = extensions.split(separator: ",").map {
+                String($0.trimmingCharacters(in: .whitespaces))
+            }
+        } else {
+            parsedExtensions = nil
+        }
+
+        // Build CLI inputs
+        let cliInputs = PatternCLIInputs(
+            patterns: patterns.nilIfEmpty,
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            extensions: parsedExtensions,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
+        )
+
+        // Merge CLI > Config > Default and resolve HEAD commits
+        let input = try await PatternSDK.Input(
+            cli: cliInputs,
+            config: fileConfig,
+            resolvingCommits: true
+        )
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
@@ -110,52 +138,6 @@ public struct Pattern: AsyncParsableCommand {
 
         let summary = Summary(outputs: outputs)
         logSummary(summary)
-    }
-
-    private func buildInput(fileConfig: PatternConfig?) async throws -> PatternSDK.Input {
-        let gitConfig = GitConfiguration(
-            cli: GitCLIInputs(
-                repoPath: repoPath,
-                clean: gitClean ? true : nil,
-                fixLFS: fixLfs ? true : nil,
-                initializeSubmodules: initializeSubmodules ? true : nil
-            ),
-            fileConfig: fileConfig?.git
-        )
-
-        let repoPathURL =
-            try URL(string: gitConfig.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: gitConfig.repoPath)
-
-        // Parse extensions from CLI (comma-separated string)
-        var resolvedExtensions: [String] = ["swift"]
-        if let extensions {
-            resolvedExtensions = extensions.split(separator: ",").map {
-                String($0.trimmingCharacters(in: .whitespaces))
-            }
-        } else if let configExtensions = fileConfig?.extensions {
-            resolvedExtensions = configExtensions
-        }
-
-        // Build metrics from CLI args or config file
-        var metrics: [PatternSDK.MetricInput] = []
-        if !patterns.isEmpty {
-            let commitList = commits.isEmpty ? ["HEAD"] : commits
-            metrics = patterns.map { PatternSDK.MetricInput(pattern: $0, commits: commitList) }
-        } else if let configMetrics = fileConfig?.metrics {
-            metrics = configMetrics.map {
-                PatternSDK.MetricInput(pattern: $0.pattern, commits: $0.commits ?? ["HEAD"])
-            }
-        }
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await metrics.resolvingHeadCommits(repoPath: repoPathURL.path)
-
-        return PatternSDK.Input(
-            git: gitConfig,
-            metrics: resolvedMetrics,
-            extensions: resolvedExtensions
-        )
     }
 
     private func logSummary(_ summary: Summary) {

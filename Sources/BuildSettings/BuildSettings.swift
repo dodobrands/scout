@@ -61,8 +61,26 @@ public struct BuildSettings: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
+        // Load config from file
         let fileConfig = try await BuildSettingsConfig(configPath: config)
-        let input = try await buildInput(fileConfig: fileConfig)
+
+        // Build CLI inputs
+        let cliInputs = BuildSettingsCLIInputs(
+            project: project,
+            buildSettingsParameters: buildSettingsParameters.nilIfEmpty,
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
+        )
+
+        // Merge CLI > Config > Default and resolve HEAD commits
+        let input = try await BuildSettingsSDK.Input(
+            cli: cliInputs,
+            config: fileConfig,
+            resolvingCommits: true
+        )
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
@@ -95,69 +113,5 @@ public struct BuildSettings: AsyncParsableCommand {
         GitHubActionsLogHandler.writeSummary(summary)
 
         Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
-    }
-
-    private func buildInput(fileConfig: BuildSettingsConfig?) async throws -> BuildSettingsSDK.Input
-    {
-        let gitConfig = GitConfiguration(
-            cli: GitCLIInputs(
-                repoPath: repoPath,
-                clean: gitClean ? true : nil,
-                fixLFS: fixLfs ? true : nil,
-                initializeSubmodules: initializeSubmodules ? true : nil
-            ),
-            fileConfig: fileConfig?.git
-        )
-
-        let repoPathURL =
-            try URL(string: gitConfig.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: gitConfig.repoPath)
-
-        // Resolve project path
-        let resolvedProject: String
-        if let project {
-            resolvedProject = project
-        } else if let configProject = fileConfig?.project {
-            resolvedProject = configProject
-        } else {
-            throw ValidationError("Project path is required")
-        }
-
-        // Resolve configuration
-        let configuration = fileConfig?.configuration ?? "Release"
-
-        // Build setup commands
-        let setupCommands: [SetupCommand] =
-            fileConfig?.setupCommands?.map {
-                SetupCommand(
-                    command: $0.command,
-                    workingDirectory: $0.workingDirectory,
-                    optional: $0.optional ?? false
-                )
-            } ?? []
-
-        // Build metrics from CLI args or config file
-        var metrics: [BuildSettingsSDK.MetricInput] = []
-        if !buildSettingsParameters.isEmpty {
-            let commitList = commits.isEmpty ? ["HEAD"] : commits
-            metrics = buildSettingsParameters.map {
-                BuildSettingsSDK.MetricInput(setting: $0, commits: commitList)
-            }
-        } else if let configMetrics = fileConfig?.metrics {
-            metrics = configMetrics.map {
-                BuildSettingsSDK.MetricInput(setting: $0.setting, commits: $0.commits ?? ["HEAD"])
-            }
-        }
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await metrics.resolvingHeadCommits(repoPath: repoPathURL.path)
-
-        return BuildSettingsSDK.Input(
-            git: gitConfig,
-            setupCommands: setupCommands,
-            metrics: resolvedMetrics,
-            project: resolvedProject,
-            configuration: configuration
-        )
     }
 }

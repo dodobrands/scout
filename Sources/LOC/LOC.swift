@@ -69,8 +69,24 @@ public struct LOC: AsyncParsableCommand {
         // Load config from file
         let fileConfig = try await LOCConfig(configPath: config)
 
-        // Build input by merging CLI > Config > Default
-        let input = try await buildInput(fileConfig: fileConfig)
+        // Build CLI inputs
+        let cliInputs = LOCCLIInputs(
+            languages: languages.nilIfEmpty,
+            include: include.nilIfEmpty,
+            exclude: exclude.nilIfEmpty,
+            repoPath: repoPath,
+            commits: commits.nilIfEmpty,
+            gitClean: gitClean ? true : nil,
+            fixLfs: fixLfs ? true : nil,
+            initializeSubmodules: initializeSubmodules ? true : nil
+        )
+
+        // Merge CLI > Config > Default and resolve HEAD commits
+        let input = try await LOCSDK.Input(
+            cli: cliInputs,
+            config: fileConfig,
+            resolvingCommits: true
+        )
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
@@ -94,56 +110,6 @@ public struct LOC: AsyncParsableCommand {
 
         let summary = LOCSummary(outputs: outputs)
         logSummary(summary)
-    }
-
-    private func buildInput(fileConfig: LOCConfig?) async throws -> LOCSDK.Input {
-        let gitConfig = GitConfiguration(
-            cli: GitCLIInputs(
-                repoPath: repoPath,
-                clean: gitClean ? true : nil,
-                fixLFS: fixLfs ? true : nil,
-                initializeSubmodules: initializeSubmodules ? true : nil
-            ),
-            fileConfig: fileConfig?.git
-        )
-
-        let repoPathURL =
-            try URL(string: gitConfig.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: gitConfig.repoPath)
-
-        var metrics: [LOCSDK.MetricInput]
-
-        if !languages.isEmpty {
-            // CLI languages provided - create single metric
-            let commits = commits.nilIfEmpty ?? ["HEAD"]
-            metrics = [
-                LOCSDK.MetricInput(
-                    languages: languages,
-                    include: include,
-                    exclude: exclude,
-                    commits: commits
-                )
-            ]
-        } else if let configMetrics = fileConfig?.metrics {
-            // Use config metrics, CLI --commits overrides all
-            metrics = configMetrics.compactMap { metric in
-                if let commits = metric.commits, commits.isEmpty { return nil }
-                let commits = self.commits.nilIfEmpty ?? metric.commits ?? ["HEAD"]
-                return LOCSDK.MetricInput(
-                    languages: metric.languages,
-                    include: metric.include,
-                    exclude: metric.exclude,
-                    commits: commits
-                )
-            }
-        } else {
-            metrics = []
-        }
-
-        // Resolve HEAD commits
-        metrics = try await metrics.resolvingHeadCommits(repoPath: repoPathURL.path)
-
-        return LOCSDK.Input(git: gitConfig, metrics: metrics)
     }
 
     private func logSummary(_ summary: LOCSummary) {
