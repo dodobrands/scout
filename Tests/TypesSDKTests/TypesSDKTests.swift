@@ -231,6 +231,41 @@ struct TypesSDKTests {
         #expect(result.typeName == "AnalyticsEvent")
         #expect(result.types == ["CloseScreenEvent", "OpenScreenEvent", "TapButtonEvent"])
     }
+
+    @Test
+    func `When searching for types nested in classes, should find all levels`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Component")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "Component")
+        #expect(result.types == ["DeepComponent", "InnerComponent", "InnerEnum"])
+    }
+
+    @Test
+    func `When searching for types in extensions of external types, should find them`() async throws
+    {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Formatter")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "Formatter")
+        #expect(result.types == ["CurrencyFormatter", "DateFormatter"])
+    }
 }
 
 private func samplesDirectory() throws -> URL {

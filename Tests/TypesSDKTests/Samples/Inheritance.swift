@@ -40,3 +40,30 @@ extension Analytics {
 extension Analytics {
     struct TapButtonEvent: AnalyticsEvent {}
 }
+
+// MARK: - Nested types inside classes/structs
+
+protocol Component {}
+
+class Container {
+    struct InnerComponent: Component {}
+    class NestedContainer {
+        struct DeepComponent: Component {}
+    }
+}
+
+struct OuterStruct {
+    enum InnerEnum: Component {}
+}
+
+// MARK: - Types in file-level extensions (extending external types)
+
+protocol Formatter {}
+
+extension String {
+    struct DateFormatter: Formatter {}
+}
+
+extension Int {
+    struct CurrencyFormatter: Formatter {}
+}
