@@ -76,25 +76,50 @@ func count(input: Input) -> [Result]  // internal, for tests
 let results = try await sut.count(input: input)
 ```
 
-5. **No test-only methods** — all internal methods must be used by the main tool code. If tests need a method that skips checkout (for performance), the public method must perform checkout and then call this internal method:
+5. **Separate git operations from analysis logic** — SDK must have two layers:
+   - **Public `analyze()` method** — handles git operations (checkout, prepare repository) and orchestrates analysis across multiple commits
+   - **Internal analysis method** — performs domain-specific analysis on current repository state without any git operations
+   - **Simplified input type** — internal analysis method uses a separate input type without git/metrics fields
 
 ```swift
-// SDK
+// SDK public types
+public struct Input: Sendable {
+    public let git: GitConfiguration
+    public let metrics: [MetricInput]
+    // ... other fields
+}
+
+public struct AnalysisInput: Sendable {
+    public let repoPath: String
+    // ... analysis-specific fields (no git, no metrics)
+}
+
+// Public method - handles git operations
 public func analyze(input: Input) async throws -> [Output] {
-    for metric in input.metrics {
-        try await git.checkout(metric.commit)
-        let result = try analyzeCurrentState(input: metric)  // internal
+    for commit in commits {
+        try await git.checkout(commit)
+        try await GitFix.prepareRepository(git: input.git)
+        
+        let analysisInput = AnalysisInput(repoPath: input.git.repoPath, ...)
+        let result = try await extractData(input: analysisInput)  // internal
         // ...
     }
 }
 
-// Internal method - no checkout, works with current repo state
-func analyzeCurrentState(input: MetricInput) throws -> ResultItem
+// Internal method - pure analysis, no git operations
+func extractData(input: AnalysisInput) async throws -> [Result]
 
-// Tests - use internal method directly (repo already in desired state)
+// Tests - use internal method directly with sample project
 @testable import MySDK
-let result = try sut.analyzeCurrentState(input: metricInput)
+let input = MySDK.AnalysisInput(repoPath: samplesDir.path, ...)
+let results = try await sut.extractData(input: input)
 ```
+
+**Benefits:**
+- Tests are fast (no git operations, no checkout)
+- Tests work with static sample projects in test resources
+- Clear separation of concerns (git vs domain analysis)
+- Consistent pattern across all SDK modules
 
 ## Common Module Visibility
 
