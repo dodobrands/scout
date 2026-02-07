@@ -75,3 +75,84 @@ extension String {
 extension Int {
     struct CurrencyFormatter: Formatter {}
 }
+
+// MARK: - Type with conformance + extension with nested conforming type
+
+protocol Screen {}
+
+struct MainScreen: Screen {}
+
+extension MainScreen {
+    struct NestedScreen: Screen {}
+}
+
+// MARK: - Actor types
+
+protocol DataProvider {}
+
+actor CacheProvider: DataProvider {}
+actor NetworkProvider: DataProvider {}
+
+// MARK: - Enum with cases
+
+protocol Action {}
+
+enum UserAction: Action {
+    case login
+    case logout
+}
+
+enum SystemAction: Action {
+    case refresh
+}
+
+// MARK: - Generic types with constraints
+
+protocol Repository {}
+
+struct GenericRepository<T>: Repository {}
+struct ConstrainedRepository<T: Codable>: Repository {}
+class BaseRepository<T, U>: Repository {}
+
+// MARK: - Access control modifiers
+
+protocol InternalProtocol {}
+
+private struct PrivateType: InternalProtocol {}
+private struct FileprivateType: InternalProtocol {}
+internal struct InternalType: InternalProtocol {}
+public struct PublicType: InternalProtocol {}
+
+// MARK: - Same name in different containers (namespacing)
+
+protocol WidgetProtocol {}
+
+enum Dashboard {
+    struct Widget: Inheritance.WidgetProtocol {}
+}
+
+enum Settings {
+    struct Widget: Inheritance.WidgetProtocol {}
+}
+
+// MARK: - Property wrappers
+
+protocol Wrapper {}
+
+@propertyWrapper
+struct StateWrapper: Wrapper {
+    var wrappedValue: Int
+}
+
+@propertyWrapper
+struct BindingWrapper<T>: Wrapper {
+    var wrappedValue: T
+}
+
+// MARK: - Protocol composition in inheritance list
+
+protocol Identifiable {}
+protocol Nameable {}
+
+struct Person: Identifiable, Nameable {}
+struct Company: Nameable, Identifiable {}

@@ -157,15 +157,27 @@ struct SwiftParser {
     /// Checks if an inherited type matches the base type pattern.
     /// - `JsonAsyncRequest` matches only exact `JsonAsyncRequest` (no generics)
     /// - `JsonAsyncRequest<*>` matches `JsonAsyncRequest<T>`, `JsonAsyncRequest<SomeDTO>`, etc.
+    /// - `Widget` matches `Widget` or `Module.Widget` or `Module.Nested.Widget`
     private func matchesBaseType(_ inheritedType: String, baseType: String) -> Bool {
         // Check for wildcard pattern: "JsonAsyncRequest<*>"
         if baseType.hasSuffix("<*>") {
             let baseWithoutWildcard = String(baseType.dropLast(3))
             // Match any generic variant: "JsonAsyncRequest<Something>"
             return inheritedType.hasPrefix("\(baseWithoutWildcard)<")
+                || inheritedType.contains(".\(baseWithoutWildcard)<")
         }
-        // Exact match only (no implicit generic matching)
-        return inheritedType == baseType
+
+        // Exact match
+        if inheritedType == baseType {
+            return true
+        }
+
+        // Match last component: "Module.Widget" matches "Widget"
+        if inheritedType.hasSuffix(".\(baseType)") {
+            return true
+        }
+
+        return false
     }
 
     /// Extracts base type name from a generic type string.
