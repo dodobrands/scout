@@ -5,13 +5,6 @@ import LOCSDK
 import Logging
 import SystemPackage
 
-/// JSON output structure for loc command.
-struct LOCOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: Int]
-}
-
 public struct LOC: AsyncParsableCommand {
     public init() {}
 
@@ -101,8 +94,7 @@ public struct LOC: AsyncParsableCommand {
         )
 
         let sdk = LOCSDK()
-        var allResults: [LOCSDK.Result] = []
-        var outputResults: [LOCOutput] = []
+        var outputResults: [LOCSDK.Output] = []
 
         // Group metrics by commits to minimize checkouts
         var commitToMetrics: [String: [LOCMetricInput]] = [:]
@@ -124,19 +116,14 @@ public struct LOC: AsyncParsableCommand {
             Self.logger.info("Processing commit: \(hash)")
 
             let commitInput = LOCInput(git: input.git, metrics: metrics)
-            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
+            let commitOutput = try await sdk.analyzeCommit(hash: hash, input: commitInput)
 
-            var resultsDict: [String: Int] = [:]
-            for result in results {
+            for result in commitOutput.results {
                 Self.logger.notice(
                     "Found \(result.linesOfCode) lines of code for '\(result.metric)' at \(hash)"
                 )
-                allResults.append(result)
-                resultsDict[result.metric] = result.linesOfCode
             }
 
-            let commitOutput = LOCOutput(commit: hash, date: date, results: resultsDict)
             outputResults.append(commitOutput)
         }
 
@@ -146,16 +133,18 @@ public struct LOC: AsyncParsableCommand {
 
         Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
 
-        let summary = LOCSummary(results: allResults)
+        let summary = LOCSummary(outputs: outputResults)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: LOCSummary) {
-        if !summary.results.isEmpty {
+        if !summary.outputs.isEmpty {
             Self.logger.info("Lines of code counts:")
-            for result in summary.results {
-                let commit = result.commit.prefix(7)
-                Self.logger.info("  - \(commit): \(result.metric): \(result.linesOfCode)")
+            for output in summary.outputs {
+                let commit = output.commit.prefix(7)
+                for result in output.results {
+                    Self.logger.info("  - \(commit): \(result.metric): \(result.linesOfCode)")
+                }
             }
         }
 

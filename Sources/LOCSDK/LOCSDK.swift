@@ -81,6 +81,30 @@ public struct LOCInput: Sendable {
 public struct LOCSDK: Sendable {
     public init() {}
 
+    /// A single LOC result item.
+    public struct ResultItem: Sendable, Encodable {
+        public let metric: String
+        public let linesOfCode: Int
+
+        public init(metric: String, linesOfCode: Int) {
+            self.metric = metric
+            self.linesOfCode = linesOfCode
+        }
+    }
+
+    /// Output of LOC analysis for a single commit.
+    public struct Output: Sendable, Encodable {
+        public let commit: String
+        public let date: String
+        public let results: [ResultItem]
+
+        public init(commit: String, date: String, results: [ResultItem]) {
+            self.commit = commit
+            self.date = date
+            self.results = results
+        }
+    }
+
     /// Result of LOC counting operation.
     public struct Result: Sendable, Encodable {
         public let commit: String
@@ -142,8 +166,8 @@ public struct LOCSDK: Sendable {
     /// - Parameters:
     ///   - hash: Commit hash to checkout
     ///   - input: Input parameters for the operation
-    /// - Returns: Array of results, one for each metric
-    public func analyzeCommit(hash: String, input: LOCInput) async throws -> [Result] {
+    /// - Returns: Output with commit info, date, and results
+    public func analyzeCommit(hash: String, input: LOCInput) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
@@ -153,7 +177,10 @@ public struct LOCSDK: Sendable {
         )
 
         let results = try await countLOC(input: input)
-        return results.map { Result(commit: hash, metric: $0.metric, linesOfCode: $0.linesOfCode) }
+        let date = try await Git.commitDate(for: hash, in: repoPath)
+
+        let resultItems = results.map { ResultItem(metric: $0.metric, linesOfCode: $0.linesOfCode) }
+        return Output(commit: hash, date: date, results: resultItems)
     }
 
     private func foldersToAnalyze(
