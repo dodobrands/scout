@@ -118,6 +118,30 @@ public struct BuildSettingsSDK: Sendable {
         }
     }
 
+    /// A single build settings result item for a target.
+    public struct ResultItem: Sendable, Encodable {
+        public let target: String
+        public let settings: [String: String?]
+
+        public init(target: String, settings: [String: String?]) {
+            self.target = target
+            self.settings = settings
+        }
+    }
+
+    /// Output of build settings analysis for a single commit.
+    public struct Output: Sendable, Encodable {
+        public let commit: String
+        public let date: String
+        public let results: [ResultItem]
+
+        public init(commit: String, date: String, results: [ResultItem]) {
+            self.commit = commit
+            self.date = date
+            self.results = results
+        }
+    }
+
     /// Result of build settings extraction - array of targets with their build settings.
     public typealias Result = [TargetWithBuildSettings]
 
@@ -152,11 +176,11 @@ public struct BuildSettingsSDK: Sendable {
     /// - Parameters:
     ///   - hash: Commit hash to checkout
     ///   - input: Input parameters for the operation
-    /// - Returns: Array of targets with their build settings
+    /// - Returns: Output with commit info, date, and results
     public func analyzeCommit(
         hash: String,
         input: BuildSettingsInput
-    ) async throws -> Result {
+    ) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         do {
@@ -169,13 +193,25 @@ public struct BuildSettingsSDK: Sendable {
             throw AnalysisError.checkoutFailed(hash: hash, error: error.localizedDescription)
         }
 
+        let targets: Result
         do {
-            return try await extractBuildSettings(input: input)
+            targets = try await extractBuildSettings(input: input)
         } catch let error as AnalysisError {
             throw error
         } catch {
             throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
         }
+
+        let date = try await Git.commitDate(for: hash, in: repoPath)
+
+        let requestedSettings = Set(input.metrics.map { $0.setting })
+        let resultItems = targets.map { target in
+            let filteredSettings = target.buildSettings.filter { requestedSettings.contains($0.key) }
+                .mapValues { Optional($0) }
+            return ResultItem(target: target.target, settings: filteredSettings)
+        }
+
+        return Output(commit: hash, date: date, results: resultItems)
     }
 
     // MARK: - Setup Commands

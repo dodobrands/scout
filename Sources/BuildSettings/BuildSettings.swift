@@ -6,13 +6,6 @@ import Logging
 import System
 import SystemPackage
 
-/// JSON output structure for build-settings command.
-struct BuildSettingsOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: [String: String?]]
-}
-
 public struct BuildSettings: AsyncParsableCommand {
     public init() {}
 
@@ -94,7 +87,7 @@ public struct BuildSettings: AsyncParsableCommand {
             repoPath: repoPathURL.path
         )
 
-        var outputResults: [BuildSettingsOutput] = []
+        var outputResults: [BuildSettingsSDK.Output] = []
 
         // Group metrics by commits to minimize checkouts
         var commitToSettings: [String: [String]] = [:]
@@ -123,9 +116,9 @@ public struct BuildSettings: AsyncParsableCommand {
                 metadata: ["hash": "\(hash)", "settings": "\(settings)"]
             )
 
-            let result: BuildSettingsSDK.Result
+            let commitOutput: BuildSettingsSDK.Output
             do {
-                result = try await sdk.analyzeCommit(hash: hash, input: input)
+                commitOutput = try await sdk.analyzeCommit(hash: hash, input: input)
             } catch let error as BuildSettingsSDK.AnalysisError {
                 Self.logger.warning(
                     "Skipping commit due to analysis failure",
@@ -137,19 +130,10 @@ public struct BuildSettings: AsyncParsableCommand {
                 continue
             }
 
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
-
-            let resultsDict = result.reduce(into: [String: [String: String?]]()) { dict, target in
-                dict[target.target] = settings.reduce(into: [:]) {
-                    $0[$1] = target.buildSettings[$1]
-                }
-            }
-
             Self.logger.notice(
-                "Extracted build settings for \(result.count) targets at \(hash)"
+                "Extracted build settings for \(commitOutput.results.count) targets at \(hash)"
             )
 
-            let commitOutput = BuildSettingsOutput(commit: hash, date: date, results: resultsDict)
             outputResults.append(commitOutput)
         }
 
@@ -157,7 +141,7 @@ public struct BuildSettings: AsyncParsableCommand {
             try outputResults.writeJSON(to: outputPath)
         }
 
-        let summary = BuildSettingsSummary(results: outputResults)
+        let summary = BuildSettingsSummary(outputs: outputResults)
         GitHubActionsLogHandler.writeSummary(summary)
 
         Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")

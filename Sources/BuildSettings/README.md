@@ -163,16 +163,22 @@ When using `--output`, results are saved as JSON array:
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T10:30:00+03:00",
-    "results": {
-      "MyApp": {
-        "SWIFT_VERSION": "5.0",
-        "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+    "results": [
+      {
+        "target": "MyApp",
+        "settings": {
+          "SWIFT_VERSION": "5.0",
+          "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+        }
       },
-      "MyAppTests": {
-        "SWIFT_VERSION": "5.0",
-        "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+      {
+        "target": "MyAppTests",
+        "settings": {
+          "SWIFT_VERSION": "5.0",
+          "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+        }
       }
-    }
+    ]
   }
 ]
 ```
@@ -183,20 +189,26 @@ When using `--output`, results are saved as JSON array:
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T10:30:00+03:00",
-    "results": {
-      "MyApp": {
-        "SWIFT_VERSION": "5.0"
+    "results": [
+      {
+        "target": "MyApp",
+        "settings": {
+          "SWIFT_VERSION": "5.0"
+        }
       }
-    }
+    ]
   },
   {
     "commit": "def5678abc1234",
     "date": "2025-02-15T14:45:00+03:00",
-    "results": {
-      "MyApp": {
-        "SWIFT_VERSION": "5.9"
+    "results": [
+      {
+        "target": "MyApp",
+        "settings": {
+          "SWIFT_VERSION": "5.9"
+        }
       }
-    }
+    ]
   }
 ]
 ```
