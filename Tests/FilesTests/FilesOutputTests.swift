@@ -5,7 +5,7 @@ import Testing
 @testable import Files
 
 /// Tests for FilesOutput JSON encoding
-@Suite("FilesOutput JSON")
+@Suite
 struct FilesOutputTests {
 
     @Test func encodesSingleCommit() {

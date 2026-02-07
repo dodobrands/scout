@@ -6,7 +6,7 @@ import TypesSDK
 @testable import Types
 
 /// Tests for TypesOutput JSON encoding
-@Suite("TypesOutput JSON")
+@Suite
 struct TypesOutputTests {
 
     @Test func encodesSingleCommit() {

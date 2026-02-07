@@ -6,7 +6,7 @@ import Testing
 @testable import Pattern
 
 /// Tests for PatternOutput JSON encoding
-@Suite("PatternOutput JSON")
+@Suite
 struct PatternOutputTests {
 
     @Test func encodesSingleCommit() {

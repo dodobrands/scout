@@ -5,7 +5,7 @@ import Testing
 @testable import LOC
 
 /// Tests for LOCOutput JSON encoding
-@Suite("LOCOutput JSON")
+@Suite
 struct LOCOutputTests {
 
     @Test func encodesSingleCommit() {
