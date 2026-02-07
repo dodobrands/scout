@@ -81,7 +81,7 @@ let value = optionalValue ?! URLError.invalidURL(
 import Common
 
 // Get current HEAD commit
-let commit = try await Git.headCommit(in: repoURL)
+let commit = try await Git.headCommit(repoPath: "/path/to/repo")
 
 // Prepare repository before analysis
 try await GitFix.prepareRepository(git: gitConfiguration)
