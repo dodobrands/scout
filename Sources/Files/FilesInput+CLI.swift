@@ -5,20 +5,17 @@ import Foundation
 extension FilesSDK.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
+    /// HEAD commits are resolved inside SDK.analyze(), not here.
+    ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    ///   - resolvingCommits: If `true`, resolves HEAD commits using git.repoPath (default: true)
-    init(
-        cli: FilesCLIInputs,
-        config: FilesConfig?,
-        resolvingCommits: Bool = true
-    ) async throws {
+    init(cli: FilesCLIInputs, config: FilesConfig?) {
         // Git configuration merges CLI > FileConfig > Default
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        var metrics: [FilesSDK.MetricInput]
+        let metrics: [FilesSDK.MetricInput]
 
         if let cliFiletypes = cli.filetypes, !cliFiletypes.isEmpty {
             // CLI filetypes provided - all use same commits (from CLI or default HEAD)
@@ -48,11 +45,6 @@ extension FilesSDK.Input {
             }
         } else {
             metrics = []
-        }
-
-        // Resolve HEAD commits if requested
-        if resolvingCommits {
-            metrics = try await metrics.resolvingHeadCommits(repoPath: gitConfig.repoPath)
         }
 
         self.init(git: gitConfig, metrics: metrics)

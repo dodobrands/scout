@@ -76,9 +76,14 @@ public struct LOCSDK: Sendable {
 
         try await Self.checkClocInstalled()
 
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
         // Group metrics by commit to minimize checkouts
         var commitToMetrics: [String: [MetricInput]] = [:]
-        for metric in input.metrics {
+        for metric in resolvedMetrics {
             for commit in metric.commits {
                 commitToMetrics[commit, default: []].append(metric)
             }

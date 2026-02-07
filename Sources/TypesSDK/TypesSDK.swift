@@ -63,9 +63,14 @@ public struct TypesSDK: Sendable {
     public func analyze(input: Input) async throws -> [Output] {
         let repoPath = URL(filePath: input.git.repoPath)
 
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
         // Group metrics by commit to minimize checkouts
         var commitToTypes: [String: [String]] = [:]
-        for metric in input.metrics {
+        for metric in resolvedMetrics {
             for commit in metric.commits {
                 commitToTypes[commit, default: []].append(metric.type)
             }

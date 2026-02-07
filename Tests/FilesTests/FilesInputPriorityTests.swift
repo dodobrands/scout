@@ -10,10 +10,10 @@ struct FilesInputPriorityTests {
     // MARK: - Metrics Priority Tests
 
     @Test
-    func `CLI filetypes create metrics with CLI commits`() async throws {
+    func `CLI filetypes create metrics with CLI commits`() throws {
         let cli = FilesCLIInputs(filetypes: ["swift"], repoPath: nil, commits: ["abc123"])
 
-        let input = try await FilesSDK.Input(cli: cli, config: nil, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -22,10 +22,10 @@ struct FilesInputPriorityTests {
     }
 
     @Test
-    func `CLI filetypes use HEAD when commits not specified`() async throws {
+    func `CLI filetypes use HEAD when commits not specified`() throws {
         let cli = FilesCLIInputs(filetypes: ["swift"], repoPath: nil, commits: nil)
 
-        let input = try await FilesSDK.Input(cli: cli, config: nil, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -34,14 +34,14 @@ struct FilesInputPriorityTests {
     }
 
     @Test
-    func `falls back to config metrics when CLI filetypes is nil`() async throws {
+    func `falls back to config metrics when CLI filetypes is nil`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let config = FilesConfig(
             metrics: [FileMetric(extension: "storyboard", commits: ["def456"])],
             git: nil
         )
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -50,14 +50,14 @@ struct FilesInputPriorityTests {
     }
 
     @Test
-    func `config metrics without commits use HEAD`() async throws {
+    func `config metrics without commits use HEAD`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let config = FilesConfig(
             metrics: [FileMetric(extension: "swift", commits: nil)],
             git: nil
         )
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -65,7 +65,7 @@ struct FilesInputPriorityTests {
     }
 
     @Test
-    func `CLI commits override all config per-metric commits`() async throws {
+    func `CLI commits override all config per-metric commits`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: ["cli-commit"])
         let config = FilesConfig(
             metrics: [
@@ -75,7 +75,7 @@ struct FilesInputPriorityTests {
             git: nil
         )
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -85,7 +85,7 @@ struct FilesInputPriorityTests {
     }
 
     @Test
-    func `config metrics with empty commits array are skipped`() async throws {
+    func `config metrics with empty commits array are skipped`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let config = FilesConfig(
             metrics: [
@@ -96,7 +96,7 @@ struct FilesInputPriorityTests {
             git: nil
         )
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -106,11 +106,11 @@ struct FilesInputPriorityTests {
     }
 
     @Test
-    func `falls back to empty array when both CLI and config filetypes are nil`() async throws {
+    func `falls back to empty array when both CLI and config filetypes are nil`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let config = FilesConfig(metrics: nil, git: nil)
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.isEmpty)
     }
@@ -118,33 +118,33 @@ struct FilesInputPriorityTests {
     // MARK: - RepoPath Priority Tests
 
     @Test
-    func `CLI repoPath overrides config repoPath`() async throws {
+    func `CLI repoPath overrides config repoPath`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: "/cli/path", commits: nil)
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = FilesConfig(metrics: nil, git: gitConfig)
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/cli/path")
     }
 
     @Test
-    func `falls back to config repoPath when CLI repoPath is nil`() async throws {
+    func `falls back to config repoPath when CLI repoPath is nil`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = FilesConfig(metrics: nil, git: gitConfig)
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/config/path")
     }
 
     @Test
-    func `falls back to current directory when both repoPath nil`() async throws {
+    func `falls back to current directory when both repoPath nil`() throws {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let config = FilesConfig(metrics: nil, git: nil)
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
     }
@@ -152,7 +152,7 @@ struct FilesInputPriorityTests {
     // MARK: - Git Flags Tests
 
     @Test
-    func `git flags from CLI are applied`() async throws {
+    func `git flags from CLI are applied`() throws {
         let cli = FilesCLIInputs(
             filetypes: nil,
             repoPath: nil,
@@ -162,7 +162,7 @@ struct FilesInputPriorityTests {
             initializeSubmodules: true
         )
 
-        let input = try await FilesSDK.Input(cli: cli, config: nil, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: nil)
 
         #expect(input.git.clean == true)
         #expect(input.git.fixLFS == true)
@@ -172,7 +172,7 @@ struct FilesInputPriorityTests {
     // MARK: - Combined Priority Tests
 
     @Test
-    func `full priority chain CLI then Config then Default`() async throws {
+    func `full priority chain CLI then Config then Default`() throws {
         let cli = FilesCLIInputs(filetypes: ["swift", "xib"], repoPath: nil, commits: nil)
         let gitConfig = GitFileConfig(repoPath: "/from/config")
         let config = FilesConfig(
@@ -180,7 +180,7 @@ struct FilesInputPriorityTests {
             git: gitConfig
         )
 
-        let input = try await FilesSDK.Input(cli: cli, config: config, resolvingCommits: false)
+        let input = FilesSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)  // from CLI
         let metric0 = try #require(input.metrics[safe: 0])

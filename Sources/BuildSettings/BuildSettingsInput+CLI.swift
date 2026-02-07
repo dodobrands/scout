@@ -28,16 +28,13 @@ enum BuildSettingsInputError: Error, LocalizedError {
 extension BuildSettingsSDK.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
+    /// HEAD commits are resolved inside SDK.analyze(), not here.
+    ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    ///   - resolvingCommits: If `true`, resolves HEAD commits using git.repoPath (default: true)
     /// - Throws: `BuildSettingsInputError.missingProject` if project not provided
-    init(
-        cli: BuildSettingsCLIInputs,
-        config: BuildSettingsConfig?,
-        resolvingCommits: Bool = true
-    ) async throws {
+    init(cli: BuildSettingsCLIInputs, config: BuildSettingsConfig?) throws {
         guard let project = cli.project ?? config?.project else {
             throw BuildSettingsInputError.missingProject
         }
@@ -49,7 +46,7 @@ extension BuildSettingsSDK.Input {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        var metrics: [BuildSettingsSDK.MetricInput]
+        let metrics: [BuildSettingsSDK.MetricInput]
 
         if let cliParameters = cli.buildSettingsParameters, !cliParameters.isEmpty {
             // CLI parameters provided - all use same commits (from CLI or default HEAD)
@@ -84,11 +81,6 @@ extension BuildSettingsSDK.Input {
             }
         } else {
             metrics = []
-        }
-
-        // Resolve HEAD commits if requested
-        if resolvingCommits {
-            metrics = try await metrics.resolvingHeadCommits(repoPath: gitConfig.repoPath)
         }
 
         self.init(

@@ -65,12 +65,8 @@ public struct Files: AsyncParsableCommand {
             initializeSubmodules: initializeSubmodules ? true : nil
         )
 
-        // Merge CLI > Config > Default and resolve HEAD commits
-        let input = try await FilesSDK.Input(
-            cli: cliInputs,
-            config: fileConfig,
-            resolvingCommits: true
-        )
+        // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
+        let input = FilesSDK.Input(cli: cliInputs, config: fileConfig)
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(

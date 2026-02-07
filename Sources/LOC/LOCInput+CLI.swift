@@ -5,20 +5,17 @@ import LOCSDK
 extension LOCSDK.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
+    /// HEAD commits are resolved inside SDK.analyze(), not here.
+    ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    ///   - resolvingCommits: If `true`, resolves HEAD commits using git.repoPath (default: true)
-    init(
-        cli: LOCCLIInputs,
-        config: LOCConfig?,
-        resolvingCommits: Bool = true
-    ) async throws {
+    init(cli: LOCCLIInputs, config: LOCConfig?) {
         // Git configuration merges CLI > FileConfig > Default
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        var metrics: [LOCSDK.MetricInput]
+        let metrics: [LOCSDK.MetricInput]
 
         if let cliLanguages = cli.languages, !cliLanguages.isEmpty {
             // CLI languages provided - create single metric with CLI commits
@@ -64,11 +61,6 @@ extension LOCSDK.Input {
             }
         } else {
             metrics = []
-        }
-
-        // Resolve HEAD commits if requested
-        if resolvingCommits {
-            metrics = try await metrics.resolvingHeadCommits(repoPath: gitConfig.repoPath)
         }
 
         self.init(git: gitConfig, metrics: metrics)
