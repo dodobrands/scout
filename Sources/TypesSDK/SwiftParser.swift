@@ -68,8 +68,8 @@ struct SwiftParser {
             return true
         }
 
-        // Check indirect inheritance through parent types
-        let child = objectFromCode.inheritedTypes.first { className in
+        // Check indirect inheritance through ALL parent types (not just first)
+        return objectFromCode.inheritedTypes.contains { className in
             // Extract base type name from generic type (e.g., "JsonAsyncRequest<DTO>" -> "JsonAsyncRequest")
             let baseTypeName = extractBaseTypeName(from: className)
 
@@ -83,8 +83,6 @@ struct SwiftParser {
                 allObjects: allObjects
             )
         }
-
-        return child != nil
     }
 
     /// Checks if an inherited type matches the base type pattern.

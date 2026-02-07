@@ -26,6 +26,14 @@ class BaseService: Trackable, Loggable {}
 final class OrderService: BaseService {}
 final class PaymentService: BaseService, Sendable {}
 
+// MARK: - Multiple conformances with different order
+
+protocol EventProtocol {}
+
+struct FirstConformanceEvent: Codable, EventProtocol {}
+struct SecondConformanceEvent: EventProtocol, Codable {}
+struct MiddleConformanceEvent: Codable, EventProtocol, Sendable {}
+
 // MARK: - Nested types in extensions
 
 protocol AnalyticsEvent {}

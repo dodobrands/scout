@@ -266,6 +266,27 @@ struct TypesSDKTests {
         #expect(result.typeName == "Formatter")
         #expect(result.types == ["CurrencyFormatter", "DateFormatter"])
     }
+
+    @Test
+    func `When type has multiple conformances, should find regardless of order`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "EventProtocol")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "EventProtocol")
+        #expect(
+            result.types == [
+                "FirstConformanceEvent", "MiddleConformanceEvent", "SecondConformanceEvent",
+            ]
+        )
+    }
 }
 
 private func samplesDirectory() throws -> URL {
