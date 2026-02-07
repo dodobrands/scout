@@ -10,10 +10,10 @@ struct TypesInputPriorityTests {
     // MARK: - Metrics Priority Tests
 
     @Test
-    func `CLI types create metrics with CLI commits`() throws {
+    func `CLI types create metrics with CLI commits`() async throws {
         let cli = TypesCLIInputs(types: ["UIView"], repoPath: nil, commits: ["abc123"])
 
-        let input = TypesSDK.Input(cli: cli, config: nil)
+        let input = try await TypesSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -22,10 +22,10 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `CLI types use HEAD when commits not specified`() throws {
+    func `CLI types use HEAD when commits not specified`() async throws {
         let cli = TypesCLIInputs(types: ["UIView"], repoPath: nil, commits: nil)
 
-        let input = TypesSDK.Input(cli: cli, config: nil)
+        let input = try await TypesSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -34,14 +34,14 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `falls back to config metrics when CLI types is nil`() throws {
+    func `falls back to config metrics when CLI types is nil`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(
             metrics: [TypeMetric(type: "UIViewController", commits: ["def456"])],
             git: nil
         )
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -50,14 +50,14 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `config metrics without commits use HEAD`() throws {
+    func `config metrics without commits use HEAD`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(
             metrics: [TypeMetric(type: "UIView", commits: nil)],
             git: nil
         )
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -65,7 +65,7 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `CLI commits override all config per-metric commits`() throws {
+    func `CLI commits override all config per-metric commits`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: ["cli-commit"])
         let config = TypesConfig(
             metrics: [
@@ -75,7 +75,7 @@ struct TypesInputPriorityTests {
             git: nil
         )
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -85,7 +85,7 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `config metrics with empty commits array are skipped`() throws {
+    func `config metrics with empty commits array are skipped`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(
             metrics: [
@@ -96,7 +96,7 @@ struct TypesInputPriorityTests {
             git: nil
         )
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -106,11 +106,11 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `falls back to empty array when both CLI and config types are nil`() {
+    func `falls back to empty array when both CLI and config types are nil`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(metrics: nil, git: nil)
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.isEmpty)
     }
@@ -118,33 +118,33 @@ struct TypesInputPriorityTests {
     // MARK: - RepoPath Priority Tests
 
     @Test
-    func `CLI repoPath overrides config repoPath`() {
+    func `CLI repoPath overrides config repoPath`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: "/cli/path", commits: nil)
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.repoPath == "/cli/path")
     }
 
     @Test
-    func `falls back to config repoPath when CLI repoPath is nil`() {
+    func `falls back to config repoPath when CLI repoPath is nil`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.repoPath == "/config/path")
     }
 
     @Test
-    func `falls back to current directory when both CLI and config repoPath are nil`() {
+    func `falls back to current directory when both repoPath nil`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(metrics: nil, git: nil)
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
     }
@@ -152,7 +152,7 @@ struct TypesInputPriorityTests {
     // MARK: - Git Flags Priority Tests
 
     @Test
-    func `CLI git flags override config git flags`() {
+    func `CLI git flags override config git flags`() async throws {
         let cli = TypesCLIInputs(
             types: nil,
             repoPath: nil,
@@ -169,7 +169,7 @@ struct TypesInputPriorityTests {
         )
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.clean == true)  // CLI
         #expect(input.git.fixLFS == false)  // CLI
@@ -177,7 +177,7 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `falls back to config git flags when CLI is nil`() {
+    func `falls back to config git flags when CLI is nil`() async throws {
         let cli = TypesCLIInputs(
             types: nil,
             repoPath: nil,
@@ -194,7 +194,7 @@ struct TypesInputPriorityTests {
         )
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.clean == true)  // from config
         #expect(input.git.fixLFS == true)  // from config
@@ -202,10 +202,10 @@ struct TypesInputPriorityTests {
     }
 
     @Test
-    func `git flags default to false when both CLI and config are nil`() {
+    func `git flags default to false when both CLI and config are nil`() async throws {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
 
-        let input = TypesSDK.Input(cli: cli, config: nil)
+        let input = try await TypesSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         #expect(input.git.clean == false)
         #expect(input.git.fixLFS == false)
@@ -215,7 +215,7 @@ struct TypesInputPriorityTests {
     // MARK: - Combined Priority Tests
 
     @Test
-    func `full priority chain CLI then Config then Default`() throws {
+    func `full priority chain CLI then Config then Default`() async throws {
         // CLI has types, config has repoPath
         let cli = TypesCLIInputs(types: ["UIView", "View"], repoPath: nil, commits: nil)
         let gitConfig = GitFileConfig(repoPath: "/from/config")
@@ -224,7 +224,7 @@ struct TypesInputPriorityTests {
             git: gitConfig
         )
 
-        let input = TypesSDK.Input(cli: cli, config: config)
+        let input = try await TypesSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 2)  // from CLI
         let metric0 = try #require(input.metrics[safe: 0])

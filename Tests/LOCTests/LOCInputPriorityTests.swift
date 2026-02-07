@@ -10,7 +10,7 @@ struct LOCInputPriorityTests {
     // MARK: - RepoPath Priority Tests
 
     @Test
-    func `CLI repoPath overrides config repoPath`() {
+    func `CLI repoPath overrides config repoPath`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -21,13 +21,13 @@ struct LOCInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = LOCConfig(metrics: nil, git: gitConfig)
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.repoPath == "/cli/path")
     }
 
     @Test
-    func `falls back to config repoPath when CLI repoPath is nil`() {
+    func `falls back to config repoPath when CLI repoPath is nil`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -38,13 +38,13 @@ struct LOCInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = LOCConfig(metrics: nil, git: gitConfig)
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.repoPath == "/config/path")
     }
 
     @Test
-    func `falls back to current directory when both CLI and config repoPath are nil`() {
+    func `falls back to current directory when both repoPath nil`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -54,7 +54,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: nil, git: nil)
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
     }
@@ -62,7 +62,7 @@ struct LOCInputPriorityTests {
     // MARK: - Commits Priority Tests
 
     @Test
-    func `CLI commits override default`() throws {
+    func `CLI commits override default`() async throws {
         let cli = LOCCLIInputs(
             languages: ["Swift"],
             include: nil,
@@ -71,14 +71,14 @@ struct LOCInputPriorityTests {
             commits: ["abc123", "def456"]
         )
 
-        let input = LOCSDK.Input(cli: cli, config: nil)
+        let input = try await LOCSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["abc123", "def456"])
     }
 
     @Test
-    func `falls back to HEAD when CLI commits is nil`() throws {
+    func `falls back to HEAD when CLI commits is nil`() async throws {
         let cli = LOCCLIInputs(
             languages: ["Swift"],
             include: nil,
@@ -87,7 +87,7 @@ struct LOCInputPriorityTests {
             commits: nil
         )
 
-        let input = LOCSDK.Input(cli: cli, config: nil)
+        let input = try await LOCSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["HEAD"])
@@ -96,7 +96,7 @@ struct LOCInputPriorityTests {
     // MARK: - Languages/Metrics Priority Tests
 
     @Test
-    func `CLI languages override config metrics`() throws {
+    func `CLI languages override config metrics`() async throws {
         let cli = LOCCLIInputs(
             languages: ["Kotlin"],
             include: nil,
@@ -112,7 +112,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: [locMetric], git: nil)
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -122,7 +122,7 @@ struct LOCInputPriorityTests {
     }
 
     @Test
-    func `CLI languages with include and exclude`() throws {
+    func `CLI languages with include and exclude`() async throws {
         let cli = LOCCLIInputs(
             languages: ["Swift"],
             include: ["Sources", "App"],
@@ -131,7 +131,7 @@ struct LOCInputPriorityTests {
             commits: nil
         )
 
-        let input = LOCSDK.Input(cli: cli, config: nil)
+        let input = try await LOCSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -141,7 +141,7 @@ struct LOCInputPriorityTests {
     }
 
     @Test
-    func `metrics from config are used when CLI languages is nil`() throws {
+    func `metrics from config are used when CLI languages is nil`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -157,7 +157,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: [locMetric], git: nil)
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -167,7 +167,7 @@ struct LOCInputPriorityTests {
     }
 
     @Test
-    func `falls back to empty metrics when both nil`() {
+    func `falls back to empty metrics when both nil`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -176,7 +176,7 @@ struct LOCInputPriorityTests {
             commits: nil
         )
 
-        let input = LOCSDK.Input(cli: cli, config: nil)
+        let input = try await LOCSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         #expect(input.metrics.isEmpty)
     }
@@ -184,7 +184,7 @@ struct LOCInputPriorityTests {
     // MARK: - Per-Metric Commits Tests
 
     @Test
-    func `config metrics use per-metric commits`() throws {
+    func `config metrics use per-metric commits`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -210,7 +210,7 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -222,7 +222,7 @@ struct LOCInputPriorityTests {
     }
 
     @Test
-    func `CLI commits override all config per-metric commits`() throws {
+    func `CLI commits override all config per-metric commits`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -248,7 +248,7 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -258,7 +258,7 @@ struct LOCInputPriorityTests {
     }
 
     @Test
-    func `config metrics with nil commits default to HEAD`() throws {
+    func `config metrics with nil commits default to HEAD`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -278,14 +278,14 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["HEAD"])
     }
 
     @Test
-    func `config metrics with empty commits array are skipped`() throws {
+    func `config metrics with empty commits array are skipped`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -317,7 +317,7 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 2)
         #expect(input.metrics.map { $0.languages } == [["Swift"], ["Objective-C"]])
@@ -326,7 +326,7 @@ struct LOCInputPriorityTests {
     // MARK: - Git Flags Tests
 
     @Test
-    func `git flags from CLI are applied`() {
+    func `git flags from CLI are applied`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -338,7 +338,7 @@ struct LOCInputPriorityTests {
             initializeSubmodules: true
         )
 
-        let input = LOCSDK.Input(cli: cli, config: nil)
+        let input = try await LOCSDK.Input(cli: cli, config: nil, resolvingCommits: false)
 
         #expect(input.git.clean == true)
         #expect(input.git.fixLFS == true)
@@ -348,7 +348,7 @@ struct LOCInputPriorityTests {
     // MARK: - Combined Priority Tests
 
     @Test
-    func `full priority chain CLI then Config then Default`() throws {
+    func `full priority chain CLI then Config then Default`() async throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -365,7 +365,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: [locMetric], git: gitConfig)
 
-        let input = LOCSDK.Input(cli: cli, config: config)
+        let input = try await LOCSDK.Input(cli: cli, config: config, resolvingCommits: false)
 
         #expect(input.metrics.count == 1)  // from config
         #expect(input.git.repoPath == "/from/config")  // from config

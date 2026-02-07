@@ -5,18 +5,20 @@ import Foundation
 extension FilesSDK.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
-    /// This is the synchronous version that does NOT resolve HEAD commits.
-    /// Use `init(cli:config:resolvingCommits:)` for the async version with HEAD resolution.
-    ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    init(cli: FilesCLIInputs, config: FilesConfig?) {
+    ///   - resolvingCommits: If `true`, resolves HEAD commits using git.repoPath (default: true)
+    init(
+        cli: FilesCLIInputs,
+        config: FilesConfig?,
+        resolvingCommits: Bool = true
+    ) async throws {
         // Git configuration merges CLI > FileConfig > Default
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [FilesSDK.MetricInput]
+        var metrics: [FilesSDK.MetricInput]
 
         if let cliFiletypes = cli.filetypes, !cliFiletypes.isEmpty {
             // CLI filetypes provided - all use same commits (from CLI or default HEAD)
@@ -48,28 +50,11 @@ extension FilesSDK.Input {
             metrics = []
         }
 
-        self.init(git: gitConfig, metrics: metrics)
-    }
-
-    /// Creates Input by merging CLI and file config with priority: CLI > Config > Default,
-    /// and resolves HEAD commits to actual commit hashes.
-    ///
-    /// - Parameters:
-    ///   - cli: Raw CLI inputs from ArgumentParser
-    ///   - config: Configuration loaded from JSON file (optional)
-    ///   - resolvingCommits: Pass `true` to resolve HEAD commits using git.repoPath
-    init(cli: FilesCLIInputs, config: FilesConfig?, resolvingCommits: Bool) async throws {
-        // Use synchronous init for merging logic
-        let input = FilesSDK.Input(cli: cli, config: config)
-
+        // Resolve HEAD commits if requested
         if resolvingCommits {
-            // Resolve HEAD commits using repoPath from merged git config
-            let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-                repoPath: input.git.repoPath
-            )
-            self.init(git: input.git, metrics: resolvedMetrics)
-        } else {
-            self = input
+            metrics = try await metrics.resolvingHeadCommits(repoPath: gitConfig.repoPath)
         }
+
+        self.init(git: gitConfig, metrics: metrics)
     }
 }

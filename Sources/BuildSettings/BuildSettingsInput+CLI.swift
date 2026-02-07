@@ -28,14 +28,16 @@ enum BuildSettingsInputError: Error, LocalizedError {
 extension BuildSettingsSDK.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
-    /// This is the synchronous version that does NOT resolve HEAD commits.
-    /// Use `init(cli:config:resolvingCommits:)` for the async version with HEAD resolution.
-    ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
+    ///   - resolvingCommits: If `true`, resolves HEAD commits using git.repoPath (default: true)
     /// - Throws: `BuildSettingsInputError.missingProject` if project not provided
-    init(cli: BuildSettingsCLIInputs, config: BuildSettingsConfig?) throws {
+    init(
+        cli: BuildSettingsCLIInputs,
+        config: BuildSettingsConfig?,
+        resolvingCommits: Bool = true
+    ) async throws {
         guard let project = cli.project ?? config?.project else {
             throw BuildSettingsInputError.missingProject
         }
@@ -47,7 +49,7 @@ extension BuildSettingsSDK.Input {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [BuildSettingsSDK.MetricInput]
+        var metrics: [BuildSettingsSDK.MetricInput]
 
         if let cliParameters = cli.buildSettingsParameters, !cliParameters.isEmpty {
             // CLI parameters provided - all use same commits (from CLI or default HEAD)
@@ -84,6 +86,11 @@ extension BuildSettingsSDK.Input {
             metrics = []
         }
 
+        // Resolve HEAD commits if requested
+        if resolvingCommits {
+            metrics = try await metrics.resolvingHeadCommits(repoPath: gitConfig.repoPath)
+        }
+
         self.init(
             git: gitConfig,
             setupCommands: setupCommands,
@@ -91,38 +98,5 @@ extension BuildSettingsSDK.Input {
             project: project,
             configuration: configuration
         )
-    }
-
-    /// Creates Input by merging CLI and file config with priority: CLI > Config > Default,
-    /// and resolves HEAD commits to actual commit hashes.
-    ///
-    /// - Parameters:
-    ///   - cli: Raw CLI inputs from ArgumentParser
-    ///   - config: Configuration loaded from JSON file (optional)
-    ///   - resolvingCommits: Pass `true` to resolve HEAD commits using git.repoPath
-    /// - Throws: `BuildSettingsInputError.missingProject` if project not provided
-    init(
-        cli: BuildSettingsCLIInputs,
-        config: BuildSettingsConfig?,
-        resolvingCommits: Bool
-    ) async throws {
-        // Use synchronous init for merging logic
-        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
-
-        if resolvingCommits {
-            // Resolve HEAD commits using repoPath from merged git config
-            let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-                repoPath: input.git.repoPath
-            )
-            self.init(
-                git: input.git,
-                setupCommands: input.setupCommands,
-                metrics: resolvedMetrics,
-                project: input.project,
-                configuration: input.configuration
-            )
-        } else {
-            self = input
-        }
     }
 }
