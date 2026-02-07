@@ -12,7 +12,7 @@ Only use `Codable` when both encoding and decoding are actually needed.
 
 ## SDK API Design
 
-1. **Standardized Input/Output types** — all SDKs must follow the same naming and structure:
+**Standardized Input/Output types** — all SDKs must follow the same naming and structure:
 
 ```swift
 public struct MySDK {
@@ -45,7 +45,7 @@ public struct MySDK {
 }
 ```
 
-2. **SDK owns iteration logic** — SDK groups metrics by commit, performs checkouts, and returns complete outputs. CLI only builds Input and formats Output:
+**SDK owns iteration logic** — SDK groups metrics by commit, performs checkouts, and returns complete outputs. CLI only builds Input and formats Output:
 
 ```swift
 // CLI
@@ -54,7 +54,7 @@ let outputs = try await sdk.analyze(input: input)
 // Format/write outputs
 ```
 
-3. **Single source of truth for parameters** — if data is in `input` (e.g., `input.metrics`), don't pass it as a separate parameter:
+**Single source of truth for parameters** — if data is in `input` (e.g., `input.metrics`), don't pass it as a separate parameter:
 
 ```swift
 // Bad
@@ -64,7 +64,7 @@ func countFiles(filetype: String, input: FilesInput) -> Result
 func analyze(input: Input) -> [Output]  // reads from input.metrics
 ```
 
-4. **Minimize public API** — only methods used by CLI should be public. Internal methods accessed via `@testable import` in tests:
+**Minimize public API** — only methods used by CLI should be public. Internal methods accessed via `@testable import` in tests:
 
 ```swift
 // SDK
@@ -76,10 +76,10 @@ func count(input: Input) -> [Result]  // internal, for tests
 let results = try await sut.count(input: input)
 ```
 
-5. **Separate git operations from analysis logic** — SDK must have two layers:
-   - **Public `analyze()` method** — handles git operations (checkout, prepare repository) and orchestrates analysis across multiple commits
-   - **Internal analysis method** — performs domain-specific analysis on current repository state without any git operations
-   - **Simplified input type** — internal analysis method uses a separate input type without git/metrics fields
+**Separate git operations from analysis logic** — SDK must have two layers:
+- **Public `analyze()` method** — handles git operations (checkout, prepare repository) and orchestrates analysis across multiple commits
+- **Internal analysis method** — performs domain-specific analysis on current repository state without any git operations
+- **Simplified input type** — internal analysis method uses a separate input type without git/metrics fields
 
 ```swift
 // SDK public types
