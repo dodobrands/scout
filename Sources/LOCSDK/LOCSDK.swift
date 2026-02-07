@@ -42,36 +42,30 @@ public struct LOCSDK: Sendable {
         }
     }
 
-    /// Counts LOC for all metrics without checkout (for testing).
-    func countLOC(input: Input) async throws -> [Output] {
-        let repoPath = URL(filePath: input.git.repoPath)
+    /// Counts LOC for a single metric in current repository state (no checkout).
+    /// - Parameters:
+    ///   - metric: The metric configuration to analyze
+    ///   - repoPath: Path to the repository
+    /// - Returns: Result item with LOC count
+    func countLOC(metric: MetricInput, repoPath: URL) async throws -> ResultItem {
+        let clocRunner = ClocRunner()
+        let foldersToAnalyze = foldersToAnalyze(
+            in: repoPath,
+            include: metric.include,
+            exclude: metric.exclude
+        )
 
-        try await Self.checkClocInstalled()
-        try await GitFix.prepareRepository(git: input.git)
-
-        var resultItems: [ResultItem] = []
-        for metric in input.metrics {
-            let clocRunner = ClocRunner()
-            let foldersToAnalyze = foldersToAnalyze(
-                in: repoPath,
-                include: metric.include,
-                exclude: metric.exclude
-            )
-
-            let loc =
-                try await metric.languages
-                .asyncFlatMap { language in
-                    try await foldersToAnalyze.asyncMap {
-                        try await clocRunner.linesOfCode(at: $0, language: language)
-                    }
+        let loc =
+            try await metric.languages
+            .asyncFlatMap { language in
+                try await foldersToAnalyze.asyncMap {
+                    try await clocRunner.linesOfCode(at: $0, language: language)
                 }
-                .compactMap { Int($0) }
-                .reduce(0, +)
+            }
+            .compactMap { Int($0) }
+            .reduce(0, +)
 
-            resultItems.append(ResultItem(metric: metric.metricIdentifier, linesOfCode: loc))
-        }
-
-        return [Output(commit: "HEAD", date: "", results: resultItems)]
+        return ResultItem(metric: metric.metricIdentifier, linesOfCode: loc)
     }
 
     /// Analyzes lines of code for all metrics across their specified commits.
@@ -102,24 +96,8 @@ public struct LOCSDK: Sendable {
 
             var resultItems: [ResultItem] = []
             for metric in metrics {
-                let clocRunner = ClocRunner()
-                let foldersToAnalyze = foldersToAnalyze(
-                    in: repoPath,
-                    include: metric.include,
-                    exclude: metric.exclude
-                )
-
-                let loc =
-                    try await metric.languages
-                    .asyncFlatMap { language in
-                        try await foldersToAnalyze.asyncMap {
-                            try await clocRunner.linesOfCode(at: $0, language: language)
-                        }
-                    }
-                    .compactMap { Int($0) }
-                    .reduce(0, +)
-
-                resultItems.append(ResultItem(metric: metric.metricIdentifier, linesOfCode: loc))
+                let result = try await countLOC(metric: metric, repoPath: repoPath)
+                resultItems.append(result)
             }
 
             let date = try await Git.commitDate(for: hash, in: repoPath)

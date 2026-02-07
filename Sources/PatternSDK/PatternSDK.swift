@@ -9,54 +9,26 @@ public struct PatternSDK: Sendable {
 
     public init() {}
 
-    /// Searches for pattern occurrences for a specific commit.
-    private func searchForCommit(_ commit: String, input: Input) async throws -> [Result] {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        try await GitFix.prepareRepository(git: input.git)
-
-        var results: [Result] = []
-        for metric in input.metrics.filter({ $0.commits.contains(commit) }) {
-            var allMatches: [Match] = []
-            for ext in input.extensions {
-                let files = findFiles(of: ext, in: repoPath)
-                for file in files {
-                    let fileMatches = try searchInFile(
-                        pattern: metric.pattern,
-                        file: file,
-                        repoPath: repoPath
-                    )
-                    allMatches.append(contentsOf: fileMatches)
-                }
+    /// Searches for a pattern in current repository state (no checkout).
+    /// - Parameters:
+    ///   - pattern: Pattern to search for
+    ///   - extensions: File extensions to search in
+    ///   - repoPath: Path to the repository
+    /// - Returns: Result with list of matches
+    func search(pattern: String, extensions: [String], repoPath: URL) throws -> Result {
+        var allMatches: [Match] = []
+        for ext in extensions {
+            let files = findFiles(of: ext, in: repoPath)
+            for file in files {
+                let fileMatches = try searchInFile(
+                    pattern: pattern,
+                    file: file,
+                    repoPath: repoPath
+                )
+                allMatches.append(contentsOf: fileMatches)
             }
-            results.append(Result(pattern: metric.pattern, matches: allMatches))
         }
-        return results
-    }
-
-    /// Searches for pattern occurrences without checkout (for testing).
-    func search(input: Input) async throws -> [Result] {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        try await GitFix.prepareRepository(git: input.git)
-
-        var results: [Result] = []
-        for metric in input.metrics {
-            var allMatches: [Match] = []
-            for ext in input.extensions {
-                let files = findFiles(of: ext, in: repoPath)
-                for file in files {
-                    let fileMatches = try searchInFile(
-                        pattern: metric.pattern,
-                        file: file,
-                        repoPath: repoPath
-                    )
-                    allMatches.append(contentsOf: fileMatches)
-                }
-            }
-            results.append(Result(pattern: metric.pattern, matches: allMatches))
-        }
-        return results
+        return Result(pattern: pattern, matches: allMatches)
     }
 
     /// Analyzes all commits from metrics and returns outputs for each.
@@ -75,7 +47,7 @@ public struct PatternSDK: Sendable {
         }
 
         var outputs: [Output] = []
-        for (hash, _) in commitToPatterns {
+        for (hash, patterns) in commitToPatterns {
             Self.logger.debug("Processing commit: \(hash)")
 
             try await Shell.execute(
@@ -84,10 +56,19 @@ public struct PatternSDK: Sendable {
                 workingDirectory: FilePath(repoPath.path(percentEncoded: false))
             )
 
-            let results = try await searchForCommit(hash, input: input)
-            let date = try await Git.commitDate(for: hash, in: repoPath)
+            try await GitFix.prepareRepository(git: input.git)
 
-            let resultItems = results.map { ResultItem(pattern: $0.pattern, matches: $0.matches) }
+            var resultItems: [ResultItem] = []
+            for pattern in patterns {
+                let result = try search(
+                    pattern: pattern,
+                    extensions: input.extensions,
+                    repoPath: repoPath
+                )
+                resultItems.append(ResultItem(pattern: result.pattern, matches: result.matches))
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
             outputs.append(Output(commit: hash, date: date, results: resultItems))
         }
 

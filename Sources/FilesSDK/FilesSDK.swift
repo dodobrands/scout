@@ -9,26 +9,14 @@ public struct FilesSDK: Sendable {
 
     public init() {}
 
-    /// Counts files for specific commit (filters metrics that include this commit).
-    private func countFilesForCommit(_ commit: String, input: Input) async throws -> [Result] {
-        try await GitFix.prepareRepository(git: input.git)
-
-        let repoPath = URL(filePath: input.git.repoPath)
-        return input.metrics.filter { $0.commits.contains(commit) }.map { metric in
-            let files = findFiles(of: metric.extension, in: repoPath)
-            return Result(filetype: metric.extension, files: files)
-        }
-    }
-
-    /// Counts files for all metrics without checkout (for testing).
-    func countFiles(input: Input) async throws -> [Result] {
-        try await GitFix.prepareRepository(git: input.git)
-
-        let repoPath = URL(filePath: input.git.repoPath)
-        return input.metrics.map { metric in
-            let files = findFiles(of: metric.extension, in: repoPath)
-            return Result(filetype: metric.extension, files: files)
-        }
+    /// Counts files for a single extension in current repository state (no checkout).
+    /// - Parameters:
+    ///   - extension: File extension to count
+    ///   - repoPath: Path to the repository
+    /// - Returns: Result with list of matching files
+    func countFiles(extension ext: String, repoPath: URL) -> Result {
+        let files = findFiles(of: ext, in: repoPath)
+        return Result(filetype: ext, files: files)
     }
 
     /// Analyzes all commits from metrics and returns outputs for each.
@@ -47,7 +35,7 @@ public struct FilesSDK: Sendable {
         }
 
         var outputs: [Output] = []
-        for (hash, _) in commitToFiletypes {
+        for (hash, filetypes) in commitToFiletypes {
             Self.logger.debug("Processing commit: \(hash)")
 
             try await Shell.execute(
@@ -56,10 +44,15 @@ public struct FilesSDK: Sendable {
                 workingDirectory: FilePath(repoPath.path(percentEncoded: false))
             )
 
-            let results = try await countFilesForCommit(hash, input: input)
-            let date = try await Git.commitDate(for: hash, in: repoPath)
+            try await GitFix.prepareRepository(git: input.git)
 
-            let resultItems = results.map { ResultItem(filetype: $0.filetype, files: $0.files) }
+            var resultItems: [ResultItem] = []
+            for ext in filetypes {
+                let result = countFiles(extension: ext, repoPath: repoPath)
+                resultItems.append(ResultItem(filetype: result.filetype, files: result.files))
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
             outputs.append(Output(commit: hash, date: date, results: resultItems))
         }
 
