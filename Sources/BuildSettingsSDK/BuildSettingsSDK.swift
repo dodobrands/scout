@@ -125,48 +125,6 @@ public struct BuildSettingsSDK: Sendable {
         return outputs
     }
 
-    /// Checks out a commit and extracts build settings.
-    /// - Parameter input: Input parameters for the operation including commit hash
-    /// - Returns: Output with commit info, date, and results
-    @available(*, deprecated, message: "Use analyze(input:) instead")
-    public func analyzeCommit(commit: String, input: Input) async throws -> Output {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        do {
-            try await Shell.execute(
-                "git",
-                arguments: ["checkout", commit],
-                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-            )
-        } catch {
-            throw AnalysisError.checkoutFailed(
-                hash: commit,
-                error: error.localizedDescription
-            )
-        }
-
-        let targets: [TargetWithBuildSettings]
-        do {
-            targets = try await extractBuildSettings(input: input)
-        } catch let error as AnalysisError {
-            throw error
-        } catch {
-            throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
-        }
-
-        let date = try await Git.commitDate(for: commit, in: repoPath)
-
-        let requestedSettings = Set(input.metrics.map { $0.setting })
-        let resultItems = targets.map { target in
-            let filteredSettings = target.buildSettings
-                .filter { requestedSettings.contains($0.key) }
-                .mapValues { Optional($0) }
-            return ResultItem(target: target.target, settings: filteredSettings)
-        }
-
-        return Output(commit: commit, date: date, results: resultItems)
-    }
-
     // MARK: - Setup Commands
 
     private func executeSetupCommands(
