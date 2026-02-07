@@ -55,6 +55,30 @@ public struct PatternSDK: Sendable {
         }
     }
 
+    /// A single pattern result item.
+    public struct ResultItem: Sendable, Encodable {
+        public let pattern: String
+        public let matches: [Match]
+
+        public init(pattern: String, matches: [Match]) {
+            self.pattern = pattern
+            self.matches = matches
+        }
+    }
+
+    /// Output of pattern analysis for a single commit.
+    public struct Output: Sendable, Encodable {
+        public let commit: String
+        public let date: String
+        public let results: [ResultItem]
+
+        public init(commit: String, date: String, results: [ResultItem]) {
+            self.commit = commit
+            self.date = date
+            self.results = results
+        }
+    }
+
     /// Result of pattern search operation.
     public struct Result: Sendable, Encodable {
         public let pattern: String
@@ -97,8 +121,8 @@ public struct PatternSDK: Sendable {
     /// - Parameters:
     ///   - hash: Commit hash to checkout
     ///   - input: Input parameters for the operation
-    /// - Returns: Array of results, one for each pattern
-    public func analyzeCommit(hash: String, input: PatternInput) async throws -> [Result] {
+    /// - Returns: Output with commit info, date, and results
+    public func analyzeCommit(hash: String, input: PatternInput) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
@@ -107,7 +131,11 @@ public struct PatternSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await search(input: input)
+        let results = try await search(input: input)
+        let date = try await Git.commitDate(for: hash, in: repoPath)
+
+        let resultItems = results.map { ResultItem(pattern: $0.pattern, matches: $0.matches) }
+        return Output(commit: hash, date: date, results: resultItems)
     }
 
     private func searchInFile(pattern: String, file: URL, repoPath: URL) throws -> [Match] {
