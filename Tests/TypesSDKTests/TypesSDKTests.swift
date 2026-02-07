@@ -306,6 +306,57 @@ struct TypesSDKTests {
         #expect(innerComponent.fullName == "Container.InnerComponent")
         #expect(deepComponent.fullName == "Container.NestedContainer.DeepComponent")
     }
+
+    @Test
+    func `When searching for types, should return relative file path`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "UIView")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        let result = try #require(results[safe: 0])
+        let awesomeView = try #require(result.types.first { $0.name == "AwesomeView" })
+
+        #expect(awesomeView.path == "UIViews.swift")
+    }
+
+    @Test
+    func `When type is top-level, fullName should equal name`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "UIView")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        let result = try #require(results[safe: 0])
+        let awesomeView = try #require(result.types.first { $0.name == "AwesomeView" })
+
+        #expect(awesomeView.fullName == "AwesomeView")
+    }
+
+    @Test
+    func `When type is inside extension, fullName should include extended type`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "AnalyticsEvent")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        let result = try #require(results[safe: 0])
+        let openScreenEvent = try #require(result.types.first { $0.name == "OpenScreenEvent" })
+
+        #expect(openScreenEvent.fullName == "Analytics.OpenScreenEvent")
+    }
 }
 
 private func samplesDirectory() throws -> URL {
