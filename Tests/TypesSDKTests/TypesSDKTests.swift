@@ -38,7 +38,8 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "View")
-        #expect(result.types.names == ["HelloView"])
+        // HelloView uses `View`, QualifiedView uses `SwiftUI.View` - both should be found
+        #expect(result.types.names == ["HelloView", "QualifiedView"])
     }
 
     @Test
@@ -212,7 +213,7 @@ struct TypesSDKTests {
         #expect(result0.typeName == "UIView")
         #expect(result0.types.names == ["AwesomeView", "DodoView"])
         #expect(result1.typeName == "View")
-        #expect(result1.types.names == ["HelloView"])
+        #expect(result1.types.names == ["HelloView", "QualifiedView"])
     }
 
     @Test
