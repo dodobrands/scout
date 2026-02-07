@@ -120,6 +120,7 @@ struct TypesSDKTests {
     func `When type conforms to multiple protocols, should be found by each protocol`() async throws
     {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
         let trackableResult = try await sut.countTypes(input: input, typeName: "Trackable")
         let loggableResult = try await sut.countTypes(input: input, typeName: "Loggable")
@@ -131,6 +132,7 @@ struct TypesSDKTests {
     @Test
     func `When searching for multiple types, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
         let uiViewResult = try await sut.countTypes(input: input, typeName: "UIView")
         let viewResult = try await sut.countTypes(input: input, typeName: "View")
@@ -329,11 +331,9 @@ struct TypesSDKTests {
     @Test
     func `When type conforms to multiple protocols, should be found by each`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let identifiableResult = try await sut.countTypes(
-            typeName: "Identifiable",
-            repoPath: samplesURL
-        )
+        let identifiableResult = try await sut.countTypes(input: input, typeName: "Identifiable")
         let nameableResult = try await sut.countTypes(input: input, typeName: "Nameable")
 
         #expect(identifiableResult.types.names == ["Company", "Person"])

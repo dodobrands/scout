@@ -11,13 +11,13 @@ public struct PatternSDK: Sendable {
 
     /// Searches for a pattern in current repository state (no checkout).
     /// - Parameters:
+    ///   - input: Analysis input with repository path and file extensions
     ///   - pattern: Pattern to search for
-    ///   - extensions: File extensions to search in
-    ///   - repoPath: Path to the repository
     /// - Returns: Result with list of matches
-    func search(pattern: String, extensions: [String], repoPath: URL) throws -> Result {
+    func search(input: AnalysisInput, pattern: String) throws -> Result {
+        let repoPath = URL(filePath: input.repoPath)
         var allMatches: [Match] = []
-        for ext in extensions {
+        for ext in input.extensions {
             let files = findFiles(of: ext, in: repoPath)
             for file in files {
                 let fileMatches = try searchInFile(
@@ -63,13 +63,14 @@ public struct PatternSDK: Sendable {
 
             try await GitFix.prepareRepository(git: input.git)
 
+            let analysisInput = AnalysisInput(
+                repoPath: input.git.repoPath,
+                extensions: input.extensions
+            )
+
             var resultItems: [ResultItem] = []
             for pattern in patterns {
-                let result = try search(
-                    pattern: pattern,
-                    extensions: input.extensions,
-                    repoPath: repoPath
-                )
+                let result = try search(input: analysisInput, pattern: pattern)
                 resultItems.append(ResultItem(pattern: result.pattern, matches: result.matches))
             }
 

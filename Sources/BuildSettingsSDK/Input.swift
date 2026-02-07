@@ -39,18 +39,6 @@ extension BuildSettingsSDK {
         let setupCommands: [SetupCommand]
         let project: String
         let configuration: String
-
-        init(
-            repoPath: String,
-            setupCommands: [SetupCommand],
-            project: String,
-            configuration: String
-        ) {
-            self.repoPath = repoPath
-            self.setupCommands = setupCommands
-            self.project = project
-            self.configuration = configuration
-        }
     }
 
     /// Input parameters for BuildSettingsSDK operations.

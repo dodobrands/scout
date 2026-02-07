@@ -42,21 +42,20 @@ public struct LOCSDK: Sendable {
         }
     }
 
-    /// Counts LOC for a single metric in current repository state (no checkout).
-    /// - Parameters:
-    ///   - metric: The metric configuration to analyze
-    ///   - repoPath: Path to the repository
+    /// Counts LOC for current repository state (no checkout).
+    /// - Parameter input: Analysis input with repository path and metric configuration
     /// - Returns: Result item with LOC count
-    func countLOC(metric: MetricInput, repoPath: URL) async throws -> ResultItem {
+    func countLOC(input: AnalysisInput) async throws -> ResultItem {
+        let repoPath = URL(filePath: input.repoPath)
         let clocRunner = ClocRunner()
         let foldersToAnalyze = foldersToAnalyze(
             in: repoPath,
-            include: metric.include,
-            exclude: metric.exclude
+            include: input.include,
+            exclude: input.exclude
         )
 
         let loc =
-            try await metric.languages
+            try await input.languages
             .asyncFlatMap { language in
                 try await foldersToAnalyze.asyncMap {
                     try await clocRunner.linesOfCode(at: $0, language: language)
@@ -65,7 +64,7 @@ public struct LOCSDK: Sendable {
             .compactMap { Int($0) }
             .reduce(0, +)
 
-        return ResultItem(metric: metric.metricIdentifier, linesOfCode: loc)
+        return ResultItem(metric: input.metricIdentifier, linesOfCode: loc)
     }
 
     /// Analyzes lines of code for all metrics across their specified commits.
@@ -101,7 +100,14 @@ public struct LOCSDK: Sendable {
 
             var resultItems: [ResultItem] = []
             for metric in metrics {
-                let result = try await countLOC(metric: metric, repoPath: repoPath)
+                let analysisInput = AnalysisInput(
+                    repoPath: input.git.repoPath,
+                    languages: metric.languages,
+                    include: metric.include,
+                    exclude: metric.exclude,
+                    metricIdentifier: metric.metricIdentifier
+                )
+                let result = try await countLOC(input: analysisInput)
                 resultItems.append(result)
             }
 
