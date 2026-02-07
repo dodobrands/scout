@@ -82,14 +82,14 @@ public struct LOC: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default
-        let input = LOCInput(cli: cliInputs, config: fileConfig)
+        let cliConfig = LOCCLIConfig(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
+            try URL(string: cliConfig.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
             repoPath: repoPathURL.path
         )
 
@@ -97,7 +97,7 @@ public struct LOC: AsyncParsableCommand {
         var outputResults: [LOCSDK.Output] = []
 
         // Group metrics by commits to minimize checkouts
-        var commitToMetrics: [String: [LOCMetricInput]] = [:]
+        var commitToMetrics: [String: [LOCSDK.MetricInput]] = [:]
         for metric in resolvedMetrics {
             for commit in metric.commits {
                 commitToMetrics[commit, default: []].append(metric)
@@ -115,8 +115,8 @@ public struct LOC: AsyncParsableCommand {
         for (hash, metrics) in commitToMetrics {
             Self.logger.info("Processing commit: \(hash)")
 
-            let commitInput = LOCInput(git: input.git, metrics: metrics)
-            let commitOutput = try await sdk.analyzeCommit(hash: hash, input: commitInput)
+            let commitInput = LOCSDK.Input(commit: hash, git: cliConfig.git, metrics: metrics)
+            let commitOutput = try await sdk.analyzeCommit(input: commitInput)
 
             for result in commitOutput.results {
                 Self.logger.notice(

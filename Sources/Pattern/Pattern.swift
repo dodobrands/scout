@@ -106,14 +106,14 @@ public struct Pattern: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default
-        let input = PatternInput(cli: cliInputs, config: fileConfig)
+        let cliConfig = PatternCLIConfig(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
+            try URL(string: cliConfig.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
             repoPath: repoPathURL.path
         )
 
@@ -140,12 +140,13 @@ public struct Pattern: AsyncParsableCommand {
         for (hash, patterns) in commitToPatterns {
             Self.logger.info("Processing commit: \(hash) for patterns: \(patterns)")
 
-            let commitInput = PatternInput(
-                git: input.git,
-                metrics: patterns.map { PatternMetricInput(pattern: $0) },
-                extensions: input.extensions
+            let commitInput = PatternSDK.Input(
+                commit: hash,
+                git: cliConfig.git,
+                metrics: patterns.map { PatternSDK.MetricInput(pattern: $0) },
+                extensions: cliConfig.extensions
             )
-            let commitOutput = try await sdk.analyzeCommit(hash: hash, input: commitInput)
+            let commitOutput = try await sdk.analyzeCommit(input: commitInput)
 
             for result in commitOutput.results {
                 Self.logger.notice(

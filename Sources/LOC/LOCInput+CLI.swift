@@ -2,8 +2,13 @@ import Common
 import Foundation
 import LOCSDK
 
-extension LOCInput {
-    /// Creates LOCInput by merging CLI and file config with priority: CLI > Config > Default
+/// Intermediate config for CLI that holds metrics with their commit arrays.
+/// This is merged from CLI args and file config, then converted to LOCSDK.Input per commit.
+struct LOCCLIConfig {
+    let git: GitConfiguration
+    let metrics: [LOCSDK.MetricInput]
+
+    /// Creates LOCCLIConfig by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
@@ -13,12 +18,12 @@ extension LOCInput {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [LOCMetricInput]
+        let metrics: [LOCSDK.MetricInput]
 
         if let cliLanguages = cli.languages, !cliLanguages.isEmpty {
             // CLI languages provided - create single metric with CLI commits
             let commits = cli.commits ?? ["HEAD"]
-            let metric = LOCMetricInput(
+            let metric = LOCSDK.MetricInput(
                 languages: cliLanguages,
                 include: cli.include ?? [],
                 exclude: cli.exclude ?? [],
@@ -34,7 +39,7 @@ extension LOCInput {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return LOCMetricInput(
+                    return LOCSDK.MetricInput(
                         languages: metric.languages,
                         include: metric.include,
                         exclude: metric.exclude,
@@ -49,7 +54,7 @@ extension LOCInput {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return LOCMetricInput(
+                    return LOCSDK.MetricInput(
                         languages: metric.languages,
                         include: metric.include,
                         exclude: metric.exclude,
@@ -61,6 +66,7 @@ extension LOCInput {
             metrics = []
         }
 
-        self.init(git: gitConfig, metrics: metrics)
+        self.git = gitConfig
+        self.metrics = metrics
     }
 }

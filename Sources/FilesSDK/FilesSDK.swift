@@ -3,43 +3,46 @@ import Foundation
 import Logging
 import System
 
-/// A single file extension metric with its commits to analyze.
-public struct FileMetricInput: Sendable, CommitResolvable {
-    /// File extension to count (e.g., "swift", "storyboard")
-    public let `extension`: String
-
-    /// Commits to analyze for this extension
-    public let commits: [String]
-
-    public init(extension: String, commits: [String] = ["HEAD"]) {
-        self.extension = `extension`
-        self.commits = commits
-    }
-
-    public func withResolvedCommits(_ commits: [String]) -> FileMetricInput {
-        FileMetricInput(extension: `extension`, commits: commits)
-    }
-}
-
-/// Input parameters for FilesSDK operations.
-public struct FilesInput: Sendable {
-    public let git: GitConfiguration
-    public let metrics: [FileMetricInput]
-
-    public init(
-        git: GitConfiguration,
-        metrics: [FileMetricInput]
-    ) {
-        self.git = git
-        self.metrics = metrics
-    }
-}
-
 /// SDK for counting files by extension.
 public struct FilesSDK: Sendable {
     private static let logger = Logger(label: "scout.FilesSDK")
 
     public init() {}
+
+    /// A single file extension metric with its commits to analyze.
+    public struct MetricInput: Sendable, CommitResolvable {
+        /// File extension to count (e.g., "swift", "storyboard")
+        public let `extension`: String
+
+        /// Commits to analyze for this extension
+        public let commits: [String]
+
+        public init(extension: String, commits: [String] = ["HEAD"]) {
+            self.extension = `extension`
+            self.commits = commits
+        }
+
+        public func withResolvedCommits(_ commits: [String]) -> MetricInput {
+            MetricInput(extension: `extension`, commits: commits)
+        }
+    }
+
+    /// Input parameters for FilesSDK operations.
+    public struct Input: Sendable {
+        public let commit: String
+        public let git: GitConfiguration
+        public let metrics: [MetricInput]
+
+        public init(
+            commit: String,
+            git: GitConfiguration,
+            metrics: [MetricInput]
+        ) {
+            self.commit = commit
+            self.git = git
+            self.metrics = metrics
+        }
+    }
 
     /// A single files result item.
     public struct ResultItem: Sendable, Encodable {
@@ -87,7 +90,7 @@ public struct FilesSDK: Sendable {
     /// Counts files for all metrics in the input.
     /// - Parameter input: Input parameters containing metrics and git configuration
     /// - Returns: Array of results, one for each metric
-    func countFiles(input: FilesInput) async throws -> [Result] {
+    func countFiles(input: Input) async throws -> [Result] {
         try await GitFix.prepareRepository(git: input.git)
 
         let repoPath = URL(filePath: input.git.repoPath)
@@ -98,24 +101,22 @@ public struct FilesSDK: Sendable {
     }
 
     /// Checks out a commit and counts files for all metrics in input.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters containing metrics and git configuration
+    /// - Parameter input: Input parameters containing commit, metrics and git configuration
     /// - Returns: Output with commit info, date, and results
-    public func analyzeCommit(hash: String, input: FilesInput) async throws -> Output {
+    public func analyzeCommit(input: Input) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
             "git",
-            arguments: ["checkout", hash],
+            arguments: ["checkout", input.commit],
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
         let results = try await countFiles(input: input)
-        let date = try await Git.commitDate(for: hash, in: repoPath)
+        let date = try await Git.commitDate(for: input.commit, in: repoPath)
 
         let resultItems = results.map { ResultItem(filetype: $0.filetype, files: $0.files) }
-        return Output(commit: hash, date: date, results: resultItems)
+        return Output(commit: input.commit, date: date, results: resultItems)
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL] {

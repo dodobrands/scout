@@ -3,43 +3,46 @@ import Foundation
 import Logging
 import System
 
-/// A single type metric with its commits to analyze.
-public struct TypeMetricInput: Sendable, CommitResolvable {
-    /// Type name to count (e.g., "UIView")
-    public let type: String
-
-    /// Commits to analyze for this type
-    public let commits: [String]
-
-    public init(type: String, commits: [String] = ["HEAD"]) {
-        self.type = type
-        self.commits = commits
-    }
-
-    public func withResolvedCommits(_ commits: [String]) -> TypeMetricInput {
-        TypeMetricInput(type: type, commits: commits)
-    }
-}
-
-/// Input parameters for TypesSDK operations.
-public struct TypesInput: Sendable {
-    public let git: GitConfiguration
-    public let metrics: [TypeMetricInput]
-
-    public init(
-        git: GitConfiguration,
-        metrics: [TypeMetricInput]
-    ) {
-        self.git = git
-        self.metrics = metrics
-    }
-}
-
 /// SDK for counting Swift types by inheritance.
 public struct TypesSDK: Sendable {
     private static let logger = Logger(label: "scout.TypesSDK")
 
     public init() {}
+
+    /// A single type metric with its commits to analyze.
+    public struct MetricInput: Sendable, CommitResolvable {
+        /// Type name to count (e.g., "UIView")
+        public let type: String
+
+        /// Commits to analyze for this type
+        public let commits: [String]
+
+        public init(type: String, commits: [String] = ["HEAD"]) {
+            self.type = type
+            self.commits = commits
+        }
+
+        public func withResolvedCommits(_ commits: [String]) -> MetricInput {
+            MetricInput(type: type, commits: commits)
+        }
+    }
+
+    /// Input parameters for TypesSDK operations.
+    public struct Input: Sendable {
+        public let commit: String
+        public let git: GitConfiguration
+        public let metrics: [MetricInput]
+
+        public init(
+            commit: String,
+            git: GitConfiguration,
+            metrics: [MetricInput]
+        ) {
+            self.commit = commit
+            self.git = git
+            self.metrics = metrics
+        }
+    }
 
     /// Information about a found type.
     public struct TypeInfo: Sendable, Encodable, Equatable {
@@ -99,7 +102,7 @@ public struct TypesSDK: Sendable {
     ///   - typeName: Base type name to search for
     ///   - input: Input parameters for the operation
     /// - Returns: Result containing count and list of matching types
-    func countTypes(typeName: String, input: TypesInput) async throws -> Result {
+    func countTypes(typeName: String, input: Input) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
         let repoPathString = repoPath.path(percentEncoded: false)
         let parser = SwiftParser()
@@ -147,7 +150,7 @@ public struct TypesSDK: Sendable {
     /// Counts types inherited from all base types in input.metrics.
     /// - Parameter input: Input parameters including array of metrics
     /// - Returns: Array of results, one for each type
-    func countTypes(input: TypesInput) async throws -> [Result] {
+    func countTypes(input: Input) async throws -> [Result] {
         var results: [Result] = []
         for metric in input.metrics {
             let result = try await countTypes(typeName: metric.type, input: input)
@@ -157,24 +160,22 @@ public struct TypesSDK: Sendable {
     }
 
     /// Checks out a commit and counts types inherited from all base types in input.metrics.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters for the operation
+    /// - Parameter input: Input parameters for the operation including commit hash
     /// - Returns: Output with commit info, date, and results
-    public func analyzeCommit(hash: String, input: TypesInput) async throws -> Output {
+    public func analyzeCommit(input: Input) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
             "git",
-            arguments: ["checkout", hash],
+            arguments: ["checkout", input.commit],
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
         let results = try await countTypes(input: input)
-        let date = try await Git.commitDate(for: hash, in: repoPath)
+        let date = try await Git.commitDate(for: input.commit, in: repoPath)
 
         let resultItems = results.map { ResultItem(typeName: $0.typeName, types: $0.types) }
-        return Output(commit: hash, date: date, results: resultItems)
+        return Output(commit: input.commit, date: date, results: resultItems)
     }
 
     private func findSwiftFiles(in directory: URL) -> [URL] {

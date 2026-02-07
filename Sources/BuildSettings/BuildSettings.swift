@@ -76,14 +76,14 @@ public struct BuildSettings: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default
-        let input = try BuildSettingsInput(cli: cliInputs, config: fileConfig)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
+            try URL(string: cliConfig.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
             repoPath: repoPathURL.path
         )
 
@@ -116,9 +116,18 @@ public struct BuildSettings: AsyncParsableCommand {
                 metadata: ["hash": "\(hash)", "settings": "\(settings)"]
             )
 
+            let commitInput = BuildSettingsSDK.Input(
+                commit: hash,
+                git: cliConfig.git,
+                setupCommands: cliConfig.setupCommands,
+                metrics: settings.map { BuildSettingsSDK.MetricInput(setting: $0) },
+                project: cliConfig.project,
+                configuration: cliConfig.configuration
+            )
+
             let commitOutput: BuildSettingsSDK.Output
             do {
-                commitOutput = try await sdk.analyzeCommit(hash: hash, input: input)
+                commitOutput = try await sdk.analyzeCommit(input: commitInput)
             } catch let error as BuildSettingsSDK.AnalysisError {
                 Self.logger.warning(
                     "Skipping commit due to analysis failure",

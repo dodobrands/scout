@@ -13,10 +13,10 @@ struct TypesInputPriorityTests {
     func `CLI types create metrics with CLI commits`() throws {
         let cli = TypesCLIInputs(types: ["UIView"], repoPath: nil, commits: ["abc123"])
 
-        let input = TypesInput(cli: cli, config: nil)
+        let cliConfig = TypesCLIConfig(cli: cli, config: nil)
 
-        #expect(input.metrics.count == 1)
-        let metric = try #require(input.metrics[safe: 0])
+        #expect(cliConfig.metrics.count == 1)
+        let metric = try #require(cliConfig.metrics[safe: 0])
         #expect(metric.type == "UIView")
         #expect(metric.commits == ["abc123"])
     }
@@ -25,10 +25,10 @@ struct TypesInputPriorityTests {
     func `CLI types use HEAD when commits not specified`() throws {
         let cli = TypesCLIInputs(types: ["UIView"], repoPath: nil, commits: nil)
 
-        let input = TypesInput(cli: cli, config: nil)
+        let cliConfig = TypesCLIConfig(cli: cli, config: nil)
 
-        #expect(input.metrics.count == 1)
-        let metric = try #require(input.metrics[safe: 0])
+        #expect(cliConfig.metrics.count == 1)
+        let metric = try #require(cliConfig.metrics[safe: 0])
         #expect(metric.type == "UIView")
         #expect(metric.commits == ["HEAD"])
     }
@@ -41,10 +41,10 @@ struct TypesInputPriorityTests {
             git: nil
         )
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 1)
-        let metric = try #require(input.metrics[safe: 0])
+        #expect(cliConfig.metrics.count == 1)
+        let metric = try #require(cliConfig.metrics[safe: 0])
         #expect(metric.type == "UIViewController")
         #expect(metric.commits == ["def456"])
     }
@@ -57,10 +57,10 @@ struct TypesInputPriorityTests {
             git: nil
         )
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 1)
-        let metric = try #require(input.metrics[safe: 0])
+        #expect(cliConfig.metrics.count == 1)
+        let metric = try #require(cliConfig.metrics[safe: 0])
         #expect(metric.commits == ["HEAD"])
     }
 
@@ -75,11 +75,11 @@ struct TypesInputPriorityTests {
             git: nil
         )
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        let metric0 = try #require(input.metrics[safe: 0])
-        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(cliConfig.metrics.count == 2)
+        let metric0 = try #require(cliConfig.metrics[safe: 0])
+        let metric1 = try #require(cliConfig.metrics[safe: 1])
         #expect(metric0.commits == ["cli-commit"])
         #expect(metric1.commits == ["cli-commit"])
     }
@@ -96,11 +96,11 @@ struct TypesInputPriorityTests {
             git: nil
         )
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        let metric0 = try #require(input.metrics[safe: 0])
-        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(cliConfig.metrics.count == 2)
+        let metric0 = try #require(cliConfig.metrics[safe: 0])
+        let metric1 = try #require(cliConfig.metrics[safe: 1])
         #expect(metric0.type == "UIView")
         #expect(metric1.type == "View")
     }
@@ -110,9 +110,9 @@ struct TypesInputPriorityTests {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(metrics: nil, git: nil)
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.isEmpty)
+        #expect(cliConfig.metrics.isEmpty)
     }
 
     // MARK: - RepoPath Priority Tests
@@ -123,9 +123,9 @@ struct TypesInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == "/cli/path")
+        #expect(cliConfig.git.repoPath == "/cli/path")
     }
 
     @Test
@@ -134,9 +134,9 @@ struct TypesInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == "/config/path")
+        #expect(cliConfig.git.repoPath == "/config/path")
     }
 
     @Test
@@ -144,9 +144,9 @@ struct TypesInputPriorityTests {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
         let config = TypesConfig(metrics: nil, git: nil)
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
+        #expect(cliConfig.git.repoPath == FileManager.default.currentDirectoryPath)
     }
 
     // MARK: - Git Flags Priority Tests
@@ -169,11 +169,11 @@ struct TypesInputPriorityTests {
         )
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.clean == true)  // CLI
-        #expect(input.git.fixLFS == false)  // CLI
-        #expect(input.git.initializeSubmodules == true)  // CLI
+        #expect(cliConfig.git.clean == true)  // CLI
+        #expect(cliConfig.git.fixLFS == false)  // CLI
+        #expect(cliConfig.git.initializeSubmodules == true)  // CLI
     }
 
     @Test
@@ -194,22 +194,22 @@ struct TypesInputPriorityTests {
         )
         let config = TypesConfig(metrics: nil, git: gitConfig)
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.clean == true)  // from config
-        #expect(input.git.fixLFS == true)  // from config
-        #expect(input.git.initializeSubmodules == true)  // from config
+        #expect(cliConfig.git.clean == true)  // from config
+        #expect(cliConfig.git.fixLFS == true)  // from config
+        #expect(cliConfig.git.initializeSubmodules == true)  // from config
     }
 
     @Test
     func `git flags default to false when both CLI and config are nil`() {
         let cli = TypesCLIInputs(types: nil, repoPath: nil, commits: nil)
 
-        let input = TypesInput(cli: cli, config: nil)
+        let cliConfig = TypesCLIConfig(cli: cli, config: nil)
 
-        #expect(input.git.clean == false)
-        #expect(input.git.fixLFS == false)
-        #expect(input.git.initializeSubmodules == false)
+        #expect(cliConfig.git.clean == false)
+        #expect(cliConfig.git.fixLFS == false)
+        #expect(cliConfig.git.initializeSubmodules == false)
     }
 
     // MARK: - Combined Priority Tests
@@ -224,14 +224,14 @@ struct TypesInputPriorityTests {
             git: gitConfig
         )
 
-        let input = TypesInput(cli: cli, config: config)
+        let cliConfig = TypesCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)  // from CLI
-        let metric0 = try #require(input.metrics[safe: 0])
-        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(cliConfig.metrics.count == 2)  // from CLI
+        let metric0 = try #require(cliConfig.metrics[safe: 0])
+        let metric1 = try #require(cliConfig.metrics[safe: 1])
         #expect(metric0.type == "UIView")
         #expect(metric1.type == "View")
-        #expect(input.git.repoPath == "/from/config")  // from config
+        #expect(cliConfig.git.repoPath == "/from/config")  // from config
         #expect(metric0.commits == ["HEAD"])  // default
     }
 }

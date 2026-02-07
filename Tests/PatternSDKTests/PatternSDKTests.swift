@@ -11,9 +11,10 @@ struct PatternSDKTests {
     func `When searching for TODO comments, should find all occurrences`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = PatternInput(
+        let input = PatternSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [PatternMetricInput(pattern: "// TODO:")]
+            metrics: [PatternSDK.MetricInput(pattern: "// TODO:")]
         )
 
         let results = try await sut.search(input: input)
@@ -28,9 +29,10 @@ struct PatternSDKTests {
     func `When searching for FIXME comments, should find all occurrences`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = PatternInput(
+        let input = PatternSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [PatternMetricInput(pattern: "// FIXME:")]
+            metrics: [PatternSDK.MetricInput(pattern: "// FIXME:")]
         )
 
         let results = try await sut.search(input: input)
@@ -44,9 +46,10 @@ struct PatternSDKTests {
     func `When searching for periphery ignore, should find all annotations`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = PatternInput(
+        let input = PatternSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [PatternMetricInput(pattern: "periphery:ignore")]
+            metrics: [PatternSDK.MetricInput(pattern: "periphery:ignore")]
         )
 
         let results = try await sut.search(input: input)
@@ -60,9 +63,10 @@ struct PatternSDKTests {
     func `When searching for non-existent pattern, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = PatternInput(
+        let input = PatternSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [PatternMetricInput(pattern: "THIS_PATTERN_DOES_NOT_EXIST")]
+            metrics: [PatternSDK.MetricInput(pattern: "THIS_PATTERN_DOES_NOT_EXIST")]
         )
 
         let results = try await sut.search(input: input)
@@ -76,9 +80,10 @@ struct PatternSDKTests {
     func `When match found, should return correct line number`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = PatternInput(
+        let input = PatternSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [PatternMetricInput(pattern: "swiftlint:disable")]
+            metrics: [PatternSDK.MetricInput(pattern: "swiftlint:disable")]
         )
 
         let results = try await sut.search(input: input)
@@ -94,9 +99,10 @@ struct PatternSDKTests {
     func `When pattern found multiple times, should return different line numbers`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = PatternInput(
+        let input = PatternSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [PatternMetricInput(pattern: "// TODO:")]
+            metrics: [PatternSDK.MetricInput(pattern: "// TODO:")]
         )
 
         let results = try await sut.search(input: input)
@@ -112,11 +118,12 @@ struct PatternSDKTests {
     func `When searching for multiple patterns, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = PatternInput(
+        let input = PatternSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             metrics: [
-                PatternMetricInput(pattern: "// TODO:"),
-                PatternMetricInput(pattern: "// FIXME:"),
+                PatternSDK.MetricInput(pattern: "// TODO:"),
+                PatternSDK.MetricInput(pattern: "// FIXME:"),
             ]
         )
 

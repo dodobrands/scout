@@ -10,7 +10,8 @@ struct BuildSettingsSDKTests {
     func `When extracting build settings, should return targets with settings`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = BuildSettingsInput(
+        let input = BuildSettingsSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             setupCommands: [],
             project: "TestApp.xcodeproj",
@@ -31,7 +32,8 @@ struct BuildSettingsSDKTests {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
         let failingCommand = SetupCommand(command: "exit 1")
-        let input = BuildSettingsInput(
+        let input = BuildSettingsSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             setupCommands: [failingCommand],
             project: "TestApp.xcodeproj",
@@ -51,7 +53,8 @@ struct BuildSettingsSDKTests {
             command: "exit 1",
             optional: true
         )
-        let input = BuildSettingsInput(
+        let input = BuildSettingsSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             setupCommands: [optionalFailingCommand],
             project: "TestApp.xcodeproj",

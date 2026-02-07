@@ -2,8 +2,13 @@ import Common
 import FilesSDK
 import Foundation
 
-extension FilesInput {
-    /// Creates FilesInput by merging CLI and file config with priority: CLI > Config > Default
+/// Intermediate config for CLI that holds metrics with their commit arrays.
+/// This is merged from CLI args and file config, then converted to FilesSDK.Input per commit.
+struct FilesCLIConfig {
+    let git: GitConfiguration
+    let metrics: [FilesSDK.MetricInput]
+
+    /// Creates FilesCLIConfig by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
@@ -13,12 +18,12 @@ extension FilesInput {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [FileMetricInput]
+        let metrics: [FilesSDK.MetricInput]
 
         if let cliFiletypes = cli.filetypes, !cliFiletypes.isEmpty {
             // CLI filetypes provided - all use same commits (from CLI or default HEAD)
             let commits = cli.commits ?? ["HEAD"]
-            metrics = cliFiletypes.map { FileMetricInput(extension: $0, commits: commits) }
+            metrics = cliFiletypes.map { FilesSDK.MetricInput(extension: $0, commits: commits) }
         } else if let configMetrics = config?.metrics {
             // Config metrics - each has its own commits, CLI --commits overrides all
             if let cliCommits = cli.commits {
@@ -28,7 +33,7 @@ extension FilesInput {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return FileMetricInput(extension: metric.extension, commits: cliCommits)
+                    return FilesSDK.MetricInput(extension: metric.extension, commits: cliCommits)
                 }
             } else {
                 // Use per-metric commits from config
@@ -38,13 +43,14 @@ extension FilesInput {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return FileMetricInput(extension: metric.extension, commits: commits)
+                    return FilesSDK.MetricInput(extension: metric.extension, commits: commits)
                 }
             }
         } else {
             metrics = []
         }
 
-        self.init(git: gitConfig, metrics: metrics)
+        self.git = gitConfig
+        self.metrics = metrics
     }
 }

@@ -69,14 +69,14 @@ public struct Types: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default
-        let input = TypesInput(cli: cliInputs, config: fileConfig)
+        let cliConfig = TypesCLIConfig(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
+            try URL(string: cliConfig.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
             repoPath: repoPathURL.path
         )
 
@@ -103,11 +103,12 @@ public struct Types: AsyncParsableCommand {
         for (hash, typeNames) in commitToTypes {
             Self.logger.info("Processing commit: \(hash) for types: \(typeNames)")
 
-            let commitInput = TypesInput(
-                git: input.git,
-                metrics: typeNames.map { TypeMetricInput(type: $0) }
+            let commitInput = TypesSDK.Input(
+                commit: hash,
+                git: cliConfig.git,
+                metrics: typeNames.map { TypesSDK.MetricInput(type: $0) }
             )
-            let commitOutput = try await sdk.analyzeCommit(hash: hash, input: commitInput)
+            let commitOutput = try await sdk.analyzeCommit(input: commitInput)
 
             for result in commitOutput.results {
                 Self.logger.notice(

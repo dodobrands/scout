@@ -23,9 +23,9 @@ struct PatternInputPriorityTests {
             git: nil
         )
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.map { $0.pattern } == ["TODO:"])
+        #expect(cliConfig.metrics.map { $0.pattern } == ["TODO:"])
     }
 
     @Test
@@ -37,9 +37,9 @@ struct PatternInputPriorityTests {
             git: nil
         )
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.map { $0.pattern } == ["FIXME:"])
+        #expect(cliConfig.metrics.map { $0.pattern } == ["FIXME:"])
     }
 
     @Test
@@ -47,9 +47,9 @@ struct PatternInputPriorityTests {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
         let config = PatternConfig(metrics: nil, extensions: nil, git: nil)
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.isEmpty)
+        #expect(cliConfig.metrics.isEmpty)
     }
 
     // MARK: - Extensions Priority Tests
@@ -64,9 +64,9 @@ struct PatternInputPriorityTests {
         )
         let config = PatternConfig(metrics: nil, extensions: ["swift"], git: nil)
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.extensions == ["m", "h"])
+        #expect(cliConfig.extensions == ["m", "h"])
     }
 
     @Test
@@ -74,9 +74,9 @@ struct PatternInputPriorityTests {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
         let config = PatternConfig(metrics: nil, extensions: ["m", "h"], git: nil)
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.extensions == ["m", "h"])
+        #expect(cliConfig.extensions == ["m", "h"])
     }
 
     @Test
@@ -84,9 +84,9 @@ struct PatternInputPriorityTests {
         let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
         let config = PatternConfig(metrics: nil, extensions: nil, git: nil)
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.extensions == ["swift"])
+        #expect(cliConfig.extensions == ["swift"])
     }
 
     // MARK: - RepoPath Priority Tests
@@ -102,9 +102,9 @@ struct PatternInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = PatternConfig(metrics: nil, extensions: nil, git: gitConfig)
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == "/cli/path")
+        #expect(cliConfig.git.repoPath == "/cli/path")
     }
 
     @Test
@@ -113,9 +113,9 @@ struct PatternInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = PatternConfig(metrics: nil, extensions: nil, git: gitConfig)
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == "/config/path")
+        #expect(cliConfig.git.repoPath == "/config/path")
     }
 
     // MARK: - Commits Priority Tests
@@ -129,9 +129,9 @@ struct PatternInputPriorityTests {
             extensions: nil
         )
 
-        let input = PatternInput(cli: cli, config: nil)
+        let cliConfig = PatternCLIConfig(cli: cli, config: nil)
 
-        let metric = try #require(input.metrics.first)
+        let metric = try #require(cliConfig.metrics.first)
         #expect(metric.commits == ["abc123"])
     }
 
@@ -144,9 +144,9 @@ struct PatternInputPriorityTests {
             extensions: nil
         )
 
-        let input = PatternInput(cli: cli, config: nil)
+        let cliConfig = PatternCLIConfig(cli: cli, config: nil)
 
-        let metric = try #require(input.metrics.first)
+        let metric = try #require(cliConfig.metrics.first)
         #expect(metric.commits == ["HEAD"])
     }
 
@@ -164,11 +164,11 @@ struct PatternInputPriorityTests {
             git: nil
         )
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        let metric0 = try #require(input.metrics[safe: 0])
-        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(cliConfig.metrics.count == 2)
+        let metric0 = try #require(cliConfig.metrics[safe: 0])
+        let metric1 = try #require(cliConfig.metrics[safe: 1])
         #expect(metric0.pattern == "TODO:")
         #expect(metric0.commits == ["abc123", "def456"])
         #expect(metric1.pattern == "FIXME:")
@@ -192,11 +192,11 @@ struct PatternInputPriorityTests {
             git: nil
         )
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        let metric0 = try #require(input.metrics[safe: 0])
-        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(cliConfig.metrics.count == 2)
+        let metric0 = try #require(cliConfig.metrics[safe: 0])
+        let metric1 = try #require(cliConfig.metrics[safe: 1])
         #expect(metric0.commits == ["override123"])
         #expect(metric1.commits == ["override123"])
     }
@@ -212,9 +212,9 @@ struct PatternInputPriorityTests {
             git: nil
         )
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        let metric = try #require(input.metrics.first)
+        let metric = try #require(cliConfig.metrics.first)
         #expect(metric.commits == ["HEAD"])
     }
 
@@ -231,10 +231,10 @@ struct PatternInputPriorityTests {
             git: nil
         )
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        #expect(input.metrics.map { $0.pattern } == ["TODO:", "FIXME:"])
+        #expect(cliConfig.metrics.count == 2)
+        #expect(cliConfig.metrics.map { $0.pattern } == ["TODO:", "FIXME:"])
     }
 
     // MARK: - Git Flags Tests
@@ -251,11 +251,11 @@ struct PatternInputPriorityTests {
             initializeSubmodules: true
         )
 
-        let input = PatternInput(cli: cli, config: nil)
+        let cliConfig = PatternCLIConfig(cli: cli, config: nil)
 
-        #expect(input.git.clean == true)
-        #expect(input.git.fixLFS == true)
-        #expect(input.git.initializeSubmodules == true)
+        #expect(cliConfig.git.clean == true)
+        #expect(cliConfig.git.fixLFS == true)
+        #expect(cliConfig.git.initializeSubmodules == true)
     }
 
     // MARK: - Combined Priority Tests
@@ -275,12 +275,12 @@ struct PatternInputPriorityTests {
             git: gitConfig
         )
 
-        let input = PatternInput(cli: cli, config: config)
+        let cliConfig = PatternCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.map { $0.pattern } == ["TODO:"])  // from CLI
-        #expect(input.git.repoPath == "/from/config")  // from config
-        #expect(input.extensions == ["m"])  // from config
-        let metric = try #require(input.metrics.first)
+        #expect(cliConfig.metrics.map { $0.pattern } == ["TODO:"])  // from CLI
+        #expect(cliConfig.git.repoPath == "/from/config")  // from config
+        #expect(cliConfig.extensions == ["m"])  // from config
+        let metric = try #require(cliConfig.metrics.first)
         #expect(metric.commits == ["HEAD"])  // default
     }
 }

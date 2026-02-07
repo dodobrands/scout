@@ -25,8 +25,16 @@ enum BuildSettingsInputError: Error, LocalizedError {
     }
 }
 
-extension BuildSettingsInput {
-    /// Creates BuildSettingsInput by merging CLI and file config with priority: CLI > Config > Default
+/// Intermediate config for CLI that holds metrics with their commit arrays.
+/// This is merged from CLI args and file config, then converted to BuildSettingsSDK.Input per commit.
+struct BuildSettingsCLIConfig {
+    let git: GitConfiguration
+    let setupCommands: [SetupCommand]
+    let metrics: [BuildSettingsSDK.MetricInput]
+    let project: String
+    let configuration: String
+
+    /// Creates BuildSettingsCLIConfig by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
@@ -44,12 +52,14 @@ extension BuildSettingsInput {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [SettingMetricInput]
+        let metrics: [BuildSettingsSDK.MetricInput]
 
         if let cliParameters = cli.buildSettingsParameters, !cliParameters.isEmpty {
             // CLI parameters provided - all use same commits (from CLI or default HEAD)
             let commits = cli.commits ?? ["HEAD"]
-            metrics = cliParameters.map { SettingMetricInput(setting: $0, commits: commits) }
+            metrics = cliParameters.map {
+                BuildSettingsSDK.MetricInput(setting: $0, commits: commits)
+            }
         } else if let configMetrics = config?.metrics {
             // Config metrics - each has its own commits, CLI --commits overrides all
             if let cliCommits = cli.commits {
@@ -59,7 +69,10 @@ extension BuildSettingsInput {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return SettingMetricInput(setting: metric.setting, commits: cliCommits)
+                    return BuildSettingsSDK.MetricInput(
+                        setting: metric.setting,
+                        commits: cliCommits
+                    )
                 }
             } else {
                 // Use per-metric commits from config
@@ -69,19 +82,17 @@ extension BuildSettingsInput {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return SettingMetricInput(setting: metric.setting, commits: commits)
+                    return BuildSettingsSDK.MetricInput(setting: metric.setting, commits: commits)
                 }
             }
         } else {
             metrics = []
         }
 
-        self.init(
-            git: gitConfig,
-            setupCommands: setupCommands,
-            metrics: metrics,
-            project: project,
-            configuration: configuration
-        )
+        self.git = gitConfig
+        self.setupCommands = setupCommands
+        self.metrics = metrics
+        self.project = project
+        self.configuration = configuration
     }
 }

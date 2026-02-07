@@ -27,59 +27,62 @@ public enum ClocError: Error, LocalizedError, Sendable {
     }
 }
 
-/// A single LOC metric with its commits to analyze.
-public struct LOCMetricInput: Sendable, CommitResolvable {
-    /// Languages to count
-    public let languages: [String]
-
-    /// Paths to include
-    public let include: [String]
-
-    /// Paths to exclude
-    public let exclude: [String]
-
-    /// Commits to analyze for this metric
-    public let commits: [String]
-
-    public init(
-        languages: [String],
-        include: [String],
-        exclude: [String],
-        commits: [String] = ["HEAD"]
-    ) {
-        self.languages = languages
-        self.include = include
-        self.exclude = exclude
-        self.commits = commits
-    }
-
-    public func withResolvedCommits(_ commits: [String]) -> LOCMetricInput {
-        LOCMetricInput(languages: languages, include: include, exclude: exclude, commits: commits)
-    }
-
-    /// Returns a unique metric identifier for output
-    public var metricIdentifier: String {
-        "LOC \(languages) \(include)"
-    }
-}
-
-/// Input parameters for LOCSDK operations.
-public struct LOCInput: Sendable {
-    public let git: GitConfiguration
-    public let metrics: [LOCMetricInput]
-
-    public init(
-        git: GitConfiguration,
-        metrics: [LOCMetricInput]
-    ) {
-        self.git = git
-        self.metrics = metrics
-    }
-}
-
 /// SDK for counting lines of code.
 public struct LOCSDK: Sendable {
     public init() {}
+
+    /// A single LOC metric with its commits to analyze.
+    public struct MetricInput: Sendable, CommitResolvable {
+        /// Languages to count
+        public let languages: [String]
+
+        /// Paths to include
+        public let include: [String]
+
+        /// Paths to exclude
+        public let exclude: [String]
+
+        /// Commits to analyze for this metric
+        public let commits: [String]
+
+        public init(
+            languages: [String],
+            include: [String],
+            exclude: [String],
+            commits: [String] = ["HEAD"]
+        ) {
+            self.languages = languages
+            self.include = include
+            self.exclude = exclude
+            self.commits = commits
+        }
+
+        public func withResolvedCommits(_ commits: [String]) -> MetricInput {
+            MetricInput(languages: languages, include: include, exclude: exclude, commits: commits)
+        }
+
+        /// Returns a unique metric identifier for output
+        public var metricIdentifier: String {
+            "LOC \(languages) \(include)"
+        }
+    }
+
+    /// Input parameters for LOCSDK operations.
+    public struct Input: Sendable {
+        public let commit: String
+        public let git: GitConfiguration
+        public let metrics: [MetricInput]
+
+        public init(
+            commit: String,
+            git: GitConfiguration,
+            metrics: [MetricInput]
+        ) {
+            self.commit = commit
+            self.git = git
+            self.metrics = metrics
+        }
+    }
 
     /// A single LOC result item.
     public struct ResultItem: Sendable, Encodable {
@@ -132,7 +135,7 @@ public struct LOCSDK: Sendable {
     /// Counts lines of code for all metrics in input.
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Array of results, one for each metric
-    func countLOC(input: LOCInput) async throws -> [Result] {
+    func countLOC(input: Input) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Self.checkClocInstalled()
@@ -163,24 +166,22 @@ public struct LOCSDK: Sendable {
     }
 
     /// Checks out a commit and counts lines of code for all metrics in input.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters for the operation
+    /// - Parameter input: Input parameters for the operation including commit hash
     /// - Returns: Output with commit info, date, and results
-    public func analyzeCommit(hash: String, input: LOCInput) async throws -> Output {
+    public func analyzeCommit(input: Input) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
             "git",
-            arguments: ["checkout", hash],
+            arguments: ["checkout", input.commit],
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
         let results = try await countLOC(input: input)
-        let date = try await Git.commitDate(for: hash, in: repoPath)
+        let date = try await Git.commitDate(for: input.commit, in: repoPath)
 
         let resultItems = results.map { ResultItem(metric: $0.metric, linesOfCode: $0.linesOfCode) }
-        return Output(commit: hash, date: date, results: resultItems)
+        return Output(commit: input.commit, date: date, results: resultItems)
     }
 
     private func foldersToAnalyze(

@@ -11,9 +11,10 @@ struct LOCSDKTests {
     func `When counting Swift LOC, should return correct count`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = LOCInput(
+        let input = LOCSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [LOCMetricInput(languages: ["Swift"], include: ["Sources"], exclude: [])]
+            metrics: [LOCSDK.MetricInput(languages: ["Swift"], include: ["Sources"], exclude: [])]
         )
 
         let results = try await sut.countLOC(input: input)
@@ -27,10 +28,11 @@ struct LOCSDKTests {
     func `When exclude path specified, should not count excluded folders`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = LOCInput(
+        let input = LOCSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             metrics: [
-                LOCMetricInput(
+                LOCSDK.MetricInput(
                     languages: ["Swift"],
                     include: ["Sources", "Vendor"],
                     exclude: ["Vendor"]
@@ -49,10 +51,15 @@ struct LOCSDKTests {
     func `When multiple folders in include, should count all`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = LOCInput(
+        let input = LOCSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             metrics: [
-                LOCMetricInput(languages: ["Swift"], include: ["Sources", "Vendor"], exclude: [])
+                LOCSDK.MetricInput(
+                    languages: ["Swift"],
+                    include: ["Sources", "Vendor"],
+                    exclude: []
+                )
             ]
         )
 
@@ -67,10 +74,15 @@ struct LOCSDKTests {
     func `When include path does not exist, should return zero`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = LOCInput(
+        let input = LOCSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             metrics: [
-                LOCMetricInput(languages: ["Swift"], include: ["NonExistentFolder"], exclude: [])
+                LOCSDK.MetricInput(
+                    languages: ["Swift"],
+                    include: ["NonExistentFolder"],
+                    exclude: []
+                )
             ]
         )
 
@@ -85,9 +97,10 @@ struct LOCSDKTests {
     func `When language has no files, should return zero`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = LOCInput(
+        let input = LOCSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
-            metrics: [LOCMetricInput(languages: ["Rust"], include: ["Sources"], exclude: [])]
+            metrics: [LOCSDK.MetricInput(languages: ["Rust"], include: ["Sources"], exclude: [])]
         )
 
         let results = try await sut.countLOC(input: input)
@@ -101,11 +114,12 @@ struct LOCSDKTests {
     func `When counting multiple configurations, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = LOCInput(
+        let input = LOCSDK.Input(
+            commit: "HEAD",
             git: gitConfig,
             metrics: [
-                LOCMetricInput(languages: ["Swift"], include: ["Sources"], exclude: []),
-                LOCMetricInput(languages: ["Swift"], include: ["Vendor"], exclude: []),
+                LOCSDK.MetricInput(languages: ["Swift"], include: ["Sources"], exclude: []),
+                LOCSDK.MetricInput(languages: ["Swift"], include: ["Vendor"], exclude: []),
             ]
         )
 

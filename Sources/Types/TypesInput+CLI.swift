@@ -2,8 +2,13 @@ import Common
 import Foundation
 import TypesSDK
 
-extension TypesInput {
-    /// Creates TypesInput by merging CLI and file config with priority: CLI > Config > Default
+/// Intermediate config for CLI that holds metrics with their commit arrays.
+/// This is merged from CLI args and file config, then converted to TypesSDK.Input per commit.
+struct TypesCLIConfig {
+    let git: GitConfiguration
+    let metrics: [TypesSDK.MetricInput]
+
+    /// Creates TypesCLIConfig by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
@@ -13,12 +18,12 @@ extension TypesInput {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [TypeMetricInput]
+        let metrics: [TypesSDK.MetricInput]
 
         if let cliTypes = cli.types, !cliTypes.isEmpty {
             // CLI types provided - all use same commits (from CLI or default HEAD)
             let commits = cli.commits ?? ["HEAD"]
-            metrics = cliTypes.map { TypeMetricInput(type: $0, commits: commits) }
+            metrics = cliTypes.map { TypesSDK.MetricInput(type: $0, commits: commits) }
         } else if let configMetrics = config?.metrics {
             // Config metrics - each has its own commits, CLI --commits overrides all
             if let cliCommits = cli.commits {
@@ -28,7 +33,7 @@ extension TypesInput {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return TypeMetricInput(type: metric.type, commits: cliCommits)
+                    return TypesSDK.MetricInput(type: metric.type, commits: cliCommits)
                 }
             } else {
                 // Use per-metric commits from config
@@ -38,13 +43,14 @@ extension TypesInput {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return TypeMetricInput(type: metric.type, commits: commits)
+                    return TypesSDK.MetricInput(type: metric.type, commits: commits)
                 }
             }
         } else {
             metrics = []
         }
 
-        self.init(git: gitConfig, metrics: metrics)
+        self.git = gitConfig
+        self.metrics = metrics
     }
 }

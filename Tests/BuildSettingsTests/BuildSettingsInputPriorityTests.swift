@@ -23,7 +23,7 @@ struct BuildSettingsInputPriorityTests {
         )
 
         #expect(throws: BuildSettingsInputError.missingProject) {
-            _ = try BuildSettingsInput(cli: cli, config: nil)
+            _ = try BuildSettingsCLIConfig(cli: cli, config: nil)
         }
     }
 
@@ -47,9 +47,9 @@ struct BuildSettingsInputPriorityTests {
             git: GitFileConfig(repoPath: "/config/path")
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == "/cli/path")
+        #expect(cliConfig.git.repoPath == "/cli/path")
     }
 
     @Test func `falls back to config repoPath when CLI is nil`() throws {
@@ -70,9 +70,9 @@ struct BuildSettingsInputPriorityTests {
             git: GitFileConfig(repoPath: "/config/path")
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == "/config/path")
+        #expect(cliConfig.git.repoPath == "/config/path")
     }
 
     @Test func `falls back to current directory when both repoPath nil`() throws {
@@ -93,9 +93,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
+        #expect(cliConfig.git.repoPath == FileManager.default.currentDirectoryPath)
     }
 
     // MARK: - commits priority
@@ -118,9 +118,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        let metric = try #require(input.metrics.first)
+        let metric = try #require(cliConfig.metrics.first)
         #expect(metric.commits == ["abc123", "def456"])
     }
 
@@ -142,9 +142,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        let metric = try #require(input.metrics.first)
+        let metric = try #require(cliConfig.metrics.first)
         #expect(metric.commits == ["HEAD"])
     }
 
@@ -168,9 +168,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.configuration == "Release")
+        #expect(cliConfig.configuration == "Release")
     }
 
     @Test func `falls back to Debug when configuration nil`() throws {
@@ -191,9 +191,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.configuration == "Debug")
+        #expect(cliConfig.configuration == "Debug")
     }
 
     // MARK: - setupCommands from config
@@ -221,10 +221,10 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.setupCommands.count == 1)
-        let command = try #require(input.setupCommands[safe: 0])
+        #expect(cliConfig.setupCommands.count == 1)
+        let command = try #require(cliConfig.setupCommands[safe: 0])
         #expect(command.command == "bundle install")
         #expect(command.workingDirectory == "ios")
         #expect(command.optional == true)
@@ -248,9 +248,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.setupCommands.isEmpty)
+        #expect(cliConfig.setupCommands.isEmpty)
     }
 
     // MARK: - metrics priority
@@ -273,9 +273,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.map { $0.setting } == ["CLI_PARAM"])
+        #expect(cliConfig.metrics.map { $0.setting } == ["CLI_PARAM"])
     }
 
     @Test func `metrics from config are used when CLI is nil`() throws {
@@ -299,9 +299,11 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.map { $0.setting } == ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"])
+        #expect(
+            cliConfig.metrics.map { $0.setting } == ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"]
+        )
     }
 
     @Test func `metrics defaults to empty when both nil`() throws {
@@ -322,9 +324,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.isEmpty)
+        #expect(cliConfig.metrics.isEmpty)
     }
 
     // MARK: - Per-Metric Commits Tests
@@ -350,11 +352,11 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        let metric0 = try #require(input.metrics[safe: 0])
-        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(cliConfig.metrics.count == 2)
+        let metric0 = try #require(cliConfig.metrics[safe: 0])
+        let metric1 = try #require(cliConfig.metrics[safe: 1])
         #expect(metric0.setting == "SWIFT_VERSION")
         #expect(metric0.commits == ["abc123", "def456"])
         #expect(metric1.setting == "DEPLOYMENT_TARGET")
@@ -382,11 +384,11 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        let metric0 = try #require(input.metrics[safe: 0])
-        let metric1 = try #require(input.metrics[safe: 1])
+        #expect(cliConfig.metrics.count == 2)
+        let metric0 = try #require(cliConfig.metrics[safe: 0])
+        let metric1 = try #require(cliConfig.metrics[safe: 1])
         #expect(metric0.commits == ["override123"])
         #expect(metric1.commits == ["override123"])
     }
@@ -409,9 +411,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        let metric = try #require(input.metrics.first)
+        let metric = try #require(cliConfig.metrics.first)
         #expect(metric.commits == ["HEAD"])
     }
 
@@ -437,10 +439,10 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.metrics.count == 2)
-        #expect(input.metrics.map { $0.setting } == ["SWIFT_VERSION", "DEPLOYMENT_TARGET"])
+        #expect(cliConfig.metrics.count == 2)
+        #expect(cliConfig.metrics.map { $0.setting } == ["SWIFT_VERSION", "DEPLOYMENT_TARGET"])
     }
 
     // MARK: - git flags from CLI
@@ -463,11 +465,11 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.clean == true)
-        #expect(input.git.fixLFS == true)
-        #expect(input.git.initializeSubmodules == true)
+        #expect(cliConfig.git.clean == true)
+        #expect(cliConfig.git.fixLFS == true)
+        #expect(cliConfig.git.initializeSubmodules == true)
     }
 
     @Test func `git flags default to false`() throws {
@@ -488,11 +490,11 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.git.clean == false)
-        #expect(input.git.fixLFS == false)
-        #expect(input.git.initializeSubmodules == false)
+        #expect(cliConfig.git.clean == false)
+        #expect(cliConfig.git.fixLFS == false)
+        #expect(cliConfig.git.initializeSubmodules == false)
     }
 
     // MARK: - project is passed through
@@ -515,9 +517,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.project == "MyApp.xcworkspace")
+        #expect(cliConfig.project == "MyApp.xcworkspace")
     }
 
     @Test func `CLI project overrides config project`() throws {
@@ -538,9 +540,9 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: config)
 
-        #expect(input.project == "CLIApp.xcodeproj")
+        #expect(cliConfig.project == "CLIApp.xcodeproj")
     }
 
     @Test func `CLI project works without config`() throws {
@@ -554,8 +556,8 @@ struct BuildSettingsInputPriorityTests {
             initializeSubmodules: false
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: nil)
+        let cliConfig = try BuildSettingsCLIConfig(cli: cli, config: nil)
 
-        #expect(input.project == "MyApp.xcworkspace")
+        #expect(cliConfig.project == "MyApp.xcworkspace")
     }
 }

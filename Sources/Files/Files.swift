@@ -66,14 +66,14 @@ public struct Files: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default
-        let input = FilesInput(cli: cliInputs, config: fileConfig)
+        let cliConfig = FilesCLIConfig(cli: cliInputs, config: fileConfig)
 
         let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
+            try URL(string: cliConfig.git.repoPath)
+            ?! URLError.invalidURL(parameter: "repoPath", value: cliConfig.git.repoPath)
 
         // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+        let resolvedMetrics = try await cliConfig.metrics.resolvingHeadCommits(
             repoPath: repoPathURL.path
         )
 
@@ -100,11 +100,12 @@ public struct Files: AsyncParsableCommand {
         for (hash, filetypes) in commitToFiletypes {
             Self.logger.info("Processing commit: \(hash) for filetypes: \(filetypes)")
 
-            let commitInput = FilesInput(
-                git: input.git,
-                metrics: filetypes.map { FileMetricInput(extension: $0) }
+            let commitInput = FilesSDK.Input(
+                commit: hash,
+                git: cliConfig.git,
+                metrics: filetypes.map { FilesSDK.MetricInput(extension: $0) }
             )
-            let commitOutput = try await sdk.analyzeCommit(hash: hash, input: commitInput)
+            let commitOutput = try await sdk.analyzeCommit(input: commitInput)
 
             for result in commitOutput.results {
                 Self.logger.notice(
