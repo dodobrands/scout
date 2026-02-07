@@ -85,3 +85,23 @@ struct MainScreen: Screen {}
 extension MainScreen {
     struct NestedScreen: Screen {}
 }
+
+// MARK: - Actor types
+
+protocol DataProvider {}
+
+actor CacheProvider: DataProvider {}
+actor NetworkProvider: DataProvider {}
+
+// MARK: - Enum with cases
+
+protocol Action {}
+
+enum UserAction: Action {
+    case login
+    case logout
+}
+
+enum SystemAction: Action {
+    case refresh
+}

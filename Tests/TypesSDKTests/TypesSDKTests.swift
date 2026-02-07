@@ -376,6 +376,40 @@ struct TypesSDKTests {
         #expect(result.typeName == "Screen")
         #expect(result.types.names == ["MainScreen", "NestedScreen"])
     }
+
+    @Test
+    func `When searching for actor types, should find all conforming actors`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "DataProvider")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "DataProvider")
+        #expect(result.types.names == ["CacheProvider", "NetworkProvider"])
+    }
+
+    @Test
+    func `When searching for enum types, should find all conforming enums`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Action")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
+        #expect(result.typeName == "Action")
+        #expect(result.types.names == ["SystemAction", "UserAction"])
+    }
 }
 
 private func samplesDirectory() throws -> URL {
