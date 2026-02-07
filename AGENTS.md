@@ -55,6 +55,9 @@ swift test
 periphery scan --skip-build --strict
 ```
 
+**Checklist:**
+- [ ] Update `Sources/*/README.md` if public API changed
+
 **Never force push (`git push --force` or `--force-with-lease`) without explicit user request.**
 
 ## Commits
