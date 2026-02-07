@@ -12,7 +12,10 @@ struct LOCOutputTests {
             commit: "abc1234def5678",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                LOCSDK.ResultItem(metric: "LOC [Swift, Objective-C] [LegacyModule]", linesOfCode: 12000),
+                LOCSDK.ResultItem(
+                    metric: "LOC [Swift, Objective-C] [LegacyModule]",
+                    linesOfCode: 12000
+                ),
                 LOCSDK.ResultItem(metric: "LOC [Swift] [Sources]", linesOfCode: 48500),
             ]
         )

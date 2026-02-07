@@ -12,8 +12,14 @@ struct FilesOutputTests {
             commit: "abc1234def5678",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                FilesSDK.ResultItem(filetype: "storyboard", files: ["Main.storyboard", "Launch.storyboard"]),
-                FilesSDK.ResultItem(filetype: "swift", files: ["Sources/App.swift", "Sources/Model.swift"]),
+                FilesSDK.ResultItem(
+                    filetype: "storyboard",
+                    files: ["Main.storyboard", "Launch.storyboard"]
+                ),
+                FilesSDK.ResultItem(
+                    filetype: "swift",
+                    files: ["Sources/App.swift", "Sources/Model.swift"]
+                ),
             ]
         )
 
@@ -58,7 +64,10 @@ struct FilesOutputTests {
                 date: "2025-02-15T14:45:00+03:00",
                 results: [
                     FilesSDK.ResultItem(filetype: "storyboard", files: ["Main.storyboard"]),
-                    FilesSDK.ResultItem(filetype: "swift", files: ["Sources/App.swift", "Sources/NewFeature.swift"]),
+                    FilesSDK.ResultItem(
+                        filetype: "swift",
+                        files: ["Sources/App.swift", "Sources/NewFeature.swift"]
+                    ),
                 ]
             ),
         ]

@@ -206,7 +206,8 @@ public struct BuildSettingsSDK: Sendable {
 
         let requestedSettings = Set(input.metrics.map { $0.setting })
         let resultItems = targets.map { target in
-            let filteredSettings = target.buildSettings.filter { requestedSettings.contains($0.key) }
+            let filteredSettings = target.buildSettings
+                .filter { requestedSettings.contains($0.key) }
                 .mapValues { Optional($0) }
             return ResultItem(target: target.target, settings: filteredSettings)
         }
