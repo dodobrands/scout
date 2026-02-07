@@ -321,7 +321,7 @@ struct TypesSDKTests {
         let result = try #require(results[safe: 0])
         let awesomeView = try #require(result.types.first { $0.name == "AwesomeView" })
 
-        #expect(awesomeView.path == "UIViews.swift")
+        #expect(awesomeView.path == "Views/UIViews.swift")
     }
 
     @Test
