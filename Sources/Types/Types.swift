@@ -10,7 +10,7 @@ import TypesSDK
 struct TypesOutput: Encodable {
     let commit: String
     let date: String
-    let results: [String: [String]]
+    let results: [String: [TypesSDK.TypeInfo]]
 }
 
 public struct Types: AsyncParsableCommand {
@@ -118,7 +118,7 @@ public struct Types: AsyncParsableCommand {
             let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
-            var resultsDict: [String: [String]] = [:]
+            var resultsDict: [String: [TypesSDK.TypeInfo]] = [:]
             for result in results {
                 Self.logger.notice(
                     "Found \(result.types.count) types inherited from \(result.typeName) at \(hash)"

@@ -41,13 +41,29 @@ public struct TypesSDK: Sendable {
 
     public init() {}
 
+    /// Information about a found type.
+    public struct TypeInfo: Sendable, Encodable, Equatable {
+        /// Simple type name (e.g., "AddToCartEvent")
+        public let name: String
+        /// Full qualified type name (e.g., "Analytics.AddToCartEvent")
+        public let fullName: String
+        /// Relative path to the file containing this type
+        public let path: String
+
+        public init(name: String, fullName: String, path: String) {
+            self.name = name
+            self.fullName = fullName
+            self.path = path
+        }
+    }
+
     /// Result of type counting operation.
     public struct Result: Sendable, Encodable {
         public let commit: String
         public let typeName: String
-        public let types: [String]
+        public let types: [TypeInfo]
 
-        public init(commit: String = "", typeName: String, types: [String]) {
+        public init(commit: String = "", typeName: String, types: [TypeInfo]) {
             self.commit = commit
             self.typeName = typeName
             self.types = types
@@ -61,6 +77,7 @@ public struct TypesSDK: Sendable {
     /// - Returns: Result containing count and list of matching types
     func countTypes(typeName: String, input: TypesInput) async throws -> Result {
         let repoPath = URL(filePath: input.git.repoPath)
+        let repoPathString = repoPath.path(percentEncoded: false)
         let parser = SwiftParser()
 
         try await GitFix.prepareRepository(git: input.git)
@@ -80,10 +97,27 @@ public struct TypesSDK: Sendable {
 
         Self.logger.debug("Types conforming to \(typeName): \(types.map { $0.name })")
 
+        let typeInfos = types.map { obj in
+            TypeInfo(
+                name: obj.name,
+                fullName: obj.fullName,
+                path: relativePath(from: obj.filePath, relativeTo: repoPathString)
+            )
+        }
+
         return Result(
             typeName: typeName,
-            types: types.map { $0.name }
+            types: typeInfos
         )
+    }
+
+    /// Converts an absolute file path to a path relative to the repository root.
+    private func relativePath(from absolutePath: String, relativeTo repoPath: String) -> String {
+        let repoPrefix = repoPath.hasSuffix("/") ? repoPath : repoPath + "/"
+        if absolutePath.hasPrefix(repoPrefix) {
+            return String(absolutePath.dropFirst(repoPrefix.count))
+        }
+        return absolutePath
     }
 
     /// Counts types inherited from all base types in input.metrics.

@@ -21,7 +21,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "UIView")
-        #expect(result.types == ["AwesomeView", "DodoView"])
+        #expect(result.types.names == ["AwesomeView", "DodoView"])
     }
 
     @Test
@@ -38,7 +38,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "View")
-        #expect(result.types == ["HelloView"])
+        #expect(result.types.names == ["HelloView"])
     }
 
     @Test
@@ -55,7 +55,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "JsonAsyncRequest<*>")
-        #expect(result.types == ["CancelOrderRequest", "OrderListRequest", "ProfileRequest"])
+        #expect(result.types.names == ["CancelOrderRequest", "OrderListRequest", "ProfileRequest"])
     }
 
     @Test
@@ -104,7 +104,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(
-            result.types == [
+            result.types.names == [
                 "AppCoordinator", "AuthCoordinator", "FlowCoordinator", "MenuCoordinator",
             ]
         )
@@ -123,7 +123,7 @@ struct TypesSDKTests {
 
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
-        #expect(result.types == ["AuthCoordinator", "MenuCoordinator"])
+        #expect(result.types.names == ["AuthCoordinator", "MenuCoordinator"])
     }
 
     @Test
@@ -140,7 +140,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(
-            result.types == [
+            result.types.names == [
                 "ListViewModel",
                 "OrdersListViewModel",
                 "PaginatedListViewModel",
@@ -163,7 +163,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(
-            result.types == [
+            result.types.names == [
                 "OrdersListViewModel", "PaginatedListViewModel", "ProductsListViewModel",
             ]
         )
@@ -188,8 +188,8 @@ struct TypesSDKTests {
 
         let trackableResult = try #require(trackableResults[safe: 0])
         let loggableResult = try #require(loggableResults[safe: 0])
-        #expect(trackableResult.types == ["BaseService", "OrderService", "PaymentService"])
-        #expect(loggableResult.types == ["BaseService", "OrderService", "PaymentService"])
+        #expect(trackableResult.types.names == ["BaseService", "OrderService", "PaymentService"])
+        #expect(loggableResult.types.names == ["BaseService", "OrderService", "PaymentService"])
     }
 
     @Test
@@ -210,9 +210,9 @@ struct TypesSDKTests {
         let result0 = try #require(results[safe: 0])
         let result1 = try #require(results[safe: 1])
         #expect(result0.typeName == "UIView")
-        #expect(result0.types == ["AwesomeView", "DodoView"])
+        #expect(result0.types.names == ["AwesomeView", "DodoView"])
         #expect(result1.typeName == "View")
-        #expect(result1.types == ["HelloView"])
+        #expect(result1.types.names == ["HelloView"])
     }
 
     @Test
@@ -229,7 +229,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "AnalyticsEvent")
-        #expect(result.types == ["CloseScreenEvent", "OpenScreenEvent", "TapButtonEvent"])
+        #expect(result.types.names == ["CloseScreenEvent", "OpenScreenEvent", "TapButtonEvent"])
     }
 
     @Test
@@ -246,7 +246,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "Component")
-        #expect(result.types == ["DeepComponent", "InnerComponent", "InnerEnum"])
+        #expect(result.types.names == ["DeepComponent", "InnerComponent", "InnerEnum"])
     }
 
     @Test
@@ -264,7 +264,7 @@ struct TypesSDKTests {
         #expect(results.count == 1)
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "Formatter")
-        #expect(result.types == ["CurrencyFormatter", "DateFormatter"])
+        #expect(result.types.names == ["CurrencyFormatter", "DateFormatter"])
     }
 
     @Test
@@ -282,10 +282,29 @@ struct TypesSDKTests {
         let result = try #require(results[safe: 0])
         #expect(result.typeName == "EventProtocol")
         #expect(
-            result.types == [
+            result.types.names == [
                 "FirstConformanceEvent", "MiddleConformanceEvent", "SecondConformanceEvent",
             ]
         )
+    }
+
+    @Test
+    func `When searching for nested types, should return correct fullName`() async throws {
+        let samplesURL = try samplesDirectory()
+        let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
+        let input = TypesInput(
+            git: gitConfig,
+            metrics: [TypeMetricInput(type: "Component")]
+        )
+
+        let results = try await sut.countTypes(input: input)
+
+        let result = try #require(results[safe: 0])
+        let innerComponent = try #require(result.types.first { $0.name == "InnerComponent" })
+        let deepComponent = try #require(result.types.first { $0.name == "DeepComponent" })
+
+        #expect(innerComponent.fullName == "Container.InnerComponent")
+        #expect(deepComponent.fullName == "Container.NestedContainer.DeepComponent")
     }
 }
 
@@ -304,5 +323,11 @@ extension GitConfiguration {
             fixLFS: false,
             initializeSubmodules: false
         )
+    }
+}
+
+extension [TypesSDK.TypeInfo] {
+    var names: [String] {
+        map { $0.name }
     }
 }

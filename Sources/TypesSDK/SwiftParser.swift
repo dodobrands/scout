@@ -4,11 +4,18 @@ import SourceKittenFramework
 
 /// Parsed Swift code object with name and inheritance information.
 public struct ObjectFromCode: Sendable {
+    /// Simple type name (e.g., "AddToCartEvent")
     public let name: String
+    /// Full qualified type name including parent types (e.g., "Analytics.AddToCartEvent")
+    public let fullName: String
+    /// Path to the file containing this type
+    public let filePath: String
     public let inheritedTypes: [String]
 
-    public init(name: String, inheritedTypes: [String]) {
+    public init(name: String, fullName: String, filePath: String, inheritedTypes: [String]) {
         self.name = name
+        self.fullName = fullName
+        self.filePath = filePath
         self.inheritedTypes = inheritedTypes
     }
 }
@@ -25,29 +32,91 @@ struct SwiftParser {
             throw ParseError.invalidStructure(key: "key.substructure")
         }
 
-        return parseSubstructure(substructure)
+        let filePath = swiftFile.path(percentEncoded: false)
+        return parseSubstructure(substructure, parentPath: nil, filePath: filePath)
     }
 
     /// Recursively parses substructure to extract all type definitions including nested types.
-    private func parseSubstructure(_ substructure: [[String: Any]]) -> [ObjectFromCode] {
+    /// - Parameters:
+    ///   - substructure: Array of AST dictionaries to parse
+    ///   - parentPath: Dot-separated path of parent type names (e.g., "Analytics" for nested types)
+    ///   - filePath: Path to the source file
+    private func parseSubstructure(
+        _ substructure: [[String: Any]],
+        parentPath: String?,
+        filePath: String
+    ) -> [ObjectFromCode] {
         var results: [ObjectFromCode] = []
 
         for item in substructure {
-            // Try to parse current item as a type definition
-            if let name = item["key.name"] as? String,
-                let inheritedTypes = item["key.inheritedtypes"] as? [[String: String]]
-            {
-                let inheritances = inheritedTypes.compactMap { $0["key.name"] }
-                results.append(ObjectFromCode(name: name, inheritedTypes: inheritances))
-            }
+            let kind = item["key.kind"] as? String
+            let name = item["key.name"] as? String
 
-            // Recursively parse nested substructure (extensions, nested types, etc.)
-            if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
-                results.append(contentsOf: parseSubstructure(nestedSubstructure))
+            // Check if this is a type definition (class, struct, enum, protocol)
+            let isTypeDefinition = kind.map { isTypeKind($0) } ?? false
+
+            if isTypeDefinition, let name = name {
+                let inheritedTypes = item["key.inheritedtypes"] as? [[String: String]]
+                let inheritances = inheritedTypes?.compactMap { $0["key.name"] } ?? []
+                let fullName = parentPath.map { "\($0).\(name)" } ?? name
+
+                // Only add to results if there are inherited types (existing behavior)
+                if !inheritances.isEmpty {
+                    results.append(
+                        ObjectFromCode(
+                            name: name,
+                            fullName: fullName,
+                            filePath: filePath,
+                            inheritedTypes: inheritances
+                        )
+                    )
+                }
+
+                // Recursively parse nested substructure with updated parent path
+                if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
+                    results.append(
+                        contentsOf: parseSubstructure(
+                            nestedSubstructure,
+                            parentPath: fullName,
+                            filePath: filePath
+                        )
+                    )
+                }
+            } else if kind == "source.lang.swift.decl.extension", let name = name {
+                // Extensions update parent path to their extended type
+                if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
+                    let extendedPath = parentPath.map { "\($0).\(name)" } ?? name
+                    results.append(
+                        contentsOf: parseSubstructure(
+                            nestedSubstructure,
+                            parentPath: extendedPath,
+                            filePath: filePath
+                        )
+                    )
+                }
+            } else {
+                // Recursively parse nested substructure without updating parent path
+                if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
+                    results.append(
+                        contentsOf: parseSubstructure(
+                            nestedSubstructure,
+                            parentPath: parentPath,
+                            filePath: filePath
+                        )
+                    )
+                }
             }
         }
 
         return results
+    }
+
+    /// Returns true if the kind represents a type definition (class, struct, enum, protocol).
+    private func isTypeKind(_ kind: String) -> Bool {
+        kind == "source.lang.swift.decl.class"
+            || kind == "source.lang.swift.decl.struct"
+            || kind == "source.lang.swift.decl.enum"
+            || kind == "source.lang.swift.decl.protocol"
     }
 
     /// Checks if a code object inherits from the specified base type.
