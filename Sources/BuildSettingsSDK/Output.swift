@@ -1,34 +1,19 @@
 /// Represents an Xcode project or workspace.
-public struct ProjectOrWorkspace: Sendable {
-    public let path: String
-    public let isWorkspace: Bool
-
-    public init(path: String, isWorkspace: Bool) {
-        self.path = path
-        self.isWorkspace = isWorkspace
-    }
+struct ProjectOrWorkspace: Sendable {
+    let path: String
+    let isWorkspace: Bool
 }
 
 /// Represents a project with its targets.
-public struct ProjectWithTargets: Sendable {
-    public let path: String
-    public let targets: [String]
-
-    public init(path: String, targets: [String]) {
-        self.path = path
-        self.targets = targets
-    }
+struct ProjectWithTargets: Sendable {
+    let path: String
+    let targets: [String]
 }
 
 /// Represents a target with its build settings.
-public struct TargetWithBuildSettings: Sendable, Encodable {
-    public let target: String
-    public let buildSettings: [String: String]
-
-    public init(target: String, buildSettings: [String: String]) {
-        self.target = target
-        self.buildSettings = buildSettings
-    }
+struct TargetWithBuildSettings: Sendable, Encodable {
+    let target: String
+    let buildSettings: [String: String]
 }
 
 extension BuildSettingsSDK {
