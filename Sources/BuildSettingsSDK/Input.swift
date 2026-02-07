@@ -34,13 +34,13 @@ extension BuildSettingsSDK {
 
     /// Input parameters for analysis without git operations.
     /// Used by internal extractBuildSettings function.
-    public struct AnalysisInput: Sendable {
-        public let repoPath: String
-        public let setupCommands: [SetupCommand]
-        public let project: String
-        public let configuration: String
+    struct AnalysisInput: Sendable {
+        let repoPath: String
+        let setupCommands: [SetupCommand]
+        let project: String
+        let configuration: String
 
-        public init(
+        init(
             repoPath: String,
             setupCommands: [SetupCommand],
             project: String,
