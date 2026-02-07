@@ -171,15 +171,21 @@ When using `--output`, results are saved as JSON array. Each found type includes
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T10:30:00+03:00",
-    "results": {
-      "UIView": [
-        { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" },
-        { "name": "HeaderView", "fullName": "Components.HeaderView", "path": "Sources/Components/HeaderView.swift" }
-      ],
-      "UIViewController": [
-        { "name": "HomeViewController", "fullName": "HomeViewController", "path": "Sources/Screens/HomeViewController.swift" }
-      ]
-    }
+    "results": [
+      {
+        "typeName": "UIView",
+        "types": [
+          { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" },
+          { "name": "HeaderView", "fullName": "Components.HeaderView", "path": "Sources/Components/HeaderView.swift" }
+        ]
+      },
+      {
+        "typeName": "UIViewController",
+        "types": [
+          { "name": "HomeViewController", "fullName": "HomeViewController", "path": "Sources/Screens/HomeViewController.swift" }
+        ]
+      }
+    ]
   }
 ]
 ```
@@ -190,21 +196,27 @@ When using `--output`, results are saved as JSON array. Each found type includes
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T10:30:00+03:00",
-    "results": {
-      "UIView": [
-        { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" }
-      ]
-    }
+    "results": [
+      {
+        "typeName": "UIView",
+        "types": [
+          { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" }
+        ]
+      }
+    ]
   },
   {
     "commit": "def5678abc1234",
     "date": "2025-02-15T14:45:00+03:00",
-    "results": {
-      "UIView": [
-        { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" },
-        { "name": "NewView", "fullName": "NewView", "path": "Sources/UI/NewView.swift" }
-      ]
-    }
+    "results": [
+      {
+        "typeName": "UIView",
+        "types": [
+          { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" },
+          { "name": "NewView", "fullName": "NewView", "path": "Sources/UI/NewView.swift" }
+        ]
+      }
+    ]
   }
 ]
 ```

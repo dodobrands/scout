@@ -6,13 +6,6 @@ import System
 import SystemPackage
 import TypesSDK
 
-/// JSON output structure for types command.
-struct TypesOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: [TypesSDK.TypeInfo]]
-}
-
 public struct Types: AsyncParsableCommand {
     public init() {}
 
@@ -88,8 +81,7 @@ public struct Types: AsyncParsableCommand {
         )
 
         let sdk = TypesSDK()
-        var allResults: [TypesSDK.Result] = []
-        var outputResults: [TypesOutput] = []
+        var outputResults: [TypesSDK.Output] = []
 
         // Group metrics by commits to minimize checkouts
         var commitToTypes: [String: [String]] = [:]
@@ -115,19 +107,14 @@ public struct Types: AsyncParsableCommand {
                 git: input.git,
                 metrics: typeNames.map { TypeMetricInput(type: $0) }
             )
-            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
+            let commitOutput = try await sdk.analyzeCommit(hash: hash, input: commitInput)
 
-            var resultsDict: [String: [TypesSDK.TypeInfo]] = [:]
-            for result in results {
+            for result in commitOutput.results {
                 Self.logger.notice(
                     "Found \(result.types.count) types inherited from \(result.typeName) at \(hash)"
                 )
-                allResults.append(result)
-                resultsDict[result.typeName] = result.types
             }
 
-            let commitOutput = TypesOutput(commit: hash, date: date, results: resultsDict)
             outputResults.append(commitOutput)
         }
 
@@ -137,16 +124,18 @@ public struct Types: AsyncParsableCommand {
 
         Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
 
-        let summary = TypesSummary(results: allResults)
+        let summary = TypesSummary(outputs: outputResults)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: TypesSummary) {
-        if !summary.results.isEmpty {
+        if !summary.outputs.isEmpty {
             Self.logger.info("Type counts:")
-            for result in summary.results {
-                let commit = result.commit.prefix(7)
-                Self.logger.info("  - \(commit): \(result.typeName): \(result.types.count)")
+            for output in summary.outputs {
+                let commit = output.commit.prefix(7)
+                for result in output.results {
+                    Self.logger.info("  - \(commit): \(result.typeName): \(result.types.count)")
+                }
             }
         }
 

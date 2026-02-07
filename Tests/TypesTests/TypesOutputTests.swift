@@ -3,36 +3,40 @@ import InlineSnapshotTesting
 import Testing
 import TypesSDK
 
-@testable import Types
-
-/// Tests for TypesOutput JSON encoding
+/// Tests for TypesSDK.Output JSON encoding
 @Suite
 struct TypesOutputTests {
 
     @Test func encodesSingleCommit() {
-        let output = TypesOutput(
+        let output = TypesSDK.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "UIView": [
-                    TypesSDK.TypeInfo(
-                        name: "CustomButton",
-                        fullName: "CustomButton",
-                        path: "Sources/UI/CustomButton.swift"
-                    ),
-                    TypesSDK.TypeInfo(
-                        name: "HeaderView",
-                        fullName: "Components.HeaderView",
-                        path: "Sources/Components/HeaderView.swift"
-                    ),
-                ],
-                "UIViewController": [
-                    TypesSDK.TypeInfo(
-                        name: "HomeViewController",
-                        fullName: "HomeViewController",
-                        path: "Sources/Screens/HomeViewController.swift"
-                    )
-                ],
+                TypesSDK.ResultItem(
+                    typeName: "UIView",
+                    types: [
+                        TypesSDK.TypeInfo(
+                            name: "CustomButton",
+                            fullName: "CustomButton",
+                            path: "Sources/UI/CustomButton.swift"
+                        ),
+                        TypesSDK.TypeInfo(
+                            name: "HeaderView",
+                            fullName: "Components.HeaderView",
+                            path: "Sources/Components/HeaderView.swift"
+                        ),
+                    ]
+                ),
+                TypesSDK.ResultItem(
+                    typeName: "UIViewController",
+                    types: [
+                        TypesSDK.TypeInfo(
+                            name: "HomeViewController",
+                            fullName: "HomeViewController",
+                            path: "Sources/Screens/HomeViewController.swift"
+                        )
+                    ]
+                ),
             ]
         )
 
@@ -41,27 +45,33 @@ struct TypesOutputTests {
             {
               "commit" : "abc1234def5678",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "UIView" : [
-                  {
-                    "fullName" : "CustomButton",
-                    "name" : "CustomButton",
-                    "path" : "Sources\\/UI\\/CustomButton.swift"
-                  },
-                  {
-                    "fullName" : "Components.HeaderView",
-                    "name" : "HeaderView",
-                    "path" : "Sources\\/Components\\/HeaderView.swift"
-                  }
-                ],
-                "UIViewController" : [
-                  {
-                    "fullName" : "HomeViewController",
-                    "name" : "HomeViewController",
-                    "path" : "Sources\\/Screens\\/HomeViewController.swift"
-                  }
-                ]
-              }
+              "results" : [
+                {
+                  "typeName" : "UIView",
+                  "types" : [
+                    {
+                      "fullName" : "CustomButton",
+                      "name" : "CustomButton",
+                      "path" : "Sources\\/UI\\/CustomButton.swift"
+                    },
+                    {
+                      "fullName" : "Components.HeaderView",
+                      "name" : "HeaderView",
+                      "path" : "Sources\\/Components\\/HeaderView.swift"
+                    }
+                  ]
+                },
+                {
+                  "typeName" : "UIViewController",
+                  "types" : [
+                    {
+                      "fullName" : "HomeViewController",
+                      "name" : "HomeViewController",
+                      "path" : "Sources\\/Screens\\/HomeViewController.swift"
+                    }
+                  ]
+                }
+              ]
             }
             """
         }
@@ -69,35 +79,41 @@ struct TypesOutputTests {
 
     @Test func encodesMultipleCommits() {
         let outputs = [
-            TypesOutput(
+            TypesSDK.Output(
                 commit: "abc1234def5678",
                 date: "2025-01-15T10:30:00+03:00",
                 results: [
-                    "UIView": [
-                        TypesSDK.TypeInfo(
-                            name: "CustomButton",
-                            fullName: "CustomButton",
-                            path: "Sources/UI/CustomButton.swift"
-                        )
-                    ]
+                    TypesSDK.ResultItem(
+                        typeName: "UIView",
+                        types: [
+                            TypesSDK.TypeInfo(
+                                name: "CustomButton",
+                                fullName: "CustomButton",
+                                path: "Sources/UI/CustomButton.swift"
+                            )
+                        ]
+                    )
                 ]
             ),
-            TypesOutput(
+            TypesSDK.Output(
                 commit: "def5678abc1234",
                 date: "2025-02-15T14:45:00+03:00",
                 results: [
-                    "UIView": [
-                        TypesSDK.TypeInfo(
-                            name: "CustomButton",
-                            fullName: "CustomButton",
-                            path: "Sources/UI/CustomButton.swift"
-                        ),
-                        TypesSDK.TypeInfo(
-                            name: "NewView",
-                            fullName: "NewView",
-                            path: "Sources/UI/NewView.swift"
-                        ),
-                    ]
+                    TypesSDK.ResultItem(
+                        typeName: "UIView",
+                        types: [
+                            TypesSDK.TypeInfo(
+                                name: "CustomButton",
+                                fullName: "CustomButton",
+                                path: "Sources/UI/CustomButton.swift"
+                            ),
+                            TypesSDK.TypeInfo(
+                                name: "NewView",
+                                fullName: "NewView",
+                                path: "Sources/UI/NewView.swift"
+                            ),
+                        ]
+                    )
                 ]
             ),
         ]
@@ -108,33 +124,39 @@ struct TypesOutputTests {
               {
                 "commit" : "abc1234def5678",
                 "date" : "2025-01-15T10:30:00+03:00",
-                "results" : {
-                  "UIView" : [
-                    {
-                      "fullName" : "CustomButton",
-                      "name" : "CustomButton",
-                      "path" : "Sources\\/UI\\/CustomButton.swift"
-                    }
-                  ]
-                }
+                "results" : [
+                  {
+                    "typeName" : "UIView",
+                    "types" : [
+                      {
+                        "fullName" : "CustomButton",
+                        "name" : "CustomButton",
+                        "path" : "Sources\\/UI\\/CustomButton.swift"
+                      }
+                    ]
+                  }
+                ]
               },
               {
                 "commit" : "def5678abc1234",
                 "date" : "2025-02-15T14:45:00+03:00",
-                "results" : {
-                  "UIView" : [
-                    {
-                      "fullName" : "CustomButton",
-                      "name" : "CustomButton",
-                      "path" : "Sources\\/UI\\/CustomButton.swift"
-                    },
-                    {
-                      "fullName" : "NewView",
-                      "name" : "NewView",
-                      "path" : "Sources\\/UI\\/NewView.swift"
-                    }
-                  ]
-                }
+                "results" : [
+                  {
+                    "typeName" : "UIView",
+                    "types" : [
+                      {
+                        "fullName" : "CustomButton",
+                        "name" : "CustomButton",
+                        "path" : "Sources\\/UI\\/CustomButton.swift"
+                      },
+                      {
+                        "fullName" : "NewView",
+                        "name" : "NewView",
+                        "path" : "Sources\\/UI\\/NewView.swift"
+                      }
+                    ]
+                  }
+                ]
               }
             ]
             """
@@ -142,11 +164,11 @@ struct TypesOutputTests {
     }
 
     @Test func encodesEmptyResults() {
-        let output = TypesOutput(
+        let output = TypesSDK.Output(
             commit: "abc123",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "UIView": []
+                TypesSDK.ResultItem(typeName: "UIView", types: [])
             ]
         )
 
@@ -155,11 +177,14 @@ struct TypesOutputTests {
             {
               "commit" : "abc123",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "UIView" : [
+              "results" : [
+                {
+                  "typeName" : "UIView",
+                  "types" : [
 
-                ]
-              }
+                  ]
+                }
+              ]
             }
             """
         }

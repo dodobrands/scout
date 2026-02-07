@@ -57,6 +57,30 @@ public struct TypesSDK: Sendable {
         }
     }
 
+    /// A single types result item.
+    public struct ResultItem: Sendable, Encodable {
+        public let typeName: String
+        public let types: [TypeInfo]
+
+        public init(typeName: String, types: [TypeInfo]) {
+            self.typeName = typeName
+            self.types = types
+        }
+    }
+
+    /// Output of types analysis for a single commit.
+    public struct Output: Sendable, Encodable {
+        public let commit: String
+        public let date: String
+        public let results: [ResultItem]
+
+        public init(commit: String, date: String, results: [ResultItem]) {
+            self.commit = commit
+            self.date = date
+            self.results = results
+        }
+    }
+
     /// Result of type counting operation.
     public struct Result: Sendable, Encodable {
         public let commit: String
@@ -136,8 +160,8 @@ public struct TypesSDK: Sendable {
     /// - Parameters:
     ///   - hash: Commit hash to checkout
     ///   - input: Input parameters for the operation
-    /// - Returns: Array of results, one for each type
-    public func analyzeCommit(hash: String, input: TypesInput) async throws -> [Result] {
+    /// - Returns: Output with commit info, date, and results
+    public func analyzeCommit(hash: String, input: TypesInput) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
@@ -147,7 +171,10 @@ public struct TypesSDK: Sendable {
         )
 
         let results = try await countTypes(input: input)
-        return results.map { Result(commit: hash, typeName: $0.typeName, types: $0.types) }
+        let date = try await Git.commitDate(for: hash, in: repoPath)
+
+        let resultItems = results.map { ResultItem(typeName: $0.typeName, types: $0.types) }
+        return Output(commit: hash, date: date, results: resultItems)
     }
 
     private func findSwiftFiles(in directory: URL) -> [URL] {
