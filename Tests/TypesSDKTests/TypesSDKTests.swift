@@ -10,8 +10,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for UIView types, should find all UIView subclasses`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "UIView", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "UIView")
 
         #expect(result.typeName == "UIView")
         #expect(result.types.names == ["AwesomeView", "DodoView"])
@@ -20,8 +21,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for SwiftUI View types, should find all View conformances`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "View", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "View")
 
         #expect(result.typeName == "View")
         // HelloView uses `View`, QualifiedView uses `SwiftUI.View` - both should be found
@@ -31,8 +33,9 @@ struct TypesSDKTests {
     @Test
     func `When searching with wildcard pattern, should match all generic variants`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "JsonAsyncRequest<*>", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "JsonAsyncRequest<*>")
 
         #expect(result.typeName == "JsonAsyncRequest<*>")
         #expect(result.types.names == ["CancelOrderRequest", "OrderListRequest", "ProfileRequest"])
@@ -41,8 +44,9 @@ struct TypesSDKTests {
     @Test
     func `When searching without wildcard, should not match generic variants`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "JsonAsyncRequest", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "JsonAsyncRequest")
 
         #expect(result.types.isEmpty)
     }
@@ -50,8 +54,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for non-existent type, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "NonExistentType", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "NonExistentType")
 
         #expect(result.types.isEmpty)
     }
@@ -59,8 +64,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for protocol, should find all conforming types`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Coordinator", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Coordinator")
 
         #expect(
             result.types.names == [
@@ -72,8 +78,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for child protocol, should find only direct conformances`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "FlowCoordinator", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "FlowCoordinator")
 
         #expect(result.types.names == ["AuthCoordinator", "MenuCoordinator"])
     }
@@ -81,8 +88,9 @@ struct TypesSDKTests {
     @Test
     func `When type has deep inheritance chain, should find all descendants`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "BaseViewModel", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "BaseViewModel")
 
         #expect(
             result.types.names == [
@@ -97,8 +105,9 @@ struct TypesSDKTests {
     @Test
     func `When searching middle of inheritance chain, should find only descendants`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "ListViewModel", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "ListViewModel")
 
         #expect(
             result.types.names == [
@@ -112,8 +121,8 @@ struct TypesSDKTests {
     {
         let samplesURL = try samplesDirectory()
 
-        let trackableResult = try await sut.countTypes(typeName: "Trackable", repoPath: samplesURL)
-        let loggableResult = try await sut.countTypes(typeName: "Loggable", repoPath: samplesURL)
+        let trackableResult = try await sut.countTypes(input: input, typeName: "Trackable")
+        let loggableResult = try await sut.countTypes(input: input, typeName: "Loggable")
 
         #expect(trackableResult.types.names == ["BaseService", "OrderService", "PaymentService"])
         #expect(loggableResult.types.names == ["BaseService", "OrderService", "PaymentService"])
@@ -123,8 +132,8 @@ struct TypesSDKTests {
     func `When searching for multiple types, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
 
-        let uiViewResult = try await sut.countTypes(typeName: "UIView", repoPath: samplesURL)
-        let viewResult = try await sut.countTypes(typeName: "View", repoPath: samplesURL)
+        let uiViewResult = try await sut.countTypes(input: input, typeName: "UIView")
+        let viewResult = try await sut.countTypes(input: input, typeName: "View")
 
         #expect(uiViewResult.typeName == "UIView")
         #expect(uiViewResult.types.names == ["AwesomeView", "DodoView"])
@@ -135,8 +144,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for types inside extensions, should find nested types`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "AnalyticsEvent", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "AnalyticsEvent")
 
         #expect(result.typeName == "AnalyticsEvent")
         #expect(result.types.names == ["CloseScreenEvent", "OpenScreenEvent", "TapButtonEvent"])
@@ -145,8 +155,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for types nested in classes, should find all levels`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Component", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Component")
 
         #expect(result.typeName == "Component")
         #expect(result.types.names == ["DeepComponent", "InnerComponent", "InnerEnum"])
@@ -156,8 +167,9 @@ struct TypesSDKTests {
     func `When searching for types in extensions of external types, should find them`() async throws
     {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Formatter", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Formatter")
 
         #expect(result.typeName == "Formatter")
         #expect(result.types.names == ["CurrencyFormatter", "DateFormatter"])
@@ -166,8 +178,9 @@ struct TypesSDKTests {
     @Test
     func `When type has multiple conformances, should find regardless of order`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "EventProtocol", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "EventProtocol")
 
         #expect(result.typeName == "EventProtocol")
         #expect(
@@ -180,8 +193,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for nested types, should return correct fullName`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Component", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Component")
 
         let innerComponent = try #require(result.types.first { $0.name == "InnerComponent" })
         let deepComponent = try #require(result.types.first { $0.name == "DeepComponent" })
@@ -193,8 +207,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for types, should return relative file path`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "UIView", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "UIView")
 
         let awesomeView = try #require(result.types.first { $0.name == "AwesomeView" })
 
@@ -204,8 +219,9 @@ struct TypesSDKTests {
     @Test
     func `When type is top-level, fullName should equal name`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "UIView", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "UIView")
 
         let awesomeView = try #require(result.types.first { $0.name == "AwesomeView" })
 
@@ -215,8 +231,9 @@ struct TypesSDKTests {
     @Test
     func `When type is inside extension, fullName should include extended type`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "AnalyticsEvent", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "AnalyticsEvent")
 
         let openScreenEvent = try #require(result.types.first { $0.name == "OpenScreenEvent" })
 
@@ -228,8 +245,9 @@ struct TypesSDKTests {
         async throws
     {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Screen", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Screen")
 
         #expect(result.typeName == "Screen")
         #expect(result.types.names == ["MainScreen", "NestedScreen"])
@@ -238,8 +256,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for actor types, should find all conforming actors`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "DataProvider", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "DataProvider")
 
         #expect(result.typeName == "DataProvider")
         #expect(result.types.names == ["CacheProvider", "NetworkProvider"])
@@ -248,8 +267,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for enum types, should find all conforming enums`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Action", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Action")
 
         #expect(result.typeName == "Action")
         #expect(result.types.names == ["SystemAction", "UserAction"])
@@ -258,8 +278,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for generic types, should find all variants`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Repository", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Repository")
 
         #expect(result.typeName == "Repository")
         #expect(
@@ -270,8 +291,9 @@ struct TypesSDKTests {
     @Test
     func `When types have different access modifiers, should find all`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "InternalProtocol", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "InternalProtocol")
 
         #expect(result.typeName == "InternalProtocol")
         #expect(
@@ -284,8 +306,9 @@ struct TypesSDKTests {
     @Test
     func `When same name types in different containers, should find both`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "WidgetProtocol", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "WidgetProtocol")
 
         #expect(result.typeName == "WidgetProtocol")
         #expect(result.types.names == ["Widget", "Widget"])
@@ -295,8 +318,9 @@ struct TypesSDKTests {
     @Test
     func `When searching for property wrappers, should find all`() async throws {
         let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path)
 
-        let result = try await sut.countTypes(typeName: "Wrapper", repoPath: samplesURL)
+        let result = try await sut.countTypes(input: input, typeName: "Wrapper")
 
         #expect(result.typeName == "Wrapper")
         #expect(result.types.names == ["BindingWrapper", "StateWrapper"])
@@ -310,7 +334,7 @@ struct TypesSDKTests {
             typeName: "Identifiable",
             repoPath: samplesURL
         )
-        let nameableResult = try await sut.countTypes(typeName: "Nameable", repoPath: samplesURL)
+        let nameableResult = try await sut.countTypes(input: input, typeName: "Nameable")
 
         #expect(identifiableResult.types.names == ["Company", "Person"])
         #expect(nameableResult.types.names == ["Company", "Person"])

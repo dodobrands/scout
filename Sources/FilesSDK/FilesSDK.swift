@@ -11,10 +11,11 @@ public struct FilesSDK: Sendable {
 
     /// Counts files for a single extension in current repository state (no checkout).
     /// - Parameters:
+    ///   - input: Analysis input with repository path
     ///   - extension: File extension to count
-    ///   - repoPath: Path to the repository
     /// - Returns: Result with list of matching files
-    func countFiles(extension ext: String, repoPath: URL) -> Result {
+    func countFiles(input: AnalysisInput, extension ext: String) -> Result {
+        let repoPath = URL(filePath: input.repoPath)
         let files = findFiles(of: ext, in: repoPath)
         return Result(filetype: ext, files: files)
     }
@@ -51,9 +52,11 @@ public struct FilesSDK: Sendable {
 
             try await GitFix.prepareRepository(git: input.git)
 
+            let analysisInput = AnalysisInput(repoPath: input.git.repoPath)
+
             var resultItems: [ResultItem] = []
             for ext in filetypes {
-                let result = countFiles(extension: ext, repoPath: repoPath)
+                let result = countFiles(input: analysisInput, extension: ext)
                 resultItems.append(ResultItem(filetype: result.filetype, files: result.files))
             }
 
