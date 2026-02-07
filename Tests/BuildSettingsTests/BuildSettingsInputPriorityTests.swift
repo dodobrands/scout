@@ -429,7 +429,7 @@ struct BuildSettingsInputPriorityTests {
             setupCommands: nil,
             metrics: [
                 SettingMetric(setting: "SWIFT_VERSION", commits: ["abc123"]),
-                SettingMetric(setting: "DEPRECATED", commits: []),
+                SettingMetric(setting: "EXCLUDED_SETTING", commits: []),
                 SettingMetric(setting: "DEPLOYMENT_TARGET", commits: nil),
             ],
             project: "App.xcworkspace",
