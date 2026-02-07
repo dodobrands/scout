@@ -89,34 +89,38 @@ public struct BuildSettings: AsyncParsableCommand {
             try URL(string: input.git.repoPath)
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
-        // Resolve commits - need to fetch HEAD if not specified
-        let commitHashes: [String]
-        if !input.commits.isEmpty && input.commits != ["HEAD"] {
-            commitHashes = input.commits
-        } else {
-            let head = try await Git.headCommit(in: repoPathURL)
-            commitHashes = [head]
-            Self.logger.info("No commits specified, using HEAD: \(head)")
-        }
+        // Resolve HEAD commits
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: repoPathURL.path
+        )
 
         var outputResults: [BuildSettingsOutput] = []
 
+        // Group metrics by commits to minimize checkouts
+        var commitToSettings: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToSettings[commit, default: []].append(metric.setting)
+            }
+        }
+
+        let allCommits = Array(commitToSettings.keys)
         Self.logger.info(
-            "Will analyze \(commitHashes.count) commits for \(input.buildSettingsParameters.count) parameter(s)",
+            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
             metadata: [
-                "commits": .array(commitHashes.map { Logger.MetadataValue.string($0) }),
+                "commits": .array(allCommits.map { Logger.MetadataValue.string($0) }),
                 "parameters": .array(
-                    input.buildSettingsParameters.map { Logger.MetadataValue.string($0) }
+                    resolvedMetrics.map { Logger.MetadataValue.string($0.setting) }
                 ),
             ]
         )
 
         let sdk = BuildSettingsSDK()
 
-        for hash in commitHashes {
+        for (hash, settings) in commitToSettings {
             Self.logger.info(
                 "Starting analysis for commit",
-                metadata: ["hash": "\(hash)"]
+                metadata: ["hash": "\(hash)", "settings": "\(settings)"]
             )
 
             let result: BuildSettingsSDK.Result
@@ -136,7 +140,7 @@ public struct BuildSettings: AsyncParsableCommand {
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             let resultsDict = result.reduce(into: [String: [String: String?]]()) { dict, target in
-                dict[target.target] = input.buildSettingsParameters.reduce(into: [:]) {
+                dict[target.target] = settings.reduce(into: [:]) {
                     $0[$1] = target.buildSettings[$1]
                 }
             }
@@ -156,6 +160,6 @@ public struct BuildSettings: AsyncParsableCommand {
         let summary = BuildSettingsSummary(results: outputResults)
         GitHubActionsLogHandler.writeSummary(summary)
 
-        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
     }
 }

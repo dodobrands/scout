@@ -50,7 +50,11 @@ scout files swift --config files-config.json
 
 ```json
 {
-  "filetypes": ["storyboard", "xib", "swift"]
+  "metrics": [
+    { "extension": "storyboard" },
+    { "extension": "xib" },
+    { "extension": "swift" }
+  ]
 }
 ```
 
@@ -58,7 +62,11 @@ scout files swift --config files-config.json
 
 ```json
 {
-  "filetypes": ["storyboard", "xib", "swift"],
+  "metrics": [
+    { "extension": "storyboard" },
+    { "extension": "xib" },
+    { "extension": "swift" }
+  ],
   "git": {
     "repoPath": "/path/to/repo",
     "clean": true,
@@ -71,8 +79,34 @@ scout files swift --config files-config.json
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `filetypes` | `[String]` | File extensions to count (without dot) |
+| `metrics` | `[Metric]` | Array of file extension metrics to analyze |
+| `metrics[].extension` | `String` | File extension to count (without dot) |
+| `metrics[].commits` | `[String]?` | Commits for this extension (default: `["HEAD"]`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
+
+### Per-Metric Commits (Config Only)
+
+Different extensions can be analyzed on different commits. This is only available via config file — CLI arguments apply the same commits to all extensions.
+
+```json
+{
+  "metrics": [
+    { "extension": "storyboard", "commits": ["abc123", "def456"] },
+    { "extension": "xib", "commits": ["ghi789"] },
+    { "extension": "swift" },
+    { "extension": "plist", "commits": [] }
+  ]
+}
+```
+
+| Extension | Analyzed On |
+|-----------|-------------|
+| `storyboard` | `abc123`, `def456` |
+| `xib` | `ghi789` |
+| `swift` | `HEAD` (default) |
+| `plist` | skipped (empty array) |
+
+> **Note:** CLI `--commits` flag overrides all config commits and applies to every extension equally.
 
 ## Output Format
 

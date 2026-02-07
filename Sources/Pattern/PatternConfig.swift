@@ -2,13 +2,22 @@ import Common
 import Foundation
 import SystemPackage
 
+/// A single pattern metric configuration with optional per-metric commits.
+struct PatternMetric: Sendable, Decodable {
+    /// Pattern to search for (e.g., "// TODO:")
+    let pattern: String
+
+    /// Commits to analyze for this pattern. If nil, uses HEAD. If empty, skips this metric.
+    let commits: [String]?
+}
+
 /// Configuration for Search tool loaded from JSON file.
 struct PatternConfig: Sendable {
     /// Default configuration file name
     static let defaultFileName = ".scout-pattern.json"
 
-    /// Patterns to search for (e.g., ["// periphery:ignore", "TODO:"])
-    let patterns: [String]?
+    /// Metrics to analyze with optional per-metric commits
+    let metrics: [PatternMetric]?
 
     /// File extensions to search in (e.g., ["swift", "m"])
     let extensions: [String]?
@@ -18,11 +27,11 @@ struct PatternConfig: Sendable {
 
     /// Initialize configuration directly (for testing)
     init(
-        patterns: [String]?,
+        metrics: [PatternMetric]?,
         extensions: [String]? = nil,
         git: GitFileConfig? = nil
     ) {
-        self.patterns = patterns
+        self.metrics = metrics
         self.extensions = extensions
         self.git = git
     }
@@ -62,7 +71,7 @@ struct PatternConfig: Sendable {
             let fileData = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
-            self.patterns = variables.patterns
+            self.metrics = variables.metrics
             self.extensions = variables.extensions
             self.git = variables.git
         } catch let decodingError as DecodingError {
@@ -79,7 +88,7 @@ struct PatternConfig: Sendable {
     }
 
     private struct Variables: Decodable {
-        let patterns: [String]?
+        let metrics: [PatternMetric]?
         let extensions: [String]?
         let git: GitFileConfig?
     }

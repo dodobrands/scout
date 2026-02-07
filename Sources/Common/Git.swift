@@ -3,13 +3,13 @@ import System
 
 package enum Git {
     /// Returns the current HEAD commit hash in the specified repository.
-    /// - Parameter repoPath: Path to the repository
+    /// - Parameter repoPath: Path to the repository as string
     /// - Returns: The HEAD commit hash
-    package static func headCommit(in repoPath: URL) async throws -> String {
+    package static func headCommit(repoPath: String) async throws -> String {
         let result = try await Shell.execute(
             "git",
             arguments: ["rev-parse", "HEAD"],
-            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+            workingDirectory: FilePath(repoPath)
         )
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }

@@ -50,7 +50,11 @@ scout types UIView --config types-config.json
 
 ```json
 {
-  "types": ["UIView", "UIViewController", "View", "XCTestCase"]
+  "metrics": [
+    { "type": "UIView" },
+    { "type": "UIViewController" },
+    { "type": "View" }
+  ]
 }
 ```
 
@@ -58,7 +62,10 @@ scout types UIView --config types-config.json
 
 ```json
 {
-  "types": ["UIView", "UIViewController", "View", "XCTestCase"],
+  "metrics": [
+    { "type": "UIView" },
+    { "type": "UIViewController" }
+  ],
   "git": {
     "repoPath": "/path/to/repo",
     "clean": true,
@@ -71,8 +78,34 @@ scout types UIView --config types-config.json
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `types` | `[String]` | Types to count by inheritance |
+| `metrics` | `[Metric]` | Array of type metrics to analyze |
+| `metrics[].type` | `String` | Type name to count by inheritance |
+| `metrics[].commits` | `[String]?` | Commits for this type (default: `["HEAD"]`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
+
+### Per-Metric Commits (Config Only)
+
+Different types can be analyzed on different commits. This is only available via config file — CLI arguments apply the same commits to all types.
+
+```json
+{
+  "metrics": [
+    { "type": "UIView", "commits": ["abc123", "def456"] },
+    { "type": "UIViewController", "commits": ["ghi789"] },
+    { "type": "XCTestCase" },
+    { "type": "NSObject", "commits": [] }
+  ]
+}
+```
+
+| Type | Analyzed On |
+|------|-------------|
+| `UIView` | `abc123`, `def456` |
+| `UIViewController` | `ghi789` |
+| `XCTestCase` | `HEAD` (default) |
+| `NSObject` | skipped (empty array) |
+
+> **Note:** CLI `--commits` flag overrides all config commits and applies to every type equally.
 
 ### Examples
 
@@ -80,24 +113,47 @@ Any type name can be used. The tool counts classes/structs that inherit from or 
 
 **UIKit/SwiftUI:**
 ```json
-{ "types": ["UIView", "UIViewController", "View"] }
+{
+  "metrics": [
+    { "type": "UIView" },
+    { "type": "UIViewController" },
+    { "type": "View" }
+  ]
+}
 ```
 
 **Testing frameworks:**
 ```json
-{ "types": ["XCTestCase", "QuickSpec"] }
+{
+  "metrics": [
+    { "type": "XCTestCase" },
+    { "type": "QuickSpec" }
+  ]
+}
 ```
 
 **Generics (with wildcard):**
 ```json
-{ "types": ["BaseCoordinator<*>", "Repository<*>", "UseCase<*>"] }
+{
+  "metrics": [
+    { "type": "BaseCoordinator<*>" },
+    { "type": "Repository<*>" },
+    { "type": "UseCase<*>" }
+  ]
+}
 ```
 
 Use `<*>` wildcard to match any generic variant (e.g., `BaseCoordinator<*>` matches `BaseCoordinator<SomeFlow>`, `BaseCoordinator<OtherFlow>`). Without the wildcard, only exact type name matches.
 
 **Custom base classes:**
 ```json
-{ "types": ["BaseViewModel", "BaseService", "FeatureModule"] }
+{
+  "metrics": [
+    { "type": "BaseViewModel" },
+    { "type": "BaseService" },
+    { "type": "FeatureModule" }
+  ]
+}
 ```
 
 ## Output Format

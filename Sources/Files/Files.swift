@@ -79,32 +79,40 @@ public struct Files: AsyncParsableCommand {
             try URL(string: input.git.repoPath)
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
-        // Resolve commits - need to fetch HEAD if not specified
-        let commitHashes: [String]
-        if !input.commits.isEmpty && input.commits != ["HEAD"] {
-            commitHashes = input.commits
-        } else {
-            let head = try await Git.headCommit(in: repoPathURL)
-            commitHashes = [head]
-            Self.logger.info("No commits specified, using HEAD: \(head)")
-        }
+        // Resolve HEAD commits
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: repoPathURL.path
+        )
 
         let sdk = FilesSDK()
         var allResults: [FilesSDK.Result] = []
         var outputResults: [FilesOutput] = []
 
+        // Group metrics by commits to minimize checkouts
+        var commitToFiletypes: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToFiletypes[commit, default: []].append(metric.extension)
+            }
+        }
+
+        let allCommits = Array(commitToFiletypes.keys)
         Self.logger.info(
-            "Will analyze \(commitHashes.count) commits for \(input.filetypes.count) file type(s)",
+            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) file type(s)",
             metadata: [
-                "commits": .array(commitHashes.map { .string($0) }),
-                "filetypes": .array(input.filetypes.map { .string($0) }),
+                "commits": .array(allCommits.map { .string($0) }),
+                "filetypes": .array(resolvedMetrics.map { .string($0.extension) }),
             ]
         )
 
-        for hash in commitHashes {
-            Self.logger.info("Processing commit: \(hash)")
+        for (hash, filetypes) in commitToFiletypes {
+            Self.logger.info("Processing commit: \(hash) for filetypes: \(filetypes)")
 
-            let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let commitInput = FilesInput(
+                git: input.git,
+                metrics: filetypes.map { FileMetricInput(extension: $0) }
+            )
+            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: [String]] = [:]
@@ -124,7 +132,7 @@ public struct Files: AsyncParsableCommand {
             try outputResults.writeJSON(to: outputPath)
         }
 
-        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
 
         let summary = FilesSummary(results: allResults)
         logSummary(summary)

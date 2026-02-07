@@ -2,6 +2,15 @@ import Common
 import Foundation
 import SystemPackage
 
+/// A single build setting metric configuration with optional per-metric commits.
+struct SettingMetric: Sendable, Decodable {
+    /// Build setting name (e.g., "SWIFT_VERSION")
+    let setting: String
+
+    /// Commits to analyze for this setting. If nil, uses HEAD. If empty, skips this metric.
+    let commits: [String]?
+}
+
 /// Configuration for ExtractBuildSettings tool loaded from JSON file.
 struct BuildSettingsConfig: Sendable {
     /// Default configuration file name
@@ -23,8 +32,8 @@ struct BuildSettingsConfig: Sendable {
     /// Commands to setup project, executed sequentially.
     let setupCommands: [SetupCommand]?
 
-    /// Build settings parameters to collect (e.g., ["SWIFT_VERSION"])
-    let buildSettingsParameters: [String]?
+    /// Build settings metrics to collect with optional per-metric commits
+    let metrics: [SettingMetric]?
 
     /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj).
     /// Can be relative to repo root or absolute.
@@ -39,13 +48,13 @@ struct BuildSettingsConfig: Sendable {
     /// Initialize configuration directly (for testing)
     init(
         setupCommands: [SetupCommand]?,
-        buildSettingsParameters: [String]?,
+        metrics: [SettingMetric]?,
         project: String?,
         configuration: String?,
         git: GitFileConfig? = nil
     ) {
         self.setupCommands = setupCommands
-        self.buildSettingsParameters = buildSettingsParameters
+        self.metrics = metrics
         self.project = project
         self.configuration = configuration
         self.git = git
@@ -87,7 +96,7 @@ struct BuildSettingsConfig: Sendable {
             let decoder = JSONDecoder()
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.setupCommands = variables.setupCommands
-            self.buildSettingsParameters = variables.buildSettingsParameters
+            self.metrics = variables.metrics
             self.project = variables.project
             self.configuration = variables.configuration
             self.git = variables.git
@@ -106,7 +115,7 @@ struct BuildSettingsConfig: Sendable {
 
     private struct Variables: Decodable {
         let setupCommands: [SetupCommand]?
-        let buildSettingsParameters: [String]?
+        let metrics: [SettingMetric]?
         let project: String?
         let configuration: String?
         let git: GitFileConfig?

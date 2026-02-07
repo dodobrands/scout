@@ -95,31 +95,36 @@ public struct LOC: AsyncParsableCommand {
             try URL(string: input.git.repoPath)
             ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
 
-        // Resolve commits - need to fetch HEAD if not specified
-        let commitHashes: [String]
-        if !input.commits.isEmpty && input.commits != ["HEAD"] {
-            commitHashes = input.commits
-        } else {
-            let head = try await Git.headCommit(in: repoPathURL)
-            commitHashes = [head]
-            Self.logger.info("No commits specified, using HEAD: \(head)")
-        }
+        // Resolve HEAD commits
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: repoPathURL.path
+        )
 
         let sdk = LOCSDK()
         var allResults: [LOCSDK.Result] = []
         var outputResults: [LOCOutput] = []
 
+        // Group metrics by commits to minimize checkouts
+        var commitToMetrics: [String: [LOCMetricInput]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToMetrics[commit, default: []].append(metric)
+            }
+        }
+
+        let allCommits = Array(commitToMetrics.keys)
         Self.logger.info(
-            "Will analyze \(commitHashes.count) commits for \(input.configurations.count) configuration(s)",
+            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
             metadata: [
-                "commits": .array(commitHashes.map { .string($0) })
+                "commits": .array(allCommits.map { .string($0) })
             ]
         )
 
-        for hash in commitHashes {
+        for (hash, metrics) in commitToMetrics {
             Self.logger.info("Processing commit: \(hash)")
 
-            let results = try await sdk.analyzeCommit(hash: hash, input: input)
+            let commitInput = LOCInput(git: input.git, metrics: metrics)
+            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
             let date = try await Git.commitDate(for: hash, in: repoPathURL)
 
             var resultsDict: [String: Int] = [:]
@@ -139,7 +144,7 @@ public struct LOC: AsyncParsableCommand {
             try outputResults.writeJSON(to: outputPath)
         }
 
-        Self.logger.notice("Summary: analyzed \(commitHashes.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
 
         let summary = LOCSummary(results: allResults)
         logSummary(summary)

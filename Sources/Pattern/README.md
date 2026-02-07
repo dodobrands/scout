@@ -49,10 +49,28 @@ scout pattern "import UIKit" --config pattern-config.json
 
 ### JSON Format
 
+**Simple format (all metrics use same commits):**
+
 ```json
 {
-  "patterns": ["import Testing", "import Quick", "// TODO:"],
+  "metrics": [
+    { "pattern": "import Testing" },
+    { "pattern": "import Quick" },
+    { "pattern": "// TODO:" }
+  ],
   "extensions": ["swift", "m"]
+}
+```
+
+**Per-metric commits:**
+
+```json
+{
+  "metrics": [
+    { "pattern": "import Testing", "commits": ["abc123", "def456"] },
+    { "pattern": "import Quick", "commits": ["ghi789"] },
+    { "pattern": "// TODO:" }
+  ]
 }
 ```
 
@@ -60,7 +78,10 @@ scout pattern "import UIKit" --config pattern-config.json
 
 ```json
 {
-  "patterns": ["import Testing", "// TODO:"],
+  "metrics": [
+    { "pattern": "import Testing" },
+    { "pattern": "// TODO:" }
+  ],
   "git": {
     "repoPath": "/path/to/repo",
     "clean": true,
@@ -69,11 +90,24 @@ scout pattern "import UIKit" --config pattern-config.json
 }
 ```
 
+**Skip a metric (empty commits array):**
+
+```json
+{
+  "metrics": [
+    { "pattern": "import Testing", "commits": ["abc123"] },
+    { "pattern": "// SKIP:", "commits": [] }
+  ]
+}
+```
+
 ### Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `patterns` | `[String]` | String patterns to search for |
+| `metrics` | `[PatternMetric]` | Array of pattern metrics to analyze |
+| `metrics[].pattern` | `String` | String pattern to search for |
+| `metrics[].commits` | `[String]?` | Commits to analyze (default: HEAD, empty array skips metric) |
 | `extensions` | `[String]?` | File extensions to search in (default: `["swift"]`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
 

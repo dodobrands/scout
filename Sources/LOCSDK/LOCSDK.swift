@@ -27,43 +27,53 @@ public enum ClocError: Error, LocalizedError, Sendable {
     }
 }
 
-/// Configuration for LOC counting.
-public struct LOCConfiguration: Sendable {
+/// A single LOC metric with its commits to analyze.
+public struct LOCMetricInput: Sendable, CommitResolvable {
+    /// Languages to count
     public let languages: [String]
+
+    /// Paths to include
     public let include: [String]
+
+    /// Paths to exclude
     public let exclude: [String]
 
-    public init(languages: [String], include: [String], exclude: [String]) {
+    /// Commits to analyze for this metric
+    public let commits: [String]
+
+    public init(
+        languages: [String],
+        include: [String],
+        exclude: [String],
+        commits: [String] = ["HEAD"]
+    ) {
         self.languages = languages
         self.include = include
         self.exclude = exclude
+        self.commits = commits
+    }
+
+    public func withResolvedCommits(_ commits: [String]) -> LOCMetricInput {
+        LOCMetricInput(languages: languages, include: include, exclude: exclude, commits: commits)
+    }
+
+    /// Returns a unique metric identifier for output
+    public var metricIdentifier: String {
+        "LOC \(languages) \(include)"
     }
 }
 
 /// Input parameters for LOCSDK operations.
 public struct LOCInput: Sendable {
     public let git: GitConfiguration
-    public let configurations: [LOCConfiguration]
-    public let commits: [String]
+    public let metrics: [LOCMetricInput]
 
     public init(
         git: GitConfiguration,
-        configurations: [LOCConfiguration],
-        commits: [String] = ["HEAD"]
+        metrics: [LOCMetricInput]
     ) {
         self.git = git
-        self.configurations = configurations
-        self.commits = commits
-    }
-
-    public init(
-        git: GitConfiguration,
-        configuration: LOCConfiguration,
-        commits: [String] = ["HEAD"]
-    ) {
-        self.git = git
-        self.configurations = [configuration]
-        self.commits = commits
+        self.metrics = metrics
     }
 }
 
@@ -95,61 +105,45 @@ public struct LOCSDK: Sendable {
         }
     }
 
-    /// Counts lines of code in the repository with the specified configuration.
-    /// - Parameters:
-    ///   - configuration: LOC configuration to use
-    ///   - input: Input parameters for the operation
-    /// - Returns: Result containing total LOC count
-    public func countLOC(configuration: LOCConfiguration, input: LOCInput) async throws -> Result {
+    /// Counts lines of code for all metrics in input.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Array of results, one for each metric
+    func countLOC(input: LOCInput) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Self.checkClocInstalled()
         try await GitFix.prepareRepository(git: input.git)
 
-        let clocRunner = ClocRunner()
-        let foldersToAnalyze = foldersToAnalyze(
-            in: repoPath,
-            include: configuration.include,
-            exclude: configuration.exclude
-        )
-
-        let loc =
-            try await configuration.languages
-            .asyncFlatMap { language in
-                try await foldersToAnalyze.asyncMap {
-                    try await clocRunner.linesOfCode(at: $0, language: language)
-                }
-            }
-            .compactMap { Int($0) }
-            .reduce(0, +)
-
-        let metric = "LOC \(configuration.languages) \(configuration.include)"
-        return Result(metric: metric, linesOfCode: loc)
-    }
-
-    /// Counts lines of code in the repository with all specified configurations.
-    /// - Parameter input: Input parameters including array of configurations
-    /// - Returns: Array of results, one for each configuration
-    public func countLOC(input: LOCInput) async throws -> [Result] {
         var results: [Result] = []
-        for configuration in input.configurations {
-            let result = try await countLOC(configuration: configuration, input: input)
-            results.append(result)
+        for metric in input.metrics {
+            let clocRunner = ClocRunner()
+            let foldersToAnalyze = foldersToAnalyze(
+                in: repoPath,
+                include: metric.include,
+                exclude: metric.exclude
+            )
+
+            let loc =
+                try await metric.languages
+                .asyncFlatMap { language in
+                    try await foldersToAnalyze.asyncMap {
+                        try await clocRunner.linesOfCode(at: $0, language: language)
+                    }
+                }
+                .compactMap { Int($0) }
+                .reduce(0, +)
+
+            results.append(Result(metric: metric.metricIdentifier, linesOfCode: loc))
         }
         return results
     }
 
-    /// Checks out a commit and counts lines of code with the specified configuration.
+    /// Checks out a commit and counts lines of code for all metrics in input.
     /// - Parameters:
     ///   - hash: Commit hash to checkout
-    ///   - configuration: LOC configuration to use
     ///   - input: Input parameters for the operation
-    /// - Returns: Result containing total LOC count
-    public func analyzeCommit(
-        hash: String,
-        configuration: LOCConfiguration,
-        input: LOCInput
-    ) async throws -> Result {
+    /// - Returns: Array of results, one for each metric
+    public func analyzeCommit(hash: String, input: LOCInput) async throws -> [Result] {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
@@ -158,29 +152,8 @@ public struct LOCSDK: Sendable {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
 
-        return try await countLOC(configuration: configuration, input: input)
-    }
-
-    /// Checks out a commit and counts lines of code with all specified configurations.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters including array of configurations
-    /// - Returns: Array of results, one for each configuration
-    public func analyzeCommit(
-        hash: String,
-        input: LOCInput
-    ) async throws -> [Result] {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", hash],
-            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-        )
-
-        return try await countLOC(input: input).map {
-            Result(commit: hash, metric: $0.metric, linesOfCode: $0.linesOfCode)
-        }
+        let results = try await countLOC(input: input)
+        return results.map { Result(commit: hash, metric: $0.metric, linesOfCode: $0.linesOfCode) }
     }
 
     private func foldersToAnalyze(

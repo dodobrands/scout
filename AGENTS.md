@@ -57,6 +57,18 @@ periphery scan --skip-build --strict
 
 **Never force push (`git push --force` or `--force-with-lease`) without explicit user request.**
 
+## Commits
+
+Make a commit after each logical unit of work:
+
+- After completing a task or todo item
+- Before switching from coding to validation (linting, testing, static analysis)
+- After fixing issues found during validation
+- Before switching to documentation updates
+- After documentation updates
+
+Each commit should represent a single coherent change that can be understood in isolation.
+
 ## Coding Conventions
 
 ### Protocol Conformance
@@ -66,6 +78,70 @@ Use specific protocols instead of `Codable`:
 - `Decodable` — for config/input structs that are only read from JSON
 
 Only use `Codable` when both encoding and decoding are actually needed.
+
+### SDK API Design
+
+1. **Single source of truth for parameters** — if data is in `input` (e.g., `input.metrics`), don't pass it as a separate parameter:
+
+```swift
+// Bad
+func countFiles(filetype: String, input: FilesInput) -> Result
+
+// Good
+func countFiles(input: FilesInput) -> [Result]  // reads from input.metrics
+```
+
+2. **Minimize public API** — only methods used by CLI should be public. Internal methods accessed via `@testable import` in tests:
+
+```swift
+// SDK
+public func analyzeCommit(hash: String, input: Input) -> [Result]  // used by CLI
+func count(input: Input) -> [Result]  // internal, for tests
+
+// Tests
+@testable import MySDK
+let results = try await sut.count(input: input)
+```
+
+### Common Module Visibility
+
+Prefer `package` over `public` in `Sources/Common/`. Use `public` only when the type is part of a public SDK API (e.g., `GitConfiguration` used in `*Input` structs).
+
+### Safe Array Access
+
+Use `[safe: index]` subscript instead of direct index access:
+
+```swift
+// Bad
+let item = array[0]
+
+// Good
+guard let item = array[safe: 0] else { return }
+```
+
+### Testing
+
+Use `try #require` instead of `#expect` with optionals:
+
+```swift
+// Bad
+#expect(array.first?.value == expected)
+
+// Good
+let item = try #require(array.first)
+#expect(item.value == expected)
+```
+
+Use `try #require` with safe subscript for index access:
+
+```swift
+// Bad
+#expect(results[0].value == expected)
+
+// Good
+let item = try #require(results[safe: 0])
+#expect(item.value == expected)
+```
 
 ## Documentation Updates
 

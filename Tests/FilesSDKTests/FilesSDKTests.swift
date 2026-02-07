@@ -1,7 +1,8 @@
 import Common
-import FilesSDK
 import Foundation
 import Testing
+
+@testable import FilesSDK
 
 struct FilesSDKTests {
     let sut = FilesSDK()
@@ -10,10 +11,15 @@ struct FilesSDKTests {
     func `When searching for swift files, should find all swift files`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = FilesInput(git: gitConfig, filetypes: ["swift"])
+        let input = FilesInput(
+            git: gitConfig,
+            metrics: [FileMetricInput(extension: "swift")]
+        )
 
-        let result = try await sut.countFiles(filetype: "swift", input: input)
+        let results = try await sut.countFiles(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.filetype == "swift")
         #expect(result.files.count == 2)
         #expect(result.files.contains { $0.hasSuffix("file1.swift") })
@@ -24,36 +30,53 @@ struct FilesSDKTests {
     func `When searching for storyboard files, should find all storyboards`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = FilesInput(git: gitConfig, filetypes: ["storyboard"])
+        let input = FilesInput(
+            git: gitConfig,
+            metrics: [FileMetricInput(extension: "storyboard")]
+        )
 
-        let result = try await sut.countFiles(filetype: "storyboard", input: input)
+        let results = try await sut.countFiles(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.filetype == "storyboard")
         #expect(result.files.count == 1)
-        #expect(result.files.first?.hasSuffix("view.storyboard") == true)
+        let file = try #require(result.files.first)
+        #expect(file.hasSuffix("view.storyboard"))
     }
 
     @Test
     func `When searching for xib files, should find all xibs`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = FilesInput(git: gitConfig, filetypes: ["xib"])
+        let input = FilesInput(
+            git: gitConfig,
+            metrics: [FileMetricInput(extension: "xib")]
+        )
 
-        let result = try await sut.countFiles(filetype: "xib", input: input)
+        let results = try await sut.countFiles(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.filetype == "xib")
         #expect(result.files.count == 1)
-        #expect(result.files.first?.hasSuffix("cell.xib") == true)
+        let file = try #require(result.files.first)
+        #expect(file.hasSuffix("cell.xib"))
     }
 
     @Test
     func `When searching for json files, should find all json files`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = FilesInput(git: gitConfig, filetypes: ["json"])
+        let input = FilesInput(
+            git: gitConfig,
+            metrics: [FileMetricInput(extension: "json")]
+        )
 
-        let result = try await sut.countFiles(filetype: "json", input: input)
+        let results = try await sut.countFiles(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.filetype == "json")
         #expect(result.files.count == 1)
     }
@@ -62,10 +85,15 @@ struct FilesSDKTests {
     func `When searching for non-existent extension, should return empty result`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = FilesInput(git: gitConfig, filetypes: ["xyz"])
+        let input = FilesInput(
+            git: gitConfig,
+            metrics: [FileMetricInput(extension: "xyz")]
+        )
 
-        let result = try await sut.countFiles(filetype: "xyz", input: input)
+        let results = try await sut.countFiles(input: input)
 
+        #expect(results.count == 1)
+        let result = try #require(results[safe: 0])
         #expect(result.files.isEmpty)
     }
 
@@ -73,15 +101,23 @@ struct FilesSDKTests {
     func `When searching for multiple filetypes, should return results for each`() async throws {
         let samplesURL = try samplesDirectory()
         let gitConfig = GitConfiguration.test(repoPath: samplesURL.path)
-        let input = FilesInput(git: gitConfig, filetypes: ["swift", "storyboard"])
+        let input = FilesInput(
+            git: gitConfig,
+            metrics: [
+                FileMetricInput(extension: "swift"),
+                FileMetricInput(extension: "storyboard"),
+            ]
+        )
 
         let results = try await sut.countFiles(input: input)
 
         #expect(results.count == 2)
-        #expect(results[0].filetype == "swift")
-        #expect(results[0].files.count == 2)
-        #expect(results[1].filetype == "storyboard")
-        #expect(results[1].files.count == 1)
+        let result0 = try #require(results[safe: 0])
+        let result1 = try #require(results[safe: 1])
+        #expect(result0.filetype == "swift")
+        #expect(result0.files.count == 2)
+        #expect(result1.filetype == "storyboard")
+        #expect(result1.files.count == 1)
     }
 }
 
