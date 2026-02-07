@@ -1,20 +1,19 @@
+import FilesSDK
 import Foundation
 import InlineSnapshotTesting
 import Testing
 
-@testable import Files
-
-/// Tests for FilesOutput JSON encoding
+/// Tests for FilesSDK.Output JSON encoding
 @Suite
 struct FilesOutputTests {
 
     @Test func encodesSingleCommit() {
-        let output = FilesOutput(
+        let output = FilesSDK.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "swift": ["Sources/App.swift", "Sources/Model.swift"],
-                "storyboard": ["Main.storyboard", "Launch.storyboard"],
+                FilesSDK.ResultItem(filetype: "storyboard", files: ["Main.storyboard", "Launch.storyboard"]),
+                FilesSDK.ResultItem(filetype: "swift", files: ["Sources/App.swift", "Sources/Model.swift"]),
             ]
         )
 
@@ -23,16 +22,22 @@ struct FilesOutputTests {
             {
               "commit" : "abc1234def5678",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "storyboard" : [
-                  "Main.storyboard",
-                  "Launch.storyboard"
-                ],
-                "swift" : [
-                  "Sources\\/App.swift",
-                  "Sources\\/Model.swift"
-                ]
-              }
+              "results" : [
+                {
+                  "files" : [
+                    "Main.storyboard",
+                    "Launch.storyboard"
+                  ],
+                  "filetype" : "storyboard"
+                },
+                {
+                  "files" : [
+                    "Sources\\/App.swift",
+                    "Sources\\/Model.swift"
+                  ],
+                  "filetype" : "swift"
+                }
+              ]
             }
             """
         }
@@ -40,20 +45,20 @@ struct FilesOutputTests {
 
     @Test func encodesMultipleCommits() {
         let outputs = [
-            FilesOutput(
+            FilesSDK.Output(
                 commit: "abc1234def5678",
                 date: "2025-01-15T10:30:00+03:00",
                 results: [
-                    "swift": ["Sources/App.swift"],
-                    "storyboard": ["Main.storyboard"],
+                    FilesSDK.ResultItem(filetype: "storyboard", files: ["Main.storyboard"]),
+                    FilesSDK.ResultItem(filetype: "swift", files: ["Sources/App.swift"]),
                 ]
             ),
-            FilesOutput(
+            FilesSDK.Output(
                 commit: "def5678abc1234",
                 date: "2025-02-15T14:45:00+03:00",
                 results: [
-                    "swift": ["Sources/App.swift", "Sources/NewFeature.swift"],
-                    "storyboard": ["Main.storyboard"],
+                    FilesSDK.ResultItem(filetype: "storyboard", files: ["Main.storyboard"]),
+                    FilesSDK.ResultItem(filetype: "swift", files: ["Sources/App.swift", "Sources/NewFeature.swift"]),
                 ]
             ),
         ]
@@ -64,27 +69,39 @@ struct FilesOutputTests {
               {
                 "commit" : "abc1234def5678",
                 "date" : "2025-01-15T10:30:00+03:00",
-                "results" : {
-                  "storyboard" : [
-                    "Main.storyboard"
-                  ],
-                  "swift" : [
-                    "Sources\\/App.swift"
-                  ]
-                }
+                "results" : [
+                  {
+                    "files" : [
+                      "Main.storyboard"
+                    ],
+                    "filetype" : "storyboard"
+                  },
+                  {
+                    "files" : [
+                      "Sources\\/App.swift"
+                    ],
+                    "filetype" : "swift"
+                  }
+                ]
               },
               {
                 "commit" : "def5678abc1234",
                 "date" : "2025-02-15T14:45:00+03:00",
-                "results" : {
-                  "storyboard" : [
-                    "Main.storyboard"
-                  ],
-                  "swift" : [
-                    "Sources\\/App.swift",
-                    "Sources\\/NewFeature.swift"
-                  ]
-                }
+                "results" : [
+                  {
+                    "files" : [
+                      "Main.storyboard"
+                    ],
+                    "filetype" : "storyboard"
+                  },
+                  {
+                    "files" : [
+                      "Sources\\/App.swift",
+                      "Sources\\/NewFeature.swift"
+                    ],
+                    "filetype" : "swift"
+                  }
+                ]
               }
             ]
             """
@@ -92,11 +109,11 @@ struct FilesOutputTests {
     }
 
     @Test func encodesEmptyResults() {
-        let output = FilesOutput(
+        let output = FilesSDK.Output(
             commit: "abc123",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "swift": []
+                FilesSDK.ResultItem(filetype: "swift", files: [])
             ]
         )
 
@@ -105,11 +122,14 @@ struct FilesOutputTests {
             {
               "commit" : "abc123",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "swift" : [
+              "results" : [
+                {
+                  "files" : [
 
-                ]
-              }
+                  ],
+                  "filetype" : "swift"
+                }
+              ]
             }
             """
         }

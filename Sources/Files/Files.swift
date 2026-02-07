@@ -6,13 +6,6 @@ import Logging
 import System
 import SystemPackage
 
-/// JSON output structure for files command.
-struct FilesOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: [String]]
-}
-
 public struct Files: AsyncParsableCommand {
     public init() {}
 
@@ -85,8 +78,7 @@ public struct Files: AsyncParsableCommand {
         )
 
         let sdk = FilesSDK()
-        var allResults: [FilesSDK.Result] = []
-        var outputResults: [FilesOutput] = []
+        var outputResults: [FilesSDK.Output] = []
 
         // Group metrics by commits to minimize checkouts
         var commitToFiletypes: [String: [String]] = [:]
@@ -112,19 +104,14 @@ public struct Files: AsyncParsableCommand {
                 git: input.git,
                 metrics: filetypes.map { FileMetricInput(extension: $0) }
             )
-            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
+            let commitOutput = try await sdk.analyzeCommit(hash: hash, input: commitInput)
 
-            var resultsDict: [String: [String]] = [:]
-            for result in results {
+            for result in commitOutput.results {
                 Self.logger.notice(
                     "Found \(result.files.count) files of type '\(result.filetype)' at \(hash)"
                 )
-                allResults.append(result)
-                resultsDict[result.filetype] = result.files
             }
 
-            let commitOutput = FilesOutput(commit: hash, date: date, results: resultsDict)
             outputResults.append(commitOutput)
         }
 
@@ -134,16 +121,18 @@ public struct Files: AsyncParsableCommand {
 
         Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
 
-        let summary = FilesSummary(results: allResults)
+        let summary = FilesSummary(outputs: outputResults)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: FilesSummary) {
-        if !summary.results.isEmpty {
+        if !summary.outputs.isEmpty {
             Self.logger.info("File type counts:")
-            for result in summary.results {
-                let commit = result.commit.prefix(7)
-                Self.logger.info("  - \(commit): \(result.filetype): \(result.files.count)")
+            for output in summary.outputs {
+                let commit = output.commit.prefix(7)
+                for result in output.results {
+                    Self.logger.info("  - \(commit): \(result.filetype): \(result.files.count)")
+                }
             }
         }
 

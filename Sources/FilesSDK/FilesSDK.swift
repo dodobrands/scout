@@ -41,6 +41,30 @@ public struct FilesSDK: Sendable {
 
     public init() {}
 
+    /// A single files result item.
+    public struct ResultItem: Sendable, Encodable {
+        public let filetype: String
+        public let files: [String]
+
+        public init(filetype: String, files: [String]) {
+            self.filetype = filetype
+            self.files = files
+        }
+    }
+
+    /// Output of files analysis for a single commit.
+    public struct Output: Sendable, Encodable {
+        public let commit: String
+        public let date: String
+        public let results: [ResultItem]
+
+        public init(commit: String, date: String, results: [ResultItem]) {
+            self.commit = commit
+            self.date = date
+            self.results = results
+        }
+    }
+
     /// Result of file counting operation.
     public struct Result: Sendable, Encodable {
         public let commit: String
@@ -77,8 +101,8 @@ public struct FilesSDK: Sendable {
     /// - Parameters:
     ///   - hash: Commit hash to checkout
     ///   - input: Input parameters containing metrics and git configuration
-    /// - Returns: Array of results, one for each metric
-    public func analyzeCommit(hash: String, input: FilesInput) async throws -> [Result] {
+    /// - Returns: Output with commit info, date, and results
+    public func analyzeCommit(hash: String, input: FilesInput) async throws -> Output {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Shell.execute(
@@ -88,7 +112,10 @@ public struct FilesSDK: Sendable {
         )
 
         let results = try await countFiles(input: input)
-        return results.map { Result(commit: hash, filetype: $0.filetype, files: $0.files) }
+        let date = try await Git.commitDate(for: hash, in: repoPath)
+
+        let resultItems = results.map { ResultItem(filetype: $0.filetype, files: $0.files) }
+        return Output(commit: hash, date: date, results: resultItems)
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL] {
