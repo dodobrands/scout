@@ -9,6 +9,7 @@ package final class ISO8601UTCDateFormatter: Sendable {
 
     private init() {
         let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.formatOptions = [.withInternetDateTime]
         mutex = Mutex(formatter)
     }
