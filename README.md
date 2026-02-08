@@ -60,7 +60,7 @@ scout types UIView UIViewController View --output results.json
 ]
 ```
 
-📖 [Full documentation](Sources/Types/README.md)
+📖 [Full documentation](Sources/TypesCLI/README.md)
 
 ### files
 
@@ -86,7 +86,7 @@ scout files swift storyboard xib --output results.json
 ]
 ```
 
-📖 [Full documentation](Sources/Files/README.md)
+📖 [Full documentation](Sources/FilesCLI/README.md)
 
 ### pattern
 
@@ -115,7 +115,7 @@ scout pattern "import UIKit" "import SwiftUI" --output results.json
 ]
 ```
 
-📖 [Full documentation](Sources/Pattern/README.md)
+📖 [Full documentation](Sources/PatternCLI/README.md)
 
 ### loc
 
@@ -139,7 +139,7 @@ scout loc --config loc.json --output results.json
 ]
 ```
 
-📖 [Full documentation](Sources/LOC/README.md)
+📖 [Full documentation](Sources/LOCCLI/README.md)
 
 ### build-settings
 
@@ -166,7 +166,7 @@ scout build-settings --config build.json --output results.json
 ]
 ```
 
-📖 [Full documentation](Sources/BuildSettings/README.md)
+📖 [Full documentation](Sources/BuildSettingsCLI/README.md)
 
 ## Configuration
 
