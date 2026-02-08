@@ -40,18 +40,19 @@ public struct MySDK {
         public let results: [ResultItem]
     }
     
-    // Public method: analyze all commits, return array of outputs
-    public func analyze(input: Input) async throws -> [Output]
+    // Public method: analyze all commits, yield outputs incrementally
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error>
 }
 ```
 
-**SDK owns iteration logic** — SDK groups metrics by commit, performs checkouts, and returns complete outputs. CLI only builds Input and formats Output:
+**SDK owns iteration logic** — SDK groups metrics by commit, performs checkouts, and yields outputs incrementally. CLI only builds Input and consumes the stream:
 
 ```swift
 // CLI
 let input = SDK.Input(git: gitConfig, metrics: metrics)
-let outputs = try await sdk.analyze(input: input)
-// Format/write outputs
+for try await output in sdk.analyze(input: input) {
+    // Log and persist each output incrementally
+}
 ```
 
 **Single source of truth for parameters** — if data is in `input` (e.g., `input.metrics`), don't pass it as a separate parameter:
@@ -61,14 +62,14 @@ let outputs = try await sdk.analyze(input: input)
 func countFiles(filetype: String, input: FilesInput) -> Result
 
 // Good
-func analyze(input: Input) -> [Output]  // reads from input.metrics
+func analyze(input: Input) -> AsyncThrowingStream<Output, any Error>  // reads from input.metrics
 ```
 
 **Minimize public API** — only methods used by CLI should be public. Internal methods accessed via `@testable import` in tests:
 
 ```swift
 // SDK
-public func analyze(input: Input) -> [Output]  // used by CLI
+public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error>  // used by CLI
 func count(input: Input) -> [Result]  // internal, for tests
 
 // Tests
@@ -96,16 +97,29 @@ public struct AnalysisInput: Sendable {
 
 // Public method - handles git operations
 // Groups metrics by commit to minimize checkouts (one checkout per unique commit)
-public func analyze(input: Input) async throws -> [Output] {
-    let commitToMetrics = groupByCommit(input.metrics)
-    for (commit, metrics) in commitToMetrics {
-        try await git.checkout(commit)           // one checkout per commit
-        try await GitFix.prepareRepository(git: input.git)
-        
-        for metric in metrics {                  // all metrics within single checkout
-            let analysisInput = AnalysisInput(repoPath: input.git.repoPath, ...)
-            let result = try await extractData(input: analysisInput)  // internal
+// Yields outputs incrementally via AsyncThrowingStream
+public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+    AsyncThrowingStream { continuation in
+        let task = Task {
+            do {
+                let commitToMetrics = groupByCommit(input.metrics)
+                for (commit, metrics) in commitToMetrics {
+                    try Task.checkCancellation()
+                    try await git.checkout(commit)           // one checkout per commit
+                    try await GitFix.prepareRepository(git: input.git)
+                    
+                    for metric in metrics {                  // all metrics within single checkout
+                        let analysisInput = AnalysisInput(repoPath: input.git.repoPath, ...)
+                        let result = try await extractData(input: analysisInput)  // internal
+                    }
+                    continuation.yield(Output(...))
+                }
+                continuation.finish()
+            } catch {
+                continuation.finish(throwing: error)
+            }
         }
+        continuation.onTermination = { _ in task.cancel() }
     }
 }
 

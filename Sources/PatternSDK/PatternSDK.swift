@@ -29,54 +29,71 @@ public struct PatternSDK: Sendable {
         return Result(pattern: input.pattern, matches: allMatches)
     }
 
-    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Analyzes all commits from metrics and yields outputs incrementally.
     /// Groups metrics by commit to minimize checkouts.
     /// - Parameter input: Input parameters for the operation
-    /// - Returns: Array of outputs, one for each unique commit
-    public func analyze(input: Input) async throws -> [Output] {
-        let repoPath = URL(filePath: input.git.repoPath)
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    let repoPath = URL(filePath: input.git.repoPath)
 
-        // Resolve HEAD commits to actual hashes
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-            repoPath: input.git.repoPath
-        )
+                    // Resolve HEAD commits to actual hashes
+                    let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+                        repoPath: input.git.repoPath
+                    )
 
-        // Group metrics by commit to minimize checkouts
-        var commitToPatterns: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToPatterns[commit, default: []].append(metric.pattern)
+                    // Group metrics by commit to minimize checkouts
+                    var commitToPatterns: [String: [String]] = [:]
+                    for metric in resolvedMetrics {
+                        for commit in metric.commits {
+                            commitToPatterns[commit, default: []].append(metric.pattern)
+                        }
+                    }
+
+                    for (hash, patterns) in commitToPatterns {
+                        try Task.checkCancellation()
+
+                        Self.logger.debug("Processing commit: \(hash)")
+
+                        try await Shell.execute(
+                            "git",
+                            arguments: ["checkout", hash],
+                            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+                        )
+
+                        try await GitFix.prepareRepository(git: input.git)
+
+                        var resultItems: [ResultItem] = []
+                        for pattern in patterns {
+                            let analysisInput = AnalysisInput(
+                                repoPath: input.git.repoPath,
+                                extensions: input.extensions,
+                                pattern: pattern
+                            )
+                            let result = try search(input: analysisInput)
+                            resultItems.append(
+                                ResultItem(pattern: result.pattern, matches: result.matches)
+                            )
+                        }
+
+                        let date = try await Git.commitDate(for: hash, in: repoPath)
+                        continuation.yield(
+                            Output(commit: hash, date: date, results: resultItems)
+                        )
+                    }
+
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+
+            continuation.onTermination = { _ in
+                task.cancel()
             }
         }
-
-        var outputs: [Output] = []
-        for (hash, patterns) in commitToPatterns {
-            Self.logger.debug("Processing commit: \(hash)")
-
-            try await Shell.execute(
-                "git",
-                arguments: ["checkout", hash],
-                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-            )
-
-            try await GitFix.prepareRepository(git: input.git)
-
-            var resultItems: [ResultItem] = []
-            for pattern in patterns {
-                let analysisInput = AnalysisInput(
-                    repoPath: input.git.repoPath,
-                    extensions: input.extensions,
-                    pattern: pattern
-                )
-                let result = try search(input: analysisInput)
-                resultItems.append(ResultItem(pattern: result.pattern, matches: result.matches))
-            }
-
-            let date = try await Git.commitDate(for: hash, in: repoPath)
-            outputs.append(Output(commit: hash, date: date, results: resultItems))
-        }
-
-        return outputs
     }
 
     private func searchInFile(pattern: String, file: URL, repoPath: URL) throws -> [Match] {

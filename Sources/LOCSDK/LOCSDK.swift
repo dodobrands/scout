@@ -68,54 +68,68 @@ public struct LOCSDK: Sendable {
     }
 
     /// Analyzes lines of code for all metrics across their specified commits.
+    /// Yields outputs incrementally, one for each unique commit as it is processed.
     /// - Parameter input: Input parameters containing metrics with their commits
-    /// - Returns: Array of outputs, one for each unique commit
-    public func analyze(input: Input) async throws -> [Output] {
-        let repoPath = URL(filePath: input.git.repoPath)
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    let repoPath = URL(filePath: input.git.repoPath)
 
-        try await Self.checkClocInstalled()
+                    try await Self.checkClocInstalled()
 
-        // Resolve HEAD commits to actual hashes
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-            repoPath: input.git.repoPath
-        )
+                    // Resolve HEAD commits to actual hashes
+                    let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+                        repoPath: input.git.repoPath
+                    )
 
-        // Group metrics by commit to minimize checkouts
-        var commitToMetrics: [String: [MetricInput]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToMetrics[commit, default: []].append(metric)
+                    // Group metrics by commit to minimize checkouts
+                    var commitToMetrics: [String: [MetricInput]] = [:]
+                    for metric in resolvedMetrics {
+                        for commit in metric.commits {
+                            commitToMetrics[commit, default: []].append(metric)
+                        }
+                    }
+
+                    for (hash, metrics) in commitToMetrics {
+                        try Task.checkCancellation()
+
+                        try await Shell.execute(
+                            "git",
+                            arguments: ["checkout", hash],
+                            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+                        )
+
+                        try await GitFix.prepareRepository(git: input.git)
+
+                        var resultItems: [ResultItem] = []
+                        for metric in metrics {
+                            let analysisInput = AnalysisInput(
+                                repoPath: input.git.repoPath,
+                                languages: metric.languages,
+                                include: metric.include,
+                                exclude: metric.exclude,
+                                metricIdentifier: metric.metricIdentifier
+                            )
+                            let result = try await countLOC(input: analysisInput)
+                            resultItems.append(result)
+                        }
+
+                        let date = try await Git.commitDate(for: hash, in: repoPath)
+                        continuation.yield(Output(commit: hash, date: date, results: resultItems))
+                    }
+
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+
+            continuation.onTermination = { _ in
+                task.cancel()
             }
         }
-
-        var outputs: [Output] = []
-        for (hash, metrics) in commitToMetrics {
-            try await Shell.execute(
-                "git",
-                arguments: ["checkout", hash],
-                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-            )
-
-            try await GitFix.prepareRepository(git: input.git)
-
-            var resultItems: [ResultItem] = []
-            for metric in metrics {
-                let analysisInput = AnalysisInput(
-                    repoPath: input.git.repoPath,
-                    languages: metric.languages,
-                    include: metric.include,
-                    exclude: metric.exclude,
-                    metricIdentifier: metric.metricIdentifier
-                )
-                let result = try await countLOC(input: analysisInput)
-                resultItems.append(result)
-            }
-
-            let date = try await Git.commitDate(for: hash, in: repoPath)
-            outputs.append(Output(commit: hash, date: date, results: resultItems))
-        }
-
-        return outputs
     }
 
     private func foldersToAnalyze(

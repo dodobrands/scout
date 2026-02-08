@@ -77,18 +77,19 @@ public struct Types: AsyncParsableCommand {
         )
 
         let sdk = TypesSDK()
-        let outputs = try await sdk.analyze(input: input)
+        var outputs: [TypesSDK.Output] = []
 
-        for output in outputs {
+        for try await output in sdk.analyze(input: input) {
             for result in output.results {
                 Self.logger.notice(
                     "Found \(result.types.count) types inherited from \(result.typeName) at \(output.commit)"
                 )
             }
-        }
+            outputs.append(output)
 
-        if let outputPath = output {
-            try outputs.writeJSON(to: outputPath)
+            if let outputPath = self.output {
+                try outputs.writeJSON(to: outputPath)
+            }
         }
 
         Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
