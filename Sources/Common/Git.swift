@@ -30,7 +30,7 @@ package enum Git {
         )
         let raw = result.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let date = ISO8601UTCDateFormatter.utc.date(from: raw) else {
-            throw ParseError.invalidDateFormat(string: raw, format: "ISO 8601")
+            throw ParseError.invalidDateFormat(string: raw, format: "ISO 8601 (e.g. 2024-12-01T11:51:11+03:00)")
         }
         return ISO8601UTCDateFormatter.utc.string(from: date)
     }
