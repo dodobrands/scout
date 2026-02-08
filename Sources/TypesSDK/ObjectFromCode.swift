@@ -7,4 +7,20 @@ struct ObjectFromCode: Sendable {
     /// Path to the file containing this type
     let filePath: String
     let inheritedTypes: [String]
+    /// Whether this object represents a typealias rather than a concrete type definition.
+    let isTypealias: Bool
+
+    init(
+        name: String,
+        fullName: String,
+        filePath: String,
+        inheritedTypes: [String],
+        isTypealias: Bool = false
+    ) {
+        self.name = name
+        self.fullName = fullName
+        self.filePath = filePath
+        self.inheritedTypes = inheritedTypes
+        self.isTypealias = isTypealias
+    }
 }
