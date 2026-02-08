@@ -15,7 +15,12 @@ struct SwiftParser {
         }
 
         let filePath = swiftFile.path(percentEncoded: false)
-        return parseSubstructure(substructure, parentPath: nil, filePath: filePath)
+        return parseSubstructure(
+            substructure,
+            parentPath: nil,
+            filePath: filePath,
+            fileContents: file.contents
+        )
     }
 
     /// Recursively parses substructure to extract all type definitions including nested types.
@@ -23,10 +28,12 @@ struct SwiftParser {
     ///   - substructure: Array of AST dictionaries to parse
     ///   - parentPath: Dot-separated path of parent type names (e.g., "Analytics" for nested types)
     ///   - filePath: Path to the source file
+    ///   - fileContents: Source file contents for extracting typealias targets
     private func parseSubstructure(
         _ substructure: [[String: Any]],
         parentPath: String?,
-        filePath: String
+        filePath: String,
+        fileContents: String
     ) -> [ObjectFromCode] {
         var results: [ObjectFromCode] = []
 
@@ -60,7 +67,21 @@ struct SwiftParser {
                         contentsOf: parseSubstructure(
                             nestedSubstructure,
                             parentPath: fullName,
-                            filePath: filePath
+                            filePath: filePath,
+                            fileContents: fileContents
+                        )
+                    )
+                }
+            } else if kind == "source.lang.swift.decl.typealias", let name = name {
+                if let targetType = extractTypealiasTarget(from: item, fileContents: fileContents) {
+                    let fullName = parentPath.map { "\($0).\(name)" } ?? name
+                    results.append(
+                        ObjectFromCode(
+                            name: name,
+                            fullName: fullName,
+                            filePath: filePath,
+                            inheritedTypes: [targetType],
+                            isTypealias: true
                         )
                     )
                 }
@@ -72,7 +93,8 @@ struct SwiftParser {
                         contentsOf: parseSubstructure(
                             nestedSubstructure,
                             parentPath: extendedPath,
-                            filePath: filePath
+                            filePath: filePath,
+                            fileContents: fileContents
                         )
                     )
                 }
@@ -83,7 +105,8 @@ struct SwiftParser {
                         contentsOf: parseSubstructure(
                             nestedSubstructure,
                             parentPath: parentPath,
-                            filePath: filePath
+                            filePath: filePath,
+                            fileContents: fileContents
                         )
                     )
                 }
@@ -169,5 +192,32 @@ struct SwiftParser {
             return String(typeName[..<genericStartIndex])
         }
         return typeName
+    }
+
+    /// Extracts the target type from a typealias declaration source text.
+    /// For example, from `typealias Theme = Stylable` extracts `Stylable`.
+    private func extractTypealiasTarget(
+        from item: [String: Any],
+        fileContents: String
+    ) -> String? {
+        guard let offset = item["key.offset"] as? Int64,
+            let length = item["key.length"] as? Int64
+        else { return nil }
+
+        let bytes = Data(fileContents.utf8)
+        let start = Int(offset)
+        let end = Int(offset + length)
+
+        guard start >= 0, end <= bytes.count else { return nil }
+
+        guard let declaration = String(data: bytes[start..<end], encoding: .utf8) else {
+            return nil
+        }
+
+        guard let equalsIndex = declaration.firstIndex(of: "=") else { return nil }
+        let afterEquals = declaration[declaration.index(after: equalsIndex)...]
+        let target = afterEquals.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return target.isEmpty ? nil : target
     }
 }

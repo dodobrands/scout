@@ -23,11 +23,12 @@ public struct TypesSDK: Sendable {
         }
 
         let types = objects.filter {
-            parser.isInherited(
-                objectFromCode: $0,
-                from: input.typeName,
-                allObjects: objects
-            )
+            !$0.isTypealias
+                && parser.isInherited(
+                    objectFromCode: $0,
+                    from: input.typeName,
+                    allObjects: objects
+                )
         }.sorted(by: { $0.name < $1.name })
 
         Self.logger.debug("Types conforming to \(input.typeName): \(types.map { $0.name })")
