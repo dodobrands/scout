@@ -2,7 +2,7 @@ import BuildSettingsSDK
 import Common
 import Foundation
 
-extension SetupCommand {
+extension BuildSettingsSDK.SetupCommand {
     /// Initialize from file config SetupCommand
     init(_ fileConfig: BuildSettingsConfig.SetupCommand) {
         self.init(
@@ -39,7 +39,7 @@ extension BuildSettingsSDK.Input {
             throw BuildSettingsInputError.missingProject
         }
 
-        let setupCommands = config?.setupCommands?.map(SetupCommand.init) ?? []
+        let setupCommands = config?.setupCommands?.map(BuildSettingsSDK.SetupCommand.init) ?? []
         let configuration = config?.configuration ?? "Debug"
 
         // Git configuration merges CLI > FileConfig > Default
