@@ -102,10 +102,10 @@ public struct BuildSettings: AsyncParsableCommand {
                 "Analysis failed",
                 metadata: ["error": "\(error.localizedDescription)"]
             )
-        }
-
-        if let outputPath = output {
-            try outputs.writeJSON(to: outputPath)
+            // Write partial results collected before the error
+            if let outputPath = self.output {
+                try outputs.writeJSON(to: outputPath)
+            }
         }
 
         let summary = BuildSettingsSummary(outputs: outputs)
