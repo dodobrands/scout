@@ -33,9 +33,7 @@ struct LOCSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## CountLOC Summary
-
-            ### Lines of Code Counts
+            # Lines of Code
 
             | Commit | Configuration | LOC |
             |--------|---------------|-----|
@@ -51,7 +49,7 @@ struct LOCSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## CountLOC Summary
+            # Lines of Code
             """
         }
     }

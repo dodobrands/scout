@@ -7,11 +7,9 @@ struct FilesSummary: JobSummaryFormattable {
     var description: String { markdown }
 
     var markdown: String {
-        var lines = ["## CountFiles Summary"]
+        var lines = ["# File Counts"]
 
         if !outputs.isEmpty {
-            lines.append("")
-            lines.append("### File Type Counts")
             lines.append("")
             lines.append("| Commit | File Type | Count |")
             lines.append("|--------|-----------|-------|")

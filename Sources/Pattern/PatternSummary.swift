@@ -7,11 +7,9 @@ struct PatternSummary: JobSummaryFormattable {
     var description: String { markdown }
 
     var markdown: String {
-        var lines = ["## Search Summary"]
+        var lines = ["# Pattern Matches"]
 
         if !outputs.isEmpty {
-            lines.append("")
-            lines.append("### Pattern Matches")
             lines.append("")
             lines.append("| Commit | Pattern | Matches |")
             lines.append("|--------|---------|--------|")

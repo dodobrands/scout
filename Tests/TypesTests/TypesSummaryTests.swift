@@ -62,9 +62,7 @@ struct TypesSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## CountTypes Summary
-
-            ### Type Counts
+            # Type Counts
 
             | Commit | Type | Count |
             |--------|------|-------|
@@ -80,7 +78,7 @@ struct TypesSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## CountTypes Summary
+            # Type Counts
             """
         }
     }

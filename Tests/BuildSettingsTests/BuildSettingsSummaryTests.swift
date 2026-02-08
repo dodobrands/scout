@@ -42,9 +42,7 @@ struct BuildSettingsSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## BuildSettings Summary
-
-            ### Build Settings
+            # Build Settings
 
             | Commit | Target | Settings |
             |--------|--------|----------|
@@ -76,9 +74,7 @@ struct BuildSettingsSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## BuildSettings Summary
-
-            ### Build Settings
+            # Build Settings
 
             | Commit | Target | Settings |
             |--------|--------|----------|
@@ -92,7 +88,7 @@ struct BuildSettingsSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## BuildSettings Summary
+            # Build Settings
             """
         }
     }

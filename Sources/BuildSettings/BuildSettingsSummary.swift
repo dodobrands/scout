@@ -7,11 +7,9 @@ struct BuildSettingsSummary: JobSummaryFormattable {
     var description: String { markdown }
 
     var markdown: String {
-        var lines = ["## BuildSettings Summary"]
+        var lines = ["# Build Settings"]
 
         if !outputs.isEmpty {
-            lines.append("")
-            lines.append("### Build Settings")
             lines.append("")
             lines.append("| Commit | Target | Settings |")
             lines.append("|--------|--------|----------|")

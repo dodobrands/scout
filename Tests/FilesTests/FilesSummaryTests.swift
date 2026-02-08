@@ -39,9 +39,7 @@ struct FilesSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## CountFiles Summary
-
-            ### File Type Counts
+            # File Counts
 
             | Commit | File Type | Count |
             |--------|-----------|-------|
@@ -57,7 +55,7 @@ struct FilesSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## CountFiles Summary
+            # File Counts
             """
         }
     }

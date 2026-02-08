@@ -46,9 +46,7 @@ struct PatternSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## Search Summary
-
-            ### Pattern Matches
+            # Pattern Matches
 
             | Commit | Pattern | Matches |
             |--------|---------|--------|
@@ -64,7 +62,7 @@ struct PatternSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            ## Search Summary
+            # Pattern Matches
             """
         }
     }

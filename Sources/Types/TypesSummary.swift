@@ -7,11 +7,9 @@ struct TypesSummary: JobSummaryFormattable {
     var description: String { markdown }
 
     var markdown: String {
-        var lines = ["## CountTypes Summary"]
+        var lines = ["# Type Counts"]
 
         if !outputs.isEmpty {
-            lines.append("")
-            lines.append("### Type Counts")
             lines.append("")
             lines.append("| Commit | Type | Count |")
             lines.append("|--------|------|-------|")

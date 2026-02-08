@@ -7,11 +7,9 @@ struct LOCSummary: JobSummaryFormattable {
     var description: String { markdown }
 
     var markdown: String {
-        var lines = ["## CountLOC Summary"]
+        var lines = ["# Lines of Code"]
 
         if !outputs.isEmpty {
-            lines.append("")
-            lines.append("### Lines of Code Counts")
             lines.append("")
             lines.append("| Commit | Configuration | LOC |")
             lines.append("|--------|---------------|-----|")
