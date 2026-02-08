@@ -40,7 +40,7 @@ extension TypesSDK {
     }
 
     /// Result of type counting operation.
-    public struct Result: Sendable, Encodable {
+    public struct Result: Sendable, Encodable, Equatable {
         public let commit: String
         public let typeName: String
         public let types: [TypeInfo]

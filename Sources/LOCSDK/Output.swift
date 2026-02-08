@@ -1,6 +1,6 @@
 extension LOCSDK {
     /// A single LOC result item.
-    public struct ResultItem: Sendable, Encodable {
+    public struct ResultItem: Sendable, Encodable, Equatable {
         public let metric: String
         public let linesOfCode: Int
 

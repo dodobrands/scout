@@ -26,7 +26,7 @@ extension FilesSDK {
     }
 
     /// Result of file counting operation.
-    public struct Result: Sendable, Encodable {
+    public struct Result: Sendable, Encodable, Equatable {
         public let commit: String
         public let filetype: String
         public let files: [String]

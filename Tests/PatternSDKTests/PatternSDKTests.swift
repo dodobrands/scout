@@ -117,6 +117,28 @@ struct PatternSDKTests {
         #expect(fixmeResult.pattern == "// FIXME:")
         #expect(fixmeResult.matches.count == 2)
     }
+    @Test
+    func snapshot() throws {
+        let samplesURL = try samplesDirectory()
+        let input = PatternSDK.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "// TODO:"
+        )
+
+        let result = try sut.search(input: input)
+
+        #expect(
+            result
+                == PatternSDK.Result(
+                    pattern: "// TODO:",
+                    matches: [
+                        .init(file: "SampleCode.swift", line: 7),
+                        .init(file: "SampleCode.swift", line: 26),
+                    ]
+                )
+        )
+    }
 }
 
 private func samplesDirectory() throws -> URL {

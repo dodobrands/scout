@@ -334,6 +334,28 @@ struct TypesSDKTests {
         #expect(identifiableResult.types.names == ["Company", "Person"])
         #expect(nameableResult.types.names == ["Company", "Person"])
     }
+    @Test
+    func snapshot() async throws {
+        let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path, typeName: "UIView")
+
+        let result = try await sut.countTypes(input: input)
+
+        #expect(
+            result
+                == TypesSDK.Result(
+                    typeName: "UIView",
+                    types: [
+                        .init(
+                            name: "AwesomeView",
+                            fullName: "AwesomeView",
+                            path: "Views/UIViews.swift"
+                        ),
+                        .init(name: "DodoView", fullName: "DodoView", path: "Views/UIViews.swift"),
+                    ]
+                )
+        )
+    }
 }
 
 private func samplesDirectory() throws -> URL {

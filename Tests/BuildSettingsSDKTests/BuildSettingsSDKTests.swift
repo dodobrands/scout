@@ -59,6 +59,31 @@ struct BuildSettingsSDKTests {
 
         #expect(result.count == 1)
     }
+    @Test
+    func snapshot() async throws {
+        let samplesURL = try samplesDirectory()
+        let input = BuildSettingsSDK.AnalysisInput(
+            repoPath: samplesURL.path,
+            setupCommands: [],
+            project: "TestApp.xcodeproj",
+            configuration: "Debug"
+        )
+
+        let result = try await sut.extractBuildSettings(input: input)
+
+        #expect(result.count == 1)
+        let target = try #require(result.first)
+        #expect(
+            target
+                == TargetWithBuildSettings(
+                    target: "TestApp",
+                    buildSettings: target.buildSettings
+                )
+        )
+        #expect(target.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"] == "com.test.TestApp")
+        #expect(target.buildSettings["SWIFT_VERSION"] == "5.0")
+        #expect(target.buildSettings["PRODUCT_NAME"] == "TestApp")
+    }
 }
 
 private func samplesDirectory() throws -> URL {

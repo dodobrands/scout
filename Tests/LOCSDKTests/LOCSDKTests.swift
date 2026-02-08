@@ -134,6 +134,32 @@ struct LOCSDKTests {
         #expect(result1.linesOfCode == 16)
         #expect(result2.linesOfCode == 6)
     }
+    @Test
+    func snapshot() async throws {
+        let samplesURL = try samplesDirectory()
+        let metricInput = LOCSDK.MetricInput(
+            languages: ["Swift"],
+            include: ["Sources"],
+            exclude: []
+        )
+        let input = LOCSDK.AnalysisInput(
+            repoPath: samplesURL.path,
+            languages: metricInput.languages,
+            include: metricInput.include,
+            exclude: metricInput.exclude,
+            metricIdentifier: metricInput.metricIdentifier
+        )
+
+        let result = try await sut.countLOC(input: input)
+
+        #expect(
+            result
+                == LOCSDK.ResultItem(
+                    metric: "LOC [\"Swift\"] [\"Sources\"]",
+                    linesOfCode: 16
+                )
+        )
+    }
 }
 
 private func samplesDirectory() throws -> URL {

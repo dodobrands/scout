@@ -84,6 +84,18 @@ struct FilesSDKTests {
         #expect(storyboardResult.filetype == "storyboard")
         #expect(storyboardResult.files.count == 1)
     }
+    @Test
+    func snapshot() async throws {
+        let samplesURL = try samplesDirectory()
+        let input = FilesSDK.AnalysisInput(repoPath: samplesURL.path, extension: "storyboard")
+
+        let result = sut.countFiles(input: input)
+
+        #expect(result.filetype == "storyboard")
+        #expect(result.files.count == 1)
+        let file = try #require(result.files.first)
+        #expect(file.hasSuffix("Samples/view.storyboard"))
+    }
 }
 
 private func samplesDirectory() throws -> URL {

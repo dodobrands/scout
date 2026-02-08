@@ -178,3 +178,20 @@ Use `try #require` with safe subscript for index access:
 let item = try #require(results[safe: 0])
 #expect(item.value == expected)
 ```
+
+Each SDK must have at least one inline snapshot test that verifies the full output structure against a hardcoded expected result. This catches unexpected changes in output format:
+
+```swift
+@Test
+func `snapshot`() async throws {
+    let input = MySDK.AnalysisInput(repoPath: samplesURL.path, ...)
+    let result = try await sut.analyze(input: input)
+
+    #expect(result == [
+        .init(typeName: "UIView", types: [
+            .init(name: "AwesomeView", fullName: "AwesomeView", path: "Views/UIViews.swift"),
+            .init(name: "DodoView", fullName: "DodoView", path: "Views/UIViews.swift"),
+        ]),
+    ])
+}
+```
