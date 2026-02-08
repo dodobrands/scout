@@ -1,7 +1,7 @@
 import Foundation
 import Logging
 
-package protocol JobSummaryFormattable {
+package protocol JobSummaryFormattable: CustomStringConvertible {
     var markdown: String { get }
 }
 

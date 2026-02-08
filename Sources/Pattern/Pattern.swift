@@ -17,6 +17,18 @@ public struct Pattern: AsyncParsableCommand {
     struct Summary: JobSummaryFormattable {
         let outputs: [PatternSDK.Output]
 
+        var description: String {
+            guard !outputs.isEmpty else { return "" }
+            var lines = ["Pattern matches:"]
+            for output in outputs {
+                let commit = output.commit.prefix(Git.shortHashLength)
+                for result in output.results {
+                    lines.append("  - \(commit): \(result.pattern): \(result.matches.count)")
+                }
+            }
+            return lines.joined(separator: "\n")
+        }
+
         var markdown: String {
             var md = "## Search Summary\n\n"
 
@@ -139,15 +151,8 @@ public struct Pattern: AsyncParsableCommand {
 
     private func logSummary(_ summary: Summary) {
         if !summary.outputs.isEmpty {
-            Self.logger.info("Pattern matches:")
-            for output in summary.outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    Self.logger.info("  - \(commit): \(result.pattern): \(result.matches.count)")
-                }
-            }
+            Self.logger.info("\(summary)")
         }
-
         GitHubActionsLogHandler.writeSummary(summary)
     }
 }

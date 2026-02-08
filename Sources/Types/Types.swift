@@ -94,21 +94,49 @@ public struct Types: AsyncParsableCommand {
 
         Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
 
-        let summary = TypesSummary(outputs: outputs)
+        let summary = Summary(outputs: outputs)
         logSummary(summary)
     }
 
-    private func logSummary(_ summary: TypesSummary) {
-        if !summary.outputs.isEmpty {
-            Self.logger.info("Type counts:")
-            for output in summary.outputs {
+    struct Summary: JobSummaryFormattable {
+        let outputs: [TypesSDK.Output]
+
+        var description: String {
+            guard !outputs.isEmpty else { return "" }
+            var lines = ["Type counts:"]
+            for output in outputs {
                 let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
-                    Self.logger.info("  - \(commit): \(result.typeName): \(result.types.count)")
+                    lines.append("  - \(commit): \(result.typeName): \(result.types.count)")
                 }
             }
+            return lines.joined(separator: "\n")
         }
 
+        var markdown: String {
+            var md = "## CountTypes Summary\n\n"
+
+            if !outputs.isEmpty {
+                md += "### Type Counts\n\n"
+                md += "| Commit | Type | Count |\n"
+                md += "|--------|------|-------|\n"
+                for output in outputs {
+                    let commit = output.commit.prefix(Git.shortHashLength)
+                    for result in output.results {
+                        md += "| `\(commit)` | `\(result.typeName)` | \(result.types.count) |\n"
+                    }
+                }
+                md += "\n"
+            }
+
+            return md
+        }
+    }
+
+    private func logSummary(_ summary: Summary) {
+        if !summary.outputs.isEmpty {
+            Self.logger.info("\(summary)")
+        }
         GitHubActionsLogHandler.writeSummary(summary)
     }
 }
