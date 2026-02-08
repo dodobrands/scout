@@ -43,6 +43,11 @@ public struct LOC: AsyncParsableCommand {
     )
     public var commits: [String] = []
 
+    @Option(
+        help: "Template for metric identifier with placeholders (%langs%, %include%, %exclude%)"
+    )
+    public var nameTemplate: String?
+
     @Option(name: [.long, .short], help: "Path to save JSON results")
     public var output: String?
 
@@ -76,6 +81,7 @@ public struct LOC: AsyncParsableCommand {
             exclude: exclude.nilIfEmpty,
             repoPath: repoPath,
             commits: commits.nilIfEmpty,
+            nameTemplate: nameTemplate,
             gitClean: gitClean ? true : nil,
             fixLfs: fixLfs ? true : nil,
             initializeSubmodules: initializeSubmodules ? true : nil

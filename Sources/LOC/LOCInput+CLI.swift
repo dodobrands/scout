@@ -24,7 +24,8 @@ extension LOCSDK.Input {
                 languages: cliLanguages,
                 include: cli.include ?? [],
                 exclude: cli.exclude ?? [],
-                commits: commits
+                commits: commits,
+                nameTemplate: cli.nameTemplate
             )
             metrics = [metric]
         } else if let configMetrics = config?.metrics {
@@ -40,7 +41,8 @@ extension LOCSDK.Input {
                         languages: metric.languages,
                         include: metric.include,
                         exclude: metric.exclude,
-                        commits: cliCommits
+                        commits: cliCommits,
+                        nameTemplate: cli.nameTemplate ?? metric.nameTemplate
                     )
                 }
             } else {
@@ -55,7 +57,8 @@ extension LOCSDK.Input {
                         languages: metric.languages,
                         include: metric.include,
                         exclude: metric.exclude,
-                        commits: commits
+                        commits: commits,
+                        nameTemplate: cli.nameTemplate ?? metric.nameTemplate
                     )
                 }
             }
