@@ -30,6 +30,7 @@ scout loc Swift --commits abc123 def456
 - `--exclude, -e <paths>` — Paths to exclude (e.g., Tests Vendor)
 - `--config <path>` — Path to configuration JSON file
 - `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
+- `--name-template <template>` — Template for metric identifier with placeholders (default: `%langs% | %include%`)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
@@ -104,7 +105,56 @@ scout loc Swift --config loc-config.json
 | `metrics[].include` | `[String]` | Paths to include |
 | `metrics[].exclude` | `[String]` | Paths to exclude |
 | `metrics[].commits` | `[String]?` | Commits for this metric (default: `["HEAD"]`) |
+| `metrics[].nameTemplate` | `String?` | Template for metric identifier (default: `"%langs% | %include%"`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
+
+### Metric Naming Templates
+
+Control how metrics are labeled using customizable templates with placeholders.
+
+**Default template**: `"%langs% | %include%"`
+
+**Available placeholders**:
+- `%langs%` — Languages formatted as comma-separated list (e.g., `"Swift, Objective-C"`)
+- `%include%` — Include paths formatted as comma-separated list (e.g., `"Sources, App"`)
+- `%exclude%` — Exclude paths formatted as comma-separated list (e.g., `"Tests, Vendor"`)
+
+**Via CLI flag**:
+```bash
+# Custom template via CLI
+scout loc Swift --include Sources --name-template "LOC: %langs%"
+# Output: "LOC: Swift"
+
+scout loc Swift Objective-C --include App --name-template "%langs% in %include%"
+# Output: "Swift, Objective-C in App"
+```
+
+**Via config file**:
+```json
+{
+  "metrics": [
+    {
+      "languages": ["Swift"],
+      "include": ["Sources"],
+      "exclude": ["Tests"],
+      "nameTemplate": "LOC [%langs%] [%include%]"
+    },
+    {
+      "languages": ["Objective-C"],
+      "include": ["Legacy"],
+      "exclude": [],
+      "nameTemplate": "%langs% only"
+    }
+  ]
+}
+```
+
+**Priority**: CLI flag > Config value > Default template
+
+**Edge cases**:
+- Empty `languages` → `"Unknown"`
+- Empty `include` → `"."`
+- Empty `exclude` → `""` (empty string)
 
 ### Per-Metric Commits (Config Only)
 
@@ -136,9 +186,9 @@ Different metrics can be analyzed on different commits. This is only available v
 
 | Metric | Analyzed On |
 |--------|-------------|
-| `Swift in Sources` | `abc123`, `def456` |
-| `Swift+ObjC in LegacyModule` | `ghi789` |
-| `JSON` | `HEAD` (default) |
+| `Swift | Sources` | `abc123`, `def456` |
+| `Swift, Objective-C | LegacyModule` | `ghi789` |
+| `JSON | .` | `HEAD` (default) |
 
 > **Note:** CLI `--commits` flag overrides all config commits and applies to every metric equally.
 
@@ -153,11 +203,11 @@ When using `--output`, results are saved as JSON array:
     "date": "2025-01-15T10:30:00+03:00",
     "results": [
       {
-        "metric": "LOC [Swift] [Sources]",
+        "metric": "Swift | Sources",
         "linesOfCode": 48500
       },
       {
-        "metric": "LOC [Swift, Objective-C] [LegacyModule]",
+        "metric": "Swift, Objective-C | LegacyModule",
         "linesOfCode": 12000
       }
     ]
@@ -173,7 +223,7 @@ When using `--output`, results are saved as JSON array:
     "date": "2025-01-15T10:30:00+03:00",
     "results": [
       {
-        "metric": "LOC [Swift] [Sources]",
+        "metric": "Swift | Sources",
         "linesOfCode": 48500
       }
     ]
@@ -183,13 +233,15 @@ When using `--output`, results are saved as JSON array:
     "date": "2025-02-15T14:45:00+03:00",
     "results": [
       {
-        "metric": "LOC [Swift] [Sources]",
+        "metric": "Swift | Sources",
         "linesOfCode": 52000
       }
     ]
   }
 ]
 ```
+
+> **Note:** The `metric` field uses the template defined by `--name-template` flag or `nameTemplate` config field. Default format is `"%langs% | %include%"`. To recreate the legacy format, use: `"nameTemplate": "LOC [%langs%] [%include%]"`
 
 ## Requirements
 
