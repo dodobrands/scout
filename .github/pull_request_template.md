@@ -6,6 +6,10 @@
 
 <!-- List the main changes that are important for reviewers -->
 
+## Checklist
+
+- [ ] Update `Sources/*/README.md` if public API changed
+
 ## Additional Changes
 
 <!-- List any secondary changes, if any -->
