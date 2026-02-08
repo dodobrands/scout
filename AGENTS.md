@@ -88,7 +88,7 @@ When creating issues, use the issue template in `.github/ISSUE_TEMPLATE.md`.
 
 Each issue must be solved in a separate PR. Never combine multiple issues in one PR unless explicitly told otherwise.
 
-When creating PRs, use the PR template in `.github/pull_request_template.md`.
+When creating PRs, strictly follow the PR template in `.github/pull_request_template.md`. Ensure all checklist items are completed before submitting.
 
 ## Language
 

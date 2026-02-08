@@ -9,3 +9,7 @@
 ## Additional Changes
 
 <!-- List any secondary changes, if any -->
+
+## Checklist
+
+- [ ] Update `Sources/*/README.md` if public API changed
