@@ -15,6 +15,9 @@ struct LOCCLIInputs: Sendable {
     /// Commit hashes to analyze
     let commits: [String]?
 
+    /// Template for metric identifier with placeholders (%langs%, %include%, %exclude%)
+    let nameTemplate: String?
+
     /// Git configuration from CLI flags
     let git: GitCLIInputs
 
@@ -24,6 +27,7 @@ struct LOCCLIInputs: Sendable {
         exclude: [String]?,
         repoPath: String?,
         commits: [String]?,
+        nameTemplate: String? = nil,
         gitClean: Bool? = nil,
         fixLfs: Bool? = nil,
         initializeSubmodules: Bool? = nil
@@ -32,6 +36,7 @@ struct LOCCLIInputs: Sendable {
         self.include = include
         self.exclude = exclude
         self.commits = commits
+        self.nameTemplate = nameTemplate
         self.git = GitCLIInputs(
             repoPath: repoPath,
             clean: gitClean,

@@ -15,6 +15,9 @@ struct LOCMetric: Sendable, Decodable {
 
     /// Commits to analyze for this metric. If nil, uses HEAD. If empty, skips this metric.
     let commits: [String]?
+
+    /// Template for metric identifier with placeholders (%langs%, %include%, %exclude%)
+    let nameTemplate: String?
 }
 
 /// Configuration for CountLOC tool loaded from JSON file.
