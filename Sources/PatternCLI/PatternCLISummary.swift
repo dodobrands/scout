@@ -1,8 +1,8 @@
 import Common
-import PatternSDK
+import Pattern
 
 struct PatternCLISummary: JobSummaryFormattable {
-    let outputs: [PatternSDK.Output]
+    let outputs: [Pattern.Output]
 
     var description: String { markdown }
 

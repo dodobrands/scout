@@ -1,8 +1,8 @@
 import Common
-import LOCSDK
+import LOC
 
 struct LOCCLISummary: JobSummaryFormattable {
-    let outputs: [LOCSDK.Output]
+    let outputs: [LOC.Output]
 
     var description: String { markdown }
 

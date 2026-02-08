@@ -1,5 +1,5 @@
 import Common
-import FilesSDK
+import Files
 import Foundation
 import Testing
 
@@ -13,7 +13,7 @@ struct FilesCLIInputPriorityTests {
     func `CLI filetypes create metrics with CLI commits`() throws {
         let cli = FilesCLIInputs(filetypes: ["swift"], repoPath: nil, commits: ["abc123"])
 
-        let input = FilesSDK.Input(cli: cli, config: nil)
+        let input = Files.Input(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -25,7 +25,7 @@ struct FilesCLIInputPriorityTests {
     func `CLI filetypes use HEAD when commits not specified`() throws {
         let cli = FilesCLIInputs(filetypes: ["swift"], repoPath: nil, commits: nil)
 
-        let input = FilesSDK.Input(cli: cli, config: nil)
+        let input = Files.Input(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -41,7 +41,7 @@ struct FilesCLIInputPriorityTests {
             git: nil
         )
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -57,7 +57,7 @@ struct FilesCLIInputPriorityTests {
             git: nil
         )
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -75,7 +75,7 @@ struct FilesCLIInputPriorityTests {
             git: nil
         )
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -96,7 +96,7 @@ struct FilesCLIInputPriorityTests {
             git: nil
         )
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -110,7 +110,7 @@ struct FilesCLIInputPriorityTests {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let config = FilesCLIConfig(metrics: nil, git: nil)
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.metrics.isEmpty)
     }
@@ -123,7 +123,7 @@ struct FilesCLIInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = FilesCLIConfig(metrics: nil, git: gitConfig)
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/cli/path")
     }
@@ -134,7 +134,7 @@ struct FilesCLIInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = FilesCLIConfig(metrics: nil, git: gitConfig)
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/config/path")
     }
@@ -144,7 +144,7 @@ struct FilesCLIInputPriorityTests {
         let cli = FilesCLIInputs(filetypes: nil, repoPath: nil, commits: nil)
         let config = FilesCLIConfig(metrics: nil, git: nil)
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
     }
@@ -162,7 +162,7 @@ struct FilesCLIInputPriorityTests {
             initializeSubmodules: true
         )
 
-        let input = FilesSDK.Input(cli: cli, config: nil)
+        let input = Files.Input(cli: cli, config: nil)
 
         #expect(input.git.clean == true)
         #expect(input.git.fixLFS == true)
@@ -180,7 +180,7 @@ struct FilesCLIInputPriorityTests {
             git: gitConfig
         )
 
-        let input = FilesSDK.Input(cli: cli, config: config)
+        let input = Files.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)  // from CLI
         let metric0 = try #require(input.metrics[safe: 0])

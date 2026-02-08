@@ -1,4 +1,4 @@
-import BuildSettingsSDK
+import BuildSettings
 import InlineSnapshotTesting
 import Testing
 
@@ -10,28 +10,28 @@ struct BuildSettingsCLISummaryTests {
     @Test func multipleCommits() {
         let summary = BuildSettingsCLISummary(
             outputs: [
-                BuildSettingsSDK.Output(
+                BuildSettings.Output(
                     commit: "abc1234def5678",
                     date: "2025-01-15T07:30:00Z",
                     results: [
-                        BuildSettingsSDK.ResultItem(
+                        BuildSettings.ResultItem(
                             target: "MyApp",
                             settings: [
                                 "SWIFT_VERSION": "5.0",
                                 "IPHONEOS_DEPLOYMENT_TARGET": "15.0",
                             ]
                         ),
-                        BuildSettingsSDK.ResultItem(
+                        BuildSettings.ResultItem(
                             target: "MyFramework",
                             settings: ["SWIFT_VERSION": "5.0"]
                         ),
                     ]
                 ),
-                BuildSettingsSDK.Output(
+                BuildSettings.Output(
                     commit: "def5678abc1234",
                     date: "2025-02-15T11:45:00Z",
                     results: [
-                        BuildSettingsSDK.ResultItem(
+                        BuildSettings.ResultItem(
                             target: "MyApp",
                             settings: ["SWIFT_VERSION": "5.9"]
                         )
@@ -56,11 +56,11 @@ struct BuildSettingsCLISummaryTests {
     @Test func nullSettings() {
         let summary = BuildSettingsCLISummary(
             outputs: [
-                BuildSettingsSDK.Output(
+                BuildSettings.Output(
                     commit: "abc1234def5678",
                     date: "2025-01-15T07:30:00Z",
                     results: [
-                        BuildSettingsSDK.ResultItem(
+                        BuildSettings.ResultItem(
                             target: "MyApp",
                             settings: [
                                 "MISSING_PARAM": nil,

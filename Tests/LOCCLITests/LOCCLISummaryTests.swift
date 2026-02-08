@@ -1,5 +1,5 @@
 import InlineSnapshotTesting
-import LOCSDK
+import LOC
 import Testing
 
 @testable import LOCCLI
@@ -10,22 +10,22 @@ struct LOCCLISummaryTests {
     @Test func multipleCommits() {
         let summary = LOCCLISummary(
             outputs: [
-                LOCSDK.Output(
+                LOC.Output(
                     commit: "abc1234def5678",
                     date: "2025-01-15T07:30:00Z",
                     results: [
-                        LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 48500),
-                        LOCSDK.ResultItem(
+                        LOC.ResultItem(metric: "Swift | Sources", linesOfCode: 48500),
+                        LOC.ResultItem(
                             metric: "Swift, Objective-C | LegacyModule",
                             linesOfCode: 12000
                         ),
                     ]
                 ),
-                LOCSDK.Output(
+                LOC.Output(
                     commit: "def5678abc1234",
                     date: "2025-02-15T11:45:00Z",
                     results: [
-                        LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 52000)
+                        LOC.ResultItem(metric: "Swift | Sources", linesOfCode: 52000)
                     ]
                 ),
             ]

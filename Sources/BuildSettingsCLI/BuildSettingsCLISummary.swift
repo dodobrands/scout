@@ -1,8 +1,8 @@
-import BuildSettingsSDK
+import BuildSettings
 import Common
 
 struct BuildSettingsCLISummary: JobSummaryFormattable {
-    let outputs: [BuildSettingsSDK.Output]
+    let outputs: [BuildSettings.Output]
 
     var description: String { markdown }
 

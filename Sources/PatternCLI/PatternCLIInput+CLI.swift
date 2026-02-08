@@ -1,8 +1,8 @@
 import Common
 import Foundation
-import PatternSDK
+import Pattern
 
-extension PatternSDK.Input {
+extension Pattern.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// HEAD commits are resolved inside SDK.analyze(), not here.
@@ -17,12 +17,12 @@ extension PatternSDK.Input {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [PatternSDK.MetricInput]
+        let metrics: [Pattern.MetricInput]
 
         if let cliPatterns = cli.patterns, !cliPatterns.isEmpty {
             // CLI patterns provided - all use same commits (from CLI or default HEAD)
             let commits = cli.commits ?? ["HEAD"]
-            metrics = cliPatterns.map { PatternSDK.MetricInput(pattern: $0, commits: commits) }
+            metrics = cliPatterns.map { Pattern.MetricInput(pattern: $0, commits: commits) }
         } else if let configMetrics = config?.metrics {
             // Config metrics - each has its own commits, CLI --commits overrides all
             if let cliCommits = cli.commits {
@@ -32,7 +32,7 @@ extension PatternSDK.Input {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return PatternSDK.MetricInput(pattern: metric.pattern, commits: cliCommits)
+                    return Pattern.MetricInput(pattern: metric.pattern, commits: cliCommits)
                 }
             } else {
                 // Use per-metric commits from config
@@ -42,7 +42,7 @@ extension PatternSDK.Input {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return PatternSDK.MetricInput(pattern: metric.pattern, commits: commits)
+                    return Pattern.MetricInput(pattern: metric.pattern, commits: commits)
                 }
             }
         } else {

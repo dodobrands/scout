@@ -1,6 +1,6 @@
 import ArgumentParser
 import Common
-import FilesSDK
+import Files
 import Foundation
 import Logging
 import System
@@ -66,15 +66,15 @@ public struct FilesCLI: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
-        let input = FilesSDK.Input(cli: cliInputs, config: fileConfig)
+        let input = Files.Input(cli: cliInputs, config: fileConfig)
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
             "Will analyze \(commitCount) commit(s) for \(input.metrics.count) file type(s)"
         )
 
-        let sdk = FilesSDK()
-        var outputs: [FilesSDK.Output] = []
+        let sdk = Files()
+        var outputs: [Files.Output] = []
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {

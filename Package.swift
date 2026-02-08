@@ -7,24 +7,24 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "TypesSDK",
-            targets: ["TypesSDK"]
+            name: "Types",
+            targets: ["Types"]
         ),
         .library(
-            name: "FilesSDK",
-            targets: ["FilesSDK"]
+            name: "Files",
+            targets: ["Files"]
         ),
         .library(
-            name: "PatternSDK",
-            targets: ["PatternSDK"]
+            name: "Pattern",
+            targets: ["Pattern"]
         ),
         .library(
-            name: "LOCSDK",
-            targets: ["LOCSDK"]
+            name: "LOC",
+            targets: ["LOC"]
         ),
         .library(
-            name: "BuildSettingsSDK",
-            targets: ["BuildSettingsSDK"]
+            name: "BuildSettings",
+            targets: ["BuildSettings"]
         ),
         .executable(
             name: "scout",
@@ -80,7 +80,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "TypesSDK",
+            name: "Types",
             dependencies: [
                 .product(
                     name: "SourceKittenFramework",
@@ -97,7 +97,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "FilesSDK",
+            name: "Files",
             dependencies: [
                 .product(
                     name: "Logging",
@@ -110,7 +110,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "PatternSDK",
+            name: "Pattern",
             dependencies: [
                 .product(
                     name: "Logging",
@@ -123,7 +123,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "LOCSDK",
+            name: "LOC",
             dependencies: [
                 .product(
                     name: "Logging",
@@ -136,7 +136,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "BuildSettingsSDK",
+            name: "BuildSettings",
             dependencies: [
                 .product(
                     name: "Logging",
@@ -159,7 +159,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "TypesSDK",
+                "Types",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -178,7 +178,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "FilesSDK",
+                "Files",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -197,7 +197,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "PatternSDK",
+                "Pattern",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -216,7 +216,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "LOCSDK",
+                "LOC",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -235,7 +235,7 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "BuildSettingsSDK",
+                "BuildSettings",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -258,9 +258,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "TypesSDKTests",
+            name: "TypesTests",
             dependencies: [
-                "TypesSDK",
+                "Types",
                 .product(
                     name: "InlineSnapshotTesting",
                     package: "swift-snapshot-testing"
@@ -277,7 +277,7 @@ let package = Package(
             name: "TypesCLITests",
             dependencies: [
                 "TypesCLI",
-                "TypesSDK",
+                "Types",
                 "Common",
                 .product(
                     name: "InlineSnapshotTesting",
@@ -289,9 +289,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "FilesSDKTests",
+            name: "FilesTests",
             dependencies: [
-                "FilesSDK",
+                "Files",
             ],
             resources: [
                 .copy("Samples")
@@ -304,7 +304,7 @@ let package = Package(
             name: "FilesCLITests",
             dependencies: [
                 "FilesCLI",
-                "FilesSDK",
+                "Files",
                 "Common",
                 .product(
                     name: "InlineSnapshotTesting",
@@ -316,9 +316,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "PatternSDKTests",
+            name: "PatternTests",
             dependencies: [
-                "PatternSDK",
+                "Pattern",
             ],
             resources: [
                 .copy("Samples")
@@ -331,7 +331,7 @@ let package = Package(
             name: "PatternCLITests",
             dependencies: [
                 "PatternCLI",
-                "PatternSDK",
+                "Pattern",
                 "Common",
                 .product(
                     name: "InlineSnapshotTesting",
@@ -343,9 +343,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "LOCSDKTests",
+            name: "LOCTests",
             dependencies: [
-                "LOCSDK",
+                "LOC",
             ],
             resources: [
                 .copy("Samples")
@@ -358,7 +358,7 @@ let package = Package(
             name: "LOCCLITests",
             dependencies: [
                 "LOCCLI",
-                "LOCSDK",
+                "LOC",
                 "Common",
                 .product(
                     name: "InlineSnapshotTesting",
@@ -370,9 +370,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "BuildSettingsSDKTests",
+            name: "BuildSettingsTests",
             dependencies: [
-                "BuildSettingsSDK",
+                "BuildSettings",
             ],
             resources: [
                 .copy("Samples")
@@ -385,7 +385,7 @@ let package = Package(
             name: "BuildSettingsCLITests",
             dependencies: [
                 "BuildSettingsCLI",
-                "BuildSettingsSDK",
+                "BuildSettings",
                 "Common",
                 .product(
                     name: "InlineSnapshotTesting",

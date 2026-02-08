@@ -1,6 +1,6 @@
 import InlineSnapshotTesting
 import Testing
-import TypesSDK
+import Types
 
 @testable import TypesCLI
 
@@ -10,29 +10,29 @@ struct TypesCLISummaryTests {
     @Test func multipleCommits() {
         let summary = TypesCLISummary(
             outputs: [
-                TypesSDK.Output(
+                Types.Output(
                     commit: "abc1234def5678",
                     date: "2025-01-15T07:30:00Z",
                     results: [
-                        TypesSDK.ResultItem(
+                        Types.ResultItem(
                             typeName: "UIView",
                             types: [
-                                TypesSDK.TypeInfo(
+                                Types.TypeInfo(
                                     name: "CustomButton",
                                     fullName: "CustomButton",
                                     path: "Sources/UI/CustomButton.swift"
                                 ),
-                                TypesSDK.TypeInfo(
+                                Types.TypeInfo(
                                     name: "HeaderView",
                                     fullName: "HeaderView",
                                     path: "Sources/UI/HeaderView.swift"
                                 ),
                             ]
                         ),
-                        TypesSDK.ResultItem(
+                        Types.ResultItem(
                             typeName: "UIViewController",
                             types: [
-                                TypesSDK.TypeInfo(
+                                Types.TypeInfo(
                                     name: "HomeVC",
                                     fullName: "HomeVC",
                                     path: "Sources/HomeVC.swift"
@@ -41,14 +41,14 @@ struct TypesCLISummaryTests {
                         ),
                     ]
                 ),
-                TypesSDK.Output(
+                Types.Output(
                     commit: "def5678abc1234",
                     date: "2025-02-15T11:45:00Z",
                     results: [
-                        TypesSDK.ResultItem(
+                        Types.ResultItem(
                             typeName: "UIView",
                             types: [
-                                TypesSDK.TypeInfo(
+                                Types.TypeInfo(
                                     name: "CustomButton",
                                     fullName: "CustomButton",
                                     path: "Sources/UI/CustomButton.swift"

@@ -1,22 +1,22 @@
 import Foundation
 import InlineSnapshotTesting
-import LOCSDK
+import LOC
 import Testing
 
-/// Tests for LOCSDK.Output JSON encoding
+/// Tests for LOC.Output JSON encoding
 @Suite
 struct LOCCLIOutputTests {
 
     @Test func encodesSingleCommit() {
-        let output = LOCSDK.Output(
+        let output = LOC.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T07:30:00Z",
             results: [
-                LOCSDK.ResultItem(
+                LOC.ResultItem(
                     metric: "Swift, Objective-C | LegacyModule",
                     linesOfCode: 12000
                 ),
-                LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 48500),
+                LOC.ResultItem(metric: "Swift | Sources", linesOfCode: 48500),
             ]
         )
 
@@ -42,18 +42,18 @@ struct LOCCLIOutputTests {
 
     @Test func encodesMultipleCommits() {
         let outputs = [
-            LOCSDK.Output(
+            LOC.Output(
                 commit: "abc1234def5678",
                 date: "2025-01-15T07:30:00Z",
                 results: [
-                    LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 48500)
+                    LOC.ResultItem(metric: "Swift | Sources", linesOfCode: 48500)
                 ]
             ),
-            LOCSDK.Output(
+            LOC.Output(
                 commit: "def5678abc1234",
                 date: "2025-02-15T11:45:00Z",
                 results: [
-                    LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 52000)
+                    LOC.ResultItem(metric: "Swift | Sources", linesOfCode: 52000)
                 ]
             ),
         ]
@@ -87,11 +87,11 @@ struct LOCCLIOutputTests {
     }
 
     @Test func encodesZeroLines() {
-        let output = LOCSDK.Output(
+        let output = LOC.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
             results: [
-                LOCSDK.ResultItem(metric: "Swift | EmptyDir", linesOfCode: 0)
+                LOC.ResultItem(metric: "Swift | EmptyDir", linesOfCode: 0)
             ]
         )
 

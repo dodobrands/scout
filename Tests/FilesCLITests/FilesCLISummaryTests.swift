@@ -1,4 +1,4 @@
-import FilesSDK
+import Files
 import InlineSnapshotTesting
 import Testing
 
@@ -10,25 +10,25 @@ struct FilesCLISummaryTests {
     @Test func multipleCommits() {
         let summary = FilesCLISummary(
             outputs: [
-                FilesSDK.Output(
+                Files.Output(
                     commit: "abc1234def5678",
                     date: "2025-01-15T07:30:00Z",
                     results: [
-                        FilesSDK.ResultItem(
+                        Files.ResultItem(
                             filetype: "storyboard",
                             files: ["Main.storyboard", "Launch.storyboard"]
                         ),
-                        FilesSDK.ResultItem(
+                        Files.ResultItem(
                             filetype: "swift",
                             files: ["Sources/App.swift"]
                         ),
                     ]
                 ),
-                FilesSDK.Output(
+                Files.Output(
                     commit: "def5678abc1234",
                     date: "2025-02-15T11:45:00Z",
                     results: [
-                        FilesSDK.ResultItem(
+                        Files.ResultItem(
                             filetype: "swift",
                             files: ["Sources/App.swift", "Sources/New.swift"]
                         )

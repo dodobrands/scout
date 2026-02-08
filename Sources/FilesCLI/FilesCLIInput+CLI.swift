@@ -1,8 +1,8 @@
 import Common
-import FilesSDK
+import Files
 import Foundation
 
-extension FilesSDK.Input {
+extension Files.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// HEAD commits are resolved inside SDK.analyze(), not here.
@@ -15,12 +15,12 @@ extension FilesSDK.Input {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [FilesSDK.MetricInput]
+        let metrics: [Files.MetricInput]
 
         if let cliFiletypes = cli.filetypes, !cliFiletypes.isEmpty {
             // CLI filetypes provided - all use same commits (from CLI or default HEAD)
             let commits = cli.commits ?? ["HEAD"]
-            metrics = cliFiletypes.map { FilesSDK.MetricInput(extension: $0, commits: commits) }
+            metrics = cliFiletypes.map { Files.MetricInput(extension: $0, commits: commits) }
         } else if let configMetrics = config?.metrics {
             // Config metrics - each has its own commits, CLI --commits overrides all
             if let cliCommits = cli.commits {
@@ -30,7 +30,7 @@ extension FilesSDK.Input {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return FilesSDK.MetricInput(extension: metric.extension, commits: cliCommits)
+                    return Files.MetricInput(extension: metric.extension, commits: cliCommits)
                 }
             } else {
                 // Use per-metric commits from config
@@ -40,7 +40,7 @@ extension FilesSDK.Input {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return FilesSDK.MetricInput(extension: metric.extension, commits: commits)
+                    return Files.MetricInput(extension: metric.extension, commits: commits)
                 }
             }
         } else {

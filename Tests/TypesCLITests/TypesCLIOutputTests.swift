@@ -1,36 +1,36 @@
 import Foundation
 import InlineSnapshotTesting
 import Testing
-import TypesSDK
+import Types
 
-/// Tests for TypesSDK.Output JSON encoding
+/// Tests for Types.Output JSON encoding
 @Suite
 struct TypesCLIOutputTests {
 
     @Test func encodesSingleCommit() {
-        let output = TypesSDK.Output(
+        let output = Types.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T07:30:00Z",
             results: [
-                TypesSDK.ResultItem(
+                Types.ResultItem(
                     typeName: "UIView",
                     types: [
-                        TypesSDK.TypeInfo(
+                        Types.TypeInfo(
                             name: "CustomButton",
                             fullName: "CustomButton",
                             path: "Sources/UI/CustomButton.swift"
                         ),
-                        TypesSDK.TypeInfo(
+                        Types.TypeInfo(
                             name: "HeaderView",
                             fullName: "Components.HeaderView",
                             path: "Sources/Components/HeaderView.swift"
                         ),
                     ]
                 ),
-                TypesSDK.ResultItem(
+                Types.ResultItem(
                     typeName: "UIViewController",
                     types: [
-                        TypesSDK.TypeInfo(
+                        Types.TypeInfo(
                             name: "HomeViewController",
                             fullName: "HomeViewController",
                             path: "Sources/Screens/HomeViewController.swift"
@@ -79,14 +79,14 @@ struct TypesCLIOutputTests {
 
     @Test func encodesMultipleCommits() {
         let outputs = [
-            TypesSDK.Output(
+            Types.Output(
                 commit: "abc1234def5678",
                 date: "2025-01-15T07:30:00Z",
                 results: [
-                    TypesSDK.ResultItem(
+                    Types.ResultItem(
                         typeName: "UIView",
                         types: [
-                            TypesSDK.TypeInfo(
+                            Types.TypeInfo(
                                 name: "CustomButton",
                                 fullName: "CustomButton",
                                 path: "Sources/UI/CustomButton.swift"
@@ -95,19 +95,19 @@ struct TypesCLIOutputTests {
                     )
                 ]
             ),
-            TypesSDK.Output(
+            Types.Output(
                 commit: "def5678abc1234",
                 date: "2025-02-15T11:45:00Z",
                 results: [
-                    TypesSDK.ResultItem(
+                    Types.ResultItem(
                         typeName: "UIView",
                         types: [
-                            TypesSDK.TypeInfo(
+                            Types.TypeInfo(
                                 name: "CustomButton",
                                 fullName: "CustomButton",
                                 path: "Sources/UI/CustomButton.swift"
                             ),
-                            TypesSDK.TypeInfo(
+                            Types.TypeInfo(
                                 name: "NewView",
                                 fullName: "NewView",
                                 path: "Sources/UI/NewView.swift"
@@ -164,11 +164,11 @@ struct TypesCLIOutputTests {
     }
 
     @Test func encodesEmptyResults() {
-        let output = TypesSDK.Output(
+        let output = Types.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
             results: [
-                TypesSDK.ResultItem(typeName: "UIView", types: [])
+                Types.ResultItem(typeName: "UIView", types: [])
             ]
         )
 

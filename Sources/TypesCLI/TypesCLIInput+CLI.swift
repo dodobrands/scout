@@ -1,8 +1,8 @@
 import Common
 import Foundation
-import TypesSDK
+import Types
 
-extension TypesSDK.Input {
+extension Types.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// HEAD commits are resolved inside SDK.analyze(), not here.
@@ -15,12 +15,12 @@ extension TypesSDK.Input {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [TypesSDK.MetricInput]
+        let metrics: [Types.MetricInput]
 
         if let cliTypes = cli.types, !cliTypes.isEmpty {
             // CLI types provided - all use same commits (from CLI or default HEAD)
             let commits = cli.commits ?? ["HEAD"]
-            metrics = cliTypes.map { TypesSDK.MetricInput(type: $0, commits: commits) }
+            metrics = cliTypes.map { Types.MetricInput(type: $0, commits: commits) }
         } else if let configMetrics = config?.metrics {
             // Config metrics - each has its own commits, CLI --commits overrides all
             if let cliCommits = cli.commits {
@@ -30,7 +30,7 @@ extension TypesSDK.Input {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return TypesSDK.MetricInput(type: metric.type, commits: cliCommits)
+                    return Types.MetricInput(type: metric.type, commits: cliCommits)
                 }
             } else {
                 // Use per-metric commits from config
@@ -40,7 +40,7 @@ extension TypesSDK.Input {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return TypesSDK.MetricInput(type: metric.type, commits: commits)
+                    return Types.MetricInput(type: metric.type, commits: commits)
                 }
             }
         } else {

@@ -1,5 +1,5 @@
 import ArgumentParser
-import BuildSettingsSDK
+import BuildSettings
 import Common
 import Foundation
 import Logging
@@ -76,15 +76,15 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
-        let input = try BuildSettingsSDK.Input(cli: cliInputs, config: fileConfig)
+        let input = try BuildSettings.Input(cli: cliInputs, config: fileConfig)
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
             "Will analyze \(commitCount) commit(s) for \(input.metrics.count) metric(s)"
         )
 
-        let sdk = BuildSettingsSDK()
-        var outputs: [BuildSettingsSDK.Output] = []
+        let sdk = BuildSettings()
+        var outputs: [BuildSettings.Output] = []
 
         do {
             for try await output in sdk.analyze(input: input) {
@@ -97,7 +97,7 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
                     try outputs.writeJSON(to: outputPath)
                 }
             }
-        } catch let error as BuildSettingsSDK.AnalysisError {
+        } catch let error as BuildSettings.AnalysisError {
             Self.logger.warning(
                 "Analysis failed",
                 metadata: ["error": "\(error.localizedDescription)"]

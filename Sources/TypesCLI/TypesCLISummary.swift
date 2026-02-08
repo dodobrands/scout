@@ -1,8 +1,8 @@
 import Common
-import TypesSDK
+import Types
 
 struct TypesCLISummary: JobSummaryFormattable {
-    let outputs: [TypesSDK.Output]
+    let outputs: [Types.Output]
 
     var description: String { markdown }
 

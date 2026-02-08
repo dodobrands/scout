@@ -1,8 +1,8 @@
 import Common
-import FilesSDK
+import Files
 
 struct FilesCLISummary: JobSummaryFormattable {
-    let outputs: [FilesSDK.Output]
+    let outputs: [Files.Output]
 
     var description: String { markdown }
 

@@ -2,7 +2,7 @@ import ArgumentParser
 import Common
 import Foundation
 import Logging
-import PatternSDK
+import Pattern
 import System
 import SystemPackage
 
@@ -83,15 +83,15 @@ public struct PatternCLI: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
-        let input = PatternSDK.Input(cli: cliInputs, config: fileConfig)
+        let input = Pattern.Input(cli: cliInputs, config: fileConfig)
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
             "Will analyze \(commitCount) commit(s) for \(input.metrics.count) pattern(s)"
         )
 
-        let sdk = PatternSDK()
-        var outputs: [PatternSDK.Output] = []
+        let sdk = Pattern()
+        var outputs: [Pattern.Output] = []
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {

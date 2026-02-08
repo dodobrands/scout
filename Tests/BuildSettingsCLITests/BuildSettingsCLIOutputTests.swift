@@ -1,18 +1,18 @@
-import BuildSettingsSDK
+import BuildSettings
 import Foundation
 import InlineSnapshotTesting
 import Testing
 
-/// Tests for BuildSettingsSDK.Output JSON encoding
+/// Tests for BuildSettings.Output JSON encoding
 @Suite("BuildSettingsCLIOutput JSON")
 struct BuildSettingsCLIOutputTests {
 
     @Test func encodesNullForMissingParameters() {
-        let output = BuildSettingsSDK.Output(
+        let output = BuildSettings.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
             results: [
-                BuildSettingsSDK.ResultItem(
+                BuildSettings.ResultItem(
                     target: "MyApp",
                     settings: [
                         "MISSING_PARAM": nil,
@@ -42,11 +42,11 @@ struct BuildSettingsCLIOutputTests {
     }
 
     @Test func encodesAllNullParameters() {
-        let output = BuildSettingsSDK.Output(
+        let output = BuildSettings.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
             results: [
-                BuildSettingsSDK.ResultItem(
+                BuildSettings.ResultItem(
                     target: "MyApp",
                     settings: [
                         "PARAM1": nil,
@@ -77,18 +77,18 @@ struct BuildSettingsCLIOutputTests {
 
     @Test func encodesArrayForMultipleCommits() {
         let outputs = [
-            BuildSettingsSDK.Output(
+            BuildSettings.Output(
                 commit: "abc123",
                 date: "2025-01-15T07:30:00Z",
                 results: [
-                    BuildSettingsSDK.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.0"])
+                    BuildSettings.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.0"])
                 ]
             ),
-            BuildSettingsSDK.Output(
+            BuildSettings.Output(
                 commit: "def456",
                 date: "2025-02-15T11:45:00Z",
                 results: [
-                    BuildSettingsSDK.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.9"])
+                    BuildSettings.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.9"])
                 ]
             ),
         ]

@@ -1,7 +1,7 @@
 import ArgumentParser
 import Common
 import Foundation
-import LOCSDK
+import LOC
 import Logging
 import SystemPackage
 
@@ -69,7 +69,7 @@ public struct LOCCLI: AsyncParsableCommand {
 
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
-        try await LOCSDK.checkClocInstalled()
+        try await LOC.checkClocInstalled()
 
         // Load config from file
         let fileConfig = try await LOCCLIConfig(configPath: config)
@@ -88,15 +88,15 @@ public struct LOCCLI: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
-        let input = LOCSDK.Input(cli: cliInputs, config: fileConfig)
+        let input = LOC.Input(cli: cliInputs, config: fileConfig)
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
             "Will analyze \(commitCount) commit(s) for \(input.metrics.count) metric(s)"
         )
 
-        let sdk = LOCSDK()
-        var outputs: [LOCSDK.Output] = []
+        let sdk = LOC()
+        var outputs: [LOC.Output] = []
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {

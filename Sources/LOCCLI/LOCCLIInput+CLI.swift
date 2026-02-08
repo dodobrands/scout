@@ -1,8 +1,8 @@
 import Common
 import Foundation
-import LOCSDK
+import LOC
 
-extension LOCSDK.Input {
+extension LOC.Input {
     /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
     ///
     /// HEAD commits are resolved inside SDK.analyze(), not here.
@@ -15,12 +15,12 @@ extension LOCSDK.Input {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [LOCSDK.MetricInput]
+        let metrics: [LOC.MetricInput]
 
         if let cliLanguages = cli.languages, !cliLanguages.isEmpty {
             // CLI languages provided - create single metric with CLI commits
             let commits = cli.commits ?? ["HEAD"]
-            let metric = LOCSDK.MetricInput(
+            let metric = LOC.MetricInput(
                 languages: cliLanguages,
                 include: cli.include ?? [],
                 exclude: cli.exclude ?? [],
@@ -37,7 +37,7 @@ extension LOCSDK.Input {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return LOCSDK.MetricInput(
+                    return LOC.MetricInput(
                         languages: metric.languages,
                         include: metric.include,
                         exclude: metric.exclude,
@@ -53,7 +53,7 @@ extension LOCSDK.Input {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return LOCSDK.MetricInput(
+                    return LOC.MetricInput(
                         languages: metric.languages,
                         include: metric.include,
                         exclude: metric.exclude,

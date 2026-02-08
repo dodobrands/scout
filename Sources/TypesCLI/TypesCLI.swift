@@ -4,7 +4,7 @@ import Foundation
 import Logging
 import System
 import SystemPackage
-import TypesSDK
+import Types
 
 public struct TypesCLI: AsyncParsableCommand {
     public init() {}
@@ -69,15 +69,15 @@ public struct TypesCLI: AsyncParsableCommand {
         )
 
         // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
-        let input = TypesSDK.Input(cli: cliInputs, config: fileConfig)
+        let input = Types.Input(cli: cliInputs, config: fileConfig)
 
         let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
             "Will analyze \(commitCount) commit(s) for \(input.metrics.count) metric(s)"
         )
 
-        let sdk = TypesSDK()
-        var outputs: [TypesSDK.Output] = []
+        let sdk = Types()
+        var outputs: [Types.Output] = []
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {
