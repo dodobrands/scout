@@ -24,17 +24,20 @@ struct BuildSettingsSummary: JobSummaryFormattable {
     var markdown: String {
         var md = "## BuildSettings Summary\n\n"
 
-        for output in outputs {
-            md += "### Commit \(output.commit.prefix(Git.shortHashLength)) (\(output.date))\n\n"
-            md += "| Target | Settings |\n"
-            md += "|--------|----------|\n"
-            for result in output.results.sorted(by: { $0.target < $1.target }) {
-                let settingsStr =
-                    result.settings
-                    .sorted(by: { $0.key < $1.key })
-                    .map { "\($0.key): \($0.value ?? "null")" }
-                    .joined(separator: ", ")
-                md += "| `\(result.target)` | \(settingsStr) |\n"
+        if !outputs.isEmpty {
+            md += "### Build Settings\n\n"
+            md += "| Commit | Target | Settings |\n"
+            md += "|--------|--------|----------|\n"
+            for output in outputs {
+                let commit = output.commit.prefix(Git.shortHashLength)
+                for result in output.results.sorted(by: { $0.target < $1.target }) {
+                    let settingsStr =
+                        result.settings
+                        .sorted(by: { $0.key < $1.key })
+                        .map { "\($0.key): \($0.value ?? "null")" }
+                        .joined(separator: ", ")
+                    md += "| `\(commit)` | `\(result.target)` | \(settingsStr) |\n"
+                }
             }
             md += "\n"
         }

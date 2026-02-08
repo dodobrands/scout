@@ -44,18 +44,13 @@ struct BuildSettingsSummaryTests {
             """
             ## BuildSettings Summary
 
-            ### Commit abc1234 (2025-01-15T07:30:00Z)
+            ### Build Settings
 
-            | Target | Settings |
-            |--------|----------|
-            | `MyApp` | IPHONEOS_DEPLOYMENT_TARGET: 15.0, SWIFT_VERSION: 5.0 |
-            | `MyFramework` | SWIFT_VERSION: 5.0 |
-
-            ### Commit def5678 (2025-02-15T11:45:00Z)
-
-            | Target | Settings |
-            |--------|----------|
-            | `MyApp` | SWIFT_VERSION: 5.9 |
+            | Commit | Target | Settings |
+            |--------|--------|----------|
+            | `abc1234` | `MyApp` | IPHONEOS_DEPLOYMENT_TARGET: 15.0, SWIFT_VERSION: 5.0 |
+            | `abc1234` | `MyFramework` | SWIFT_VERSION: 5.0 |
+            | `def5678` | `MyApp` | SWIFT_VERSION: 5.9 |
 
 
             """
