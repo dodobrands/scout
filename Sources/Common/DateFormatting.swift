@@ -7,7 +7,7 @@ import Synchronization
 package final class ISO8601UTCDateFormatter: Sendable {
     private let mutex: Mutex<ISO8601DateFormatter>
 
-    package init() {
+    private init() {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         mutex = Mutex(formatter)
