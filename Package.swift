@@ -7,24 +7,24 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "TypesSDK",
-            targets: ["TypesSDK"]
+            name: "Types",
+            targets: ["Types"]
         ),
         .library(
-            name: "FilesSDK",
-            targets: ["FilesSDK"]
+            name: "Files",
+            targets: ["Files"]
         ),
         .library(
-            name: "PatternSDK",
-            targets: ["PatternSDK"]
+            name: "Pattern",
+            targets: ["Pattern"]
         ),
         .library(
-            name: "LOCSDK",
-            targets: ["LOCSDK"]
+            name: "LOC",
+            targets: ["LOC"]
         ),
         .library(
-            name: "BuildSettingsSDK",
-            targets: ["BuildSettingsSDK"]
+            name: "BuildSettings",
+            targets: ["BuildSettings"]
         ),
         .executable(
             name: "scout",
@@ -80,7 +80,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "TypesSDK",
+            name: "Types",
             dependencies: [
                 .product(
                     name: "SourceKittenFramework",
@@ -97,91 +97,14 @@ let package = Package(
             ]
         ),
         .target(
-            name: "FilesSDK",
-            dependencies: [
-                .product(
-                    name: "Logging",
-                    package: "swift-log"
-                ),
-                "Common",
-            ],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-            ]
-        ),
-        .target(
-            name: "PatternSDK",
-            dependencies: [
-                .product(
-                    name: "Logging",
-                    package: "swift-log"
-                ),
-                "Common",
-            ],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-            ]
-        ),
-        .target(
-            name: "LOCSDK",
-            dependencies: [
-                .product(
-                    name: "Logging",
-                    package: "swift-log"
-                ),
-                "Common",
-            ],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-            ]
-        ),
-        .target(
-            name: "BuildSettingsSDK",
-            dependencies: [
-                .product(
-                    name: "Logging",
-                    package: "swift-log"
-                ),
-                "Common",
-            ],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-            ]
-        ),
-        .target(
-            name: "Types",
-            dependencies: [
-                .product(
-                    name: "ArgumentParser",
-                    package: "swift-argument-parser"
-                ),
-                .product(
-                    name: "Logging",
-                    package: "swift-log"
-                ),
-                "TypesSDK",
-                "Common",
-            ],
-            exclude: ["README.md"],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
-            ]
-        ),
-        .target(
             name: "Files",
             dependencies: [
                 .product(
-                    name: "ArgumentParser",
-                    package: "swift-argument-parser"
-                ),
-                .product(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "FilesSDK",
                 "Common",
             ],
-            exclude: ["README.md"],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]
@@ -190,17 +113,11 @@ let package = Package(
             name: "Pattern",
             dependencies: [
                 .product(
-                    name: "ArgumentParser",
-                    package: "swift-argument-parser"
-                ),
-                .product(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "PatternSDK",
                 "Common",
             ],
-            exclude: ["README.md"],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]
@@ -209,23 +126,30 @@ let package = Package(
             name: "LOC",
             dependencies: [
                 .product(
-                    name: "ArgumentParser",
-                    package: "swift-argument-parser"
-                ),
-                .product(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "LOCSDK",
                 "Common",
             ],
-            exclude: ["README.md"],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]
         ),
         .target(
             name: "BuildSettings",
+            dependencies: [
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "TypesCLI",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -235,7 +159,83 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
-                "BuildSettingsSDK",
+                "Types",
+                "Common",
+            ],
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "FilesCLI",
+            dependencies: [
+                .product(
+                    name: "ArgumentParser",
+                    package: "swift-argument-parser"
+                ),
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "Files",
+                "Common",
+            ],
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "PatternCLI",
+            dependencies: [
+                .product(
+                    name: "ArgumentParser",
+                    package: "swift-argument-parser"
+                ),
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "Pattern",
+                "Common",
+            ],
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "LOCCLI",
+            dependencies: [
+                .product(
+                    name: "ArgumentParser",
+                    package: "swift-argument-parser"
+                ),
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "LOC",
+                "Common",
+            ],
+            exclude: ["README.md"],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .target(
+            name: "BuildSettingsCLI",
+            dependencies: [
+                .product(
+                    name: "ArgumentParser",
+                    package: "swift-argument-parser"
+                ),
+                .product(
+                    name: "Logging",
+                    package: "swift-log"
+                ),
+                "BuildSettings",
                 "Common",
             ],
             exclude: ["README.md"],
@@ -250,51 +250,39 @@ let package = Package(
                     name: "ArgumentParser",
                     package: "swift-argument-parser"
                 ),
-                "Types",
-                "Files",
-                "Pattern",
-                "LOC",
-                "BuildSettings",
-            ]
-        ),
-        .testTarget(
-            name: "TypesSDKTests",
-            dependencies: [
-                "TypesSDK",
-                .product(
-                    name: "InlineSnapshotTesting",
-                    package: "swift-snapshot-testing"
-                ),
-            ],
-            resources: [
-                .copy("Samples")
-            ],
-            swiftSettings: [
-                .swiftLanguageMode(.v6),
+                "TypesCLI",
+                "FilesCLI",
+                "PatternCLI",
+                "LOCCLI",
+                "BuildSettingsCLI",
             ]
         ),
         .testTarget(
             name: "TypesTests",
             dependencies: [
                 "Types",
-                "TypesSDK",
-                "Common",
                 .product(
                     name: "InlineSnapshotTesting",
                     package: "swift-snapshot-testing"
                 ),
+            ],
+            resources: [
+                .copy("Samples")
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]
         ),
         .testTarget(
-            name: "FilesSDKTests",
+            name: "TypesCLITests",
             dependencies: [
-                "FilesSDK",
-            ],
-            resources: [
-                .copy("Samples")
+                "TypesCLI",
+                "Types",
+                "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -304,24 +292,24 @@ let package = Package(
             name: "FilesTests",
             dependencies: [
                 "Files",
-                "FilesSDK",
-                "Common",
-                .product(
-                    name: "InlineSnapshotTesting",
-                    package: "swift-snapshot-testing"
-                ),
+            ],
+            resources: [
+                .copy("Samples")
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]
         ),
         .testTarget(
-            name: "PatternSDKTests",
+            name: "FilesCLITests",
             dependencies: [
-                "PatternSDK",
-            ],
-            resources: [
-                .copy("Samples")
+                "FilesCLI",
+                "Files",
+                "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -331,24 +319,24 @@ let package = Package(
             name: "PatternTests",
             dependencies: [
                 "Pattern",
-                "PatternSDK",
-                "Common",
-                .product(
-                    name: "InlineSnapshotTesting",
-                    package: "swift-snapshot-testing"
-                ),
+            ],
+            resources: [
+                .copy("Samples")
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]
         ),
         .testTarget(
-            name: "LOCSDKTests",
+            name: "PatternCLITests",
             dependencies: [
-                "LOCSDK",
-            ],
-            resources: [
-                .copy("Samples")
+                "PatternCLI",
+                "Pattern",
+                "Common",
+                .product(
+                    name: "InlineSnapshotTesting",
+                    package: "swift-snapshot-testing"
+                ),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -358,7 +346,19 @@ let package = Package(
             name: "LOCTests",
             dependencies: [
                 "LOC",
-                "LOCSDK",
+            ],
+            resources: [
+                .copy("Samples")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
+            name: "LOCCLITests",
+            dependencies: [
+                "LOCCLI",
+                "LOC",
                 "Common",
                 .product(
                     name: "InlineSnapshotTesting",
@@ -370,9 +370,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "BuildSettingsSDKTests",
+            name: "BuildSettingsTests",
             dependencies: [
-                "BuildSettingsSDK",
+                "BuildSettings",
             ],
             resources: [
                 .copy("Samples")
@@ -382,10 +382,10 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "BuildSettingsTests",
+            name: "BuildSettingsCLITests",
             dependencies: [
+                "BuildSettingsCLI",
                 "BuildSettings",
-                "BuildSettingsSDK",
                 "Common",
                 .product(
                     name: "InlineSnapshotTesting",

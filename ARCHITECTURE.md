@@ -141,7 +141,7 @@ let results = try await sut.extractData(input: input)
 ## Type Organization
 
 - Each type must live in its own dedicated file (e.g., `SetupCommand.swift`, `ObjectFromCode.swift`, `AnalysisInput.swift`)
-- Types must be nested inside their parent namespace (e.g., `BuildSettingsSDK.SetupCommand`, not top-level `SetupCommand`)
+- Types must be nested inside their parent namespace (e.g., `BuildSettings.SetupCommand`, not top-level `SetupCommand`)
 
 ## Input Data Layers
 
@@ -149,9 +149,9 @@ Input data flows through three layers with priority **CLI > Config file > Defaul
 
 - **CLI arguments** (`*CLIInputs` structs) — raw values from ArgumentParser, all fields optional
 - **Config file** (`*Config` structs) — JSON deserialization with `Decodable`, all fields optional (`Bool?`, `String?`)
-- **SDK Input** (`*SDK.Input` structs) — strictly typed public API with required fields and defaults, no `Decodable`
+- **SDK Input** (`*.Input` structs) — strictly typed public API with required fields and defaults, no `Decodable`
 
-Merging happens in `*Input+CLI.swift` extensions via `init(cli:config:)` initializer on `*SDK.Input`. Optionals are resolved with defaults at this layer (e.g., `cli.value ?? config?.value ?? defaultValue`).
+Merging happens in `*Input+CLI.swift` extensions via `init(cli:config:)` initializer on `*.Input`. Optionals are resolved with defaults at this layer (e.g., `cli.value ?? config?.value ?? defaultValue`).
 
 ## Common Module Visibility
 

@@ -1,123 +1,151 @@
-import ArgumentParser
 import Common
 import Foundation
 import Logging
-import PatternSDK
 import System
-import SystemPackage
 
-public struct Pattern: AsyncParsableCommand {
-    public init() {}
-
-    public static let configuration = CommandConfiguration(
-        commandName: "pattern",
-        abstract: "Search for string patterns in source files"
-    )
-
-    @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
-    public var repoPath: String?
-
-    @Option(help: "Path to configuration JSON file")
-    public var config: String?
-
-    @Argument(help: "Patterns to search (e.g., \"import UIKit\" \"import SwiftUI\")")
-    public var patterns: [String] = []
-
-    @Option(
-        name: [.long, .short],
-        parsing: .upToNextOption,
-        help: "Commit hashes to analyze (default: HEAD)"
-    )
-    public var commits: [String] = []
-
-    @Option(name: [.long, .short], help: "Path to save JSON results")
-    public var output: String?
-
-    @Option(
-        name: [.long, .short],
-        help: "Comma-separated file extensions to search (default: swift)"
-    )
-    public var extensions: String?
-
-    @Flag(name: [.long, .short])
-    public var verbose: Bool = false
-
-    @Flag(
-        help: "Clean working directory before analysis (git clean -ffdx && git reset --hard HEAD)"
-    )
-    public var gitClean: Bool = false
-
-    @Flag(help: "Fix broken LFS pointers by committing modified files after checkout")
-    public var fixLfs: Bool = false
-
-    @Flag(help: "Initialize submodules (reset and update to correct commits)")
-    public var initializeSubmodules: Bool = false
-
+/// SDK for searching string patterns in source files.
+public struct Pattern: Sendable {
     private static let logger = Logger(label: "scout.Pattern")
 
-    public func run() async throws {
-        LoggingSetup.setup(verbose: verbose)
+    public init() {}
 
-        // Load config from file
-        let fileConfig = try await PatternConfig(configPath: config)
-
-        // Parse extensions from CLI (comma-separated string)
-        let parsedExtensions: [String]?
-        if let extensions {
-            parsedExtensions = extensions.split(separator: ",").map {
-                String($0.trimmingCharacters(in: .whitespaces))
-            }
-        } else {
-            parsedExtensions = nil
-        }
-
-        // Build CLI inputs
-        let cliInputs = PatternCLIInputs(
-            patterns: patterns.nilIfEmpty,
-            repoPath: repoPath,
-            commits: commits.nilIfEmpty,
-            extensions: parsedExtensions,
-            gitClean: gitClean ? true : nil,
-            fixLfs: fixLfs ? true : nil,
-            initializeSubmodules: initializeSubmodules ? true : nil
-        )
-
-        // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
-        let input = PatternSDK.Input(cli: cliInputs, config: fileConfig)
-
-        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
-        Self.logger.info(
-            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) pattern(s)"
-        )
-
-        let sdk = PatternSDK()
-        var outputs: [PatternSDK.Output] = []
-
-        for try await output in sdk.analyze(input: input) {
-            for result in output.results {
-                Self.logger.notice(
-                    "Found \(result.matches.count) matches for '\(result.pattern)' at \(output.commit)"
+    /// Searches for a pattern in current repository state (no checkout).
+    /// - Parameter input: Analysis input with repository path, file extensions, and pattern
+    /// - Returns: Result with list of matches
+    func search(input: AnalysisInput) throws -> Result {
+        let repoPath = URL(filePath: input.repoPath)
+        var allMatches: [Match] = []
+        for ext in input.extensions {
+            let files = findFiles(of: ext, in: repoPath)
+            for file in files {
+                let fileMatches = try searchInFile(
+                    pattern: input.pattern,
+                    file: file,
+                    repoPath: repoPath
                 )
-            }
-            outputs.append(output)
-
-            if let outputPath = self.output {
-                try outputs.writeJSON(to: outputPath)
+                allMatches.append(contentsOf: fileMatches)
             }
         }
-
-        Self.logger.notice(
-            "Summary: analyzed \(outputs.count) commit(s) for \(input.metrics.count) pattern(s)"
-        )
-
-        let summary = PatternSummary(outputs: outputs)
-        logSummary(summary)
+        return Result(pattern: input.pattern, matches: allMatches)
     }
 
-    private func logSummary(_ summary: PatternSummary) {
-        if !summary.outputs.isEmpty {
-            Self.logger.info("\(summary)")
+    /// Analyzes all commits from metrics and yields outputs incrementally.
+    /// Groups metrics by commit to minimize checkouts.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
         }
-        GitHubActionsLogHandler.writeSummary(summary)
+    }
+
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
+        // Group metrics by commit to minimize checkouts
+        var commitToPatterns: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToPatterns[commit, default: []].append(metric.pattern)
+            }
+        }
+
+        for (hash, patterns) in commitToPatterns {
+            try Task.checkCancellation()
+
+            Self.logger.debug("Processing commit: \(hash)")
+
+            try await Shell.execute(
+                "git",
+                arguments: ["checkout", hash],
+                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+            )
+
+            try await GitFix.prepareRepository(git: input.git)
+
+            var resultItems: [ResultItem] = []
+            for pattern in patterns {
+                let analysisInput = AnalysisInput(
+                    repoPath: input.git.repoPath,
+                    extensions: input.extensions,
+                    pattern: pattern
+                )
+                let result = try search(input: analysisInput)
+                resultItems.append(
+                    ResultItem(pattern: result.pattern, matches: result.matches)
+                )
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+            onOutput(Output(commit: hash, date: date, results: resultItems))
+        }
+    }
+
+    private func searchInFile(pattern: String, file: URL, repoPath: URL) throws -> [Match] {
+        let content = try String(contentsOf: file, encoding: .utf8)
+        let lines = content.components(separatedBy: .newlines)
+        var matches: [Match] = []
+
+        let relativePath = file.path.replacingOccurrences(
+            of: repoPath.path + "/",
+            with: ""
+        )
+
+        for (index, line) in lines.enumerated() {
+            if line.contains(pattern) {
+                matches.append(Match(file: relativePath, line: index + 1))
+            }
+        }
+
+        return matches
+    }
+
+    private func findFiles(of type: String, in directory: URL) -> [URL] {
+        let fileManager = FileManager.default
+
+        guard fileManager.fileExists(atPath: directory.path) else {
+            Self.logger.info("Directory does not exist: \(directory.path)")
+            return []
+        }
+
+        guard
+            let enumerator = fileManager.enumerator(
+                at: directory,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles],
+                errorHandler: nil
+            )
+        else {
+            Self.logger.info("Failed to create enumerator for: \(directory.path)")
+            return []
+        }
+
+        var matchingFiles: [URL] = []
+
+        for case let fileURL as URL in enumerator {
+            if fileURL.pathExtension == type {
+                matchingFiles.append(fileURL)
+            }
+        }
+
+        return matchingFiles
     }
 }

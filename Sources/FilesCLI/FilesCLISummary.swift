@@ -1,0 +1,30 @@
+import Common
+import Files
+
+struct FilesCLISummary: JobSummaryFormattable {
+    let outputs: [Files.Output]
+
+    var description: String { markdown }
+
+    var markdown: String {
+        var lines = ["# File Counts"]
+
+        guard !outputs.isEmpty else {
+            lines.append("")
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
+        }
+
+        lines.append("")
+        lines.append("| Commit | File Type | Count |")
+        lines.append("|--------|-----------|-------|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results {
+                lines.append("| `\(commit)` | `.\(result.filetype)` | \(result.files.count) |")
+            }
+        }
+
+        return lines.joined(separator: "\n")
+    }
+}

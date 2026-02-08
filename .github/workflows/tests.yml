@@ -35,7 +35,7 @@ jobs:
       - name: Resolve dependencies
         run: swift package resolve
 
-      # Required for LOCSDK tests
+      # Required for LOC tests
       - name: Install cloc
         run: brew install cloc
 

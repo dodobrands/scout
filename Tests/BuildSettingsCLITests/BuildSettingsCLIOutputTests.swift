@@ -1,0 +1,127 @@
+import BuildSettings
+import Foundation
+import InlineSnapshotTesting
+import Testing
+
+/// Tests for BuildSettings.Output JSON encoding
+@Suite("BuildSettingsCLIOutput JSON")
+struct BuildSettingsCLIOutputTests {
+
+    @Test func encodesNullForMissingParameters() {
+        let output = BuildSettings.Output(
+            commit: "abc123",
+            date: "2025-01-15T07:30:00Z",
+            results: [
+                BuildSettings.ResultItem(
+                    target: "MyApp",
+                    settings: [
+                        "MISSING_PARAM": nil,
+                        "SWIFT_VERSION": "5.0",
+                    ]
+                )
+            ]
+        )
+
+        assertInlineSnapshot(of: output, as: .json) {
+            """
+            {
+              "commit" : "abc123",
+              "date" : "2025-01-15T07:30:00Z",
+              "results" : [
+                {
+                  "settings" : {
+                    "MISSING_PARAM" : null,
+                    "SWIFT_VERSION" : "5.0"
+                  },
+                  "target" : "MyApp"
+                }
+              ]
+            }
+            """
+        }
+    }
+
+    @Test func encodesAllNullParameters() {
+        let output = BuildSettings.Output(
+            commit: "abc123",
+            date: "2025-01-15T07:30:00Z",
+            results: [
+                BuildSettings.ResultItem(
+                    target: "MyApp",
+                    settings: [
+                        "PARAM1": nil,
+                        "PARAM2": nil,
+                    ]
+                )
+            ]
+        )
+
+        assertInlineSnapshot(of: output, as: .json) {
+            """
+            {
+              "commit" : "abc123",
+              "date" : "2025-01-15T07:30:00Z",
+              "results" : [
+                {
+                  "settings" : {
+                    "PARAM1" : null,
+                    "PARAM2" : null
+                  },
+                  "target" : "MyApp"
+                }
+              ]
+            }
+            """
+        }
+    }
+
+    @Test func encodesArrayForMultipleCommits() {
+        let outputs = [
+            BuildSettings.Output(
+                commit: "abc123",
+                date: "2025-01-15T07:30:00Z",
+                results: [
+                    BuildSettings.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.0"])
+                ]
+            ),
+            BuildSettings.Output(
+                commit: "def456",
+                date: "2025-02-15T11:45:00Z",
+                results: [
+                    BuildSettings.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.9"])
+                ]
+            ),
+        ]
+
+        assertInlineSnapshot(of: outputs, as: .json) {
+            """
+            [
+              {
+                "commit" : "abc123",
+                "date" : "2025-01-15T07:30:00Z",
+                "results" : [
+                  {
+                    "settings" : {
+                      "SWIFT_VERSION" : "5.0"
+                    },
+                    "target" : "MyApp"
+                  }
+                ]
+              },
+              {
+                "commit" : "def456",
+                "date" : "2025-02-15T11:45:00Z",
+                "results" : [
+                  {
+                    "settings" : {
+                      "SWIFT_VERSION" : "5.9"
+                    },
+                    "target" : "MyApp"
+                  }
+                ]
+              }
+            ]
+            """
+        }
+    }
+}

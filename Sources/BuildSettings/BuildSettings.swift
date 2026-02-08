@@ -1,119 +1,378 @@
-import ArgumentParser
-import BuildSettingsSDK
 import Common
 import Foundation
 import Logging
 import System
-import SystemPackage
 
-public struct BuildSettings: AsyncParsableCommand {
+/// SDK for extracting build settings from Xcode projects.
+public struct BuildSettings: Sendable {
+    private static let logger = Logger(label: "scout.BuildSettings")
+
     public init() {}
 
-    public static let configuration = CommandConfiguration(
-        commandName: "build-settings",
-        abstract: "Extract build settings from Xcode projects"
-    )
+    /// Error that can occur during analysis.
+    public enum AnalysisError: Error, LocalizedError {
+        case setupCommandFailed(command: String, error: String)
+        case buildSettingsExtractionFailed(error: String)
+        case checkoutFailed(hash: String, error: String)
 
-    @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
-    public var repoPath: String?
+        public var errorDescription: String? {
+            switch self {
+            case .setupCommandFailed(let command, let error):
+                return "Setup command '\(command)' failed: \(error)"
+            case .buildSettingsExtractionFailed(let error):
+                return "Build settings extraction failed: \(error)"
+            case .checkoutFailed(let hash, let error):
+                return "Failed to checkout \(hash): \(error)"
+            }
+        }
+    }
 
-    @Option(
-        name: [.long, .short],
-        help: "Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)"
-    )
-    public var project: String?
+    /// Extracts build settings from Xcode projects in the repository.
+    /// Performs analysis on current repository state without git operations.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Array of targets with their build settings
+    func extractBuildSettings(input: AnalysisInput) async throws -> [TargetWithBuildSettings] {
+        let repoPath = URL(filePath: input.repoPath)
 
-    @Option(help: "Path to configuration JSON file")
-    public var config: String?
+        try await executeSetupCommands(input.setupCommands, in: repoPath)
 
-    @Argument(
-        help:
-            "Build settings parameters to extract (e.g., SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET)"
-    )
-    public var buildSettingsParameters: [String] = []
-
-    @Option(
-        name: [.long, .short],
-        parsing: .upToNextOption,
-        help: "Commit hashes to analyze (default: HEAD)"
-    )
-    public var commits: [String] = []
-
-    @Option(name: [.long, .short], help: "Path to save JSON results")
-    public var output: String?
-
-    @Flag(name: [.long, .short])
-    public var verbose: Bool = false
-
-    @Flag(
-        help: "Clean working directory before analysis (git clean -ffdx && git reset --hard HEAD)"
-    )
-    public var gitClean: Bool = false
-
-    @Flag(help: "Fix broken LFS pointers by committing modified files after checkout")
-    public var fixLfs: Bool = false
-
-    @Flag(help: "Initialize submodules (reset and update to correct commits)")
-    public var initializeSubmodules: Bool = false
-
-    static let logger = Logger(label: "scout.ExtractBuildSettings")
-
-    public func run() async throws {
-        LoggingSetup.setup(verbose: verbose)
-
-        // Load config from file
-        let fileConfig = try await BuildSettingsConfig(configPath: config)
-
-        // Build CLI inputs
-        let cliInputs = BuildSettingsCLIInputs(
-            project: project,
-            buildSettingsParameters: buildSettingsParameters.nilIfEmpty,
-            repoPath: repoPath,
-            commits: commits.nilIfEmpty,
-            gitClean: gitClean ? true : nil,
-            fixLfs: fixLfs ? true : nil,
-            initializeSubmodules: initializeSubmodules ? true : nil
+        let foundProjectsAndWorkspaces = try resolveProject(
+            path: input.project,
+            repoPath: repoPath
         )
 
-        // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
-        let input = try BuildSettingsSDK.Input(cli: cliInputs, config: fileConfig)
-
-        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
-        Self.logger.info(
-            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) metric(s)"
+        let projectsWithTargets = try await getTargetsForAllProjects(
+            foundProjectsAndWorkspaces: foundProjectsAndWorkspaces
+        )
+        let targetsWithBuildSettings = try await getBuildSettingsForAllTargets(
+            projectsWithTargets: projectsWithTargets,
+            foundProjectsAndWorkspaces: foundProjectsAndWorkspaces,
+            configuration: input.configuration
         )
 
-        let sdk = BuildSettingsSDK()
-        var outputs: [BuildSettingsSDK.Output] = []
+        return targetsWithBuildSettings
+    }
 
-        do {
-            for try await output in sdk.analyze(input: input) {
-                Self.logger.notice(
-                    "Extracted build settings for \(output.results.count) targets at \(output.commit)"
-                )
-                outputs.append(output)
-
-                if let outputPath = self.output {
-                    try outputs.writeJSON(to: outputPath)
+    /// Analyzes all commits from metrics and yields outputs incrementally.
+    /// Groups metrics by commit to minimize checkouts.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
                 }
             }
-        } catch let error as BuildSettingsSDK.AnalysisError {
-            Self.logger.warning(
-                "Analysis failed",
-                metadata: ["error": "\(error.localizedDescription)"]
-            )
-            // Write partial results collected before the error
-            if let outputPath = self.output {
-                try outputs.writeJSON(to: outputPath)
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
+        // Group metrics by commit to minimize checkouts
+        var commitToSettings: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToSettings[commit, default: []].append(metric.setting)
             }
         }
 
-        let summary = BuildSettingsSummary(outputs: outputs)
-        if !summary.outputs.isEmpty {
-            Self.logger.info("\(summary)")
-        }
-        GitHubActionsLogHandler.writeSummary(summary)
+        for (hash, requestedSettings) in commitToSettings {
+            try Task.checkCancellation()
 
-        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
+            Self.logger.debug("Processing commit: \(hash)")
+
+            do {
+                try await Shell.execute(
+                    "git",
+                    arguments: ["checkout", hash],
+                    workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+                )
+            } catch {
+                throw AnalysisError.checkoutFailed(
+                    hash: hash,
+                    error: error.localizedDescription
+                )
+            }
+
+            try await GitFix.prepareRepository(git: input.git)
+
+            let analysisInput = AnalysisInput(
+                repoPath: input.git.repoPath,
+                setupCommands: input.setupCommands,
+                project: input.project,
+                configuration: input.configuration
+            )
+
+            let targets: [TargetWithBuildSettings]
+            do {
+                targets = try await extractBuildSettings(input: analysisInput)
+            } catch let error as AnalysisError {
+                throw error
+            } catch {
+                throw AnalysisError.buildSettingsExtractionFailed(
+                    error: error.localizedDescription
+                )
+            }
+
+            let requestedSettingsSet = Set(requestedSettings)
+            let resultItems = targets.map { target in
+                let filteredSettings = target.buildSettings
+                    .filter { requestedSettingsSet.contains($0.key) }
+                    .mapValues { Optional($0) }
+                return ResultItem(target: target.target, settings: filteredSettings)
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+            onOutput(Output(commit: hash, date: date, results: resultItems))
+        }
+    }
+
+    // MARK: - Setup Commands
+
+    private func executeSetupCommands(
+        _ commands: [SetupCommand],
+        in repoPath: URL
+    ) async throws {
+        for setupCommand in commands {
+            let workingDirPath: FilePath
+            if let dir = setupCommand.workingDirectory {
+                let workingDirURL = repoPath.appendingPathComponent(dir, isDirectory: true)
+                workingDirPath = FilePath(workingDirURL.path(percentEncoded: false))
+            } else {
+                workingDirPath = FilePath(repoPath.path(percentEncoded: false))
+            }
+
+            Self.logger.info(
+                "Executing setup command",
+                metadata: [
+                    "command": "\(setupCommand.command)",
+                    "workingDirectory": "\(workingDirPath.string)",
+                ]
+            )
+
+            do {
+                _ = try await Shell.execute(
+                    "/bin/bash",
+                    arguments: ["-c", setupCommand.command],
+                    workingDirectory: workingDirPath
+                )
+            } catch {
+                if setupCommand.optional {
+                    Self.logger.warning(
+                        "Optional setup command failed, continuing",
+                        metadata: [
+                            "command": "\(setupCommand.command)",
+                            "error": "\(error.localizedDescription)",
+                        ]
+                    )
+                } else {
+                    throw AnalysisError.setupCommandFailed(
+                        command: setupCommand.command,
+                        error: error.localizedDescription
+                    )
+                }
+            }
+        }
+    }
+
+    // MARK: - Project Discovery
+
+    private func resolveProject(
+        path: String,
+        repoPath: URL
+    ) throws -> [ProjectOrWorkspace] {
+        let fileManager = FileManager.default
+
+        // Resolve path: if relative, join with repoPath; if absolute, use as-is
+        let resolvedPath: String
+        if path.hasPrefix("/") {
+            resolvedPath = path
+        } else {
+            resolvedPath = repoPath.appendingPathComponent(path).path(percentEncoded: false)
+        }
+
+        guard fileManager.fileExists(atPath: resolvedPath) else {
+            Self.logger.warning(
+                "Project or workspace not found",
+                metadata: ["path": "\(resolvedPath)"]
+            )
+            return []
+        }
+
+        let isWorkspace = resolvedPath.hasSuffix(".xcworkspace")
+        return [ProjectOrWorkspace(path: resolvedPath, isWorkspace: isWorkspace)]
+    }
+
+    private func getTargetsForAllProjects(
+        foundProjectsAndWorkspaces: [ProjectOrWorkspace]
+    ) async throws -> [ProjectWithTargets] {
+        return try await foundProjectsAndWorkspaces.concurrentMap { project in
+            let targets = try await self.getTargetsFromProject(
+                projectPath: project.path,
+                isWorkspace: project.isWorkspace
+            )
+            return ProjectWithTargets(path: project.path, targets: targets)
+        }
+    }
+
+    private func getTargetsFromProject(
+        projectPath: String,
+        isWorkspace: Bool
+    ) async throws -> [String] {
+        let projectDir = (projectPath as NSString).deletingLastPathComponent
+        let projectName = (projectPath as NSString).lastPathComponent
+        let projectDirPath = FilePath(projectDir)
+
+        var arguments: [String] = ["-list", "-json"]
+        if isWorkspace {
+            arguments.append(contentsOf: ["-workspace", projectName])
+        } else {
+            arguments.append(contentsOf: ["-project", projectName])
+        }
+
+        let jsonOutput = try await Shell.execute(
+            "xcodebuild",
+            arguments: arguments,
+            workingDirectory: projectDirPath
+        )
+
+        guard let jsonData = jsonOutput.data(using: .utf8),
+            let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+        else {
+            return []
+        }
+
+        var targets: [String] = []
+
+        if let workspace = json["workspace"] as? [String: Any] {
+            if let projects = workspace["projects"] as? [[String: Any]] {
+                for project in projects {
+                    if let projectTargets = project["targets"] as? [String] {
+                        targets.append(contentsOf: projectTargets)
+                    }
+                }
+            }
+        } else if let project = json["project"] as? [String: Any] {
+            if let projectTargets = project["targets"] as? [String] {
+                targets.append(contentsOf: projectTargets)
+            }
+        }
+
+        return targets.sorted()
+    }
+
+    // MARK: - Build Settings Extraction
+
+    private func getBuildSettingsForAllTargets(
+        projectsWithTargets: [ProjectWithTargets],
+        foundProjectsAndWorkspaces: [ProjectOrWorkspace],
+        configuration: String
+    ) async throws -> [TargetWithBuildSettings] {
+        var projectInfoMap: [String: ProjectOrWorkspace] = [:]
+        for project in foundProjectsAndWorkspaces {
+            projectInfoMap[project.path] = project
+        }
+
+        var allTargets: [(target: String, projectPath: String, isWorkspace: Bool)] = []
+        for projectWithTargets in projectsWithTargets {
+            guard let projectInfo = projectInfoMap[projectWithTargets.path] else {
+                continue
+            }
+
+            for target in projectWithTargets.targets {
+                allTargets.append(
+                    (
+                        target: target,
+                        projectPath: projectWithTargets.path,
+                        isWorkspace: projectInfo.isWorkspace
+                    )
+                )
+            }
+        }
+
+        return try await allTargets.concurrentMap { targetInfo in
+            let buildSettings = try await self.getBuildSettingsForTarget(
+                target: targetInfo.target,
+                projectPath: targetInfo.projectPath,
+                isWorkspace: targetInfo.isWorkspace,
+                configuration: configuration
+            )
+            return TargetWithBuildSettings(
+                target: targetInfo.target,
+                buildSettings: buildSettings
+            )
+        }
+    }
+
+    private func getBuildSettingsForTarget(
+        target: String,
+        projectPath: String,
+        isWorkspace: Bool,
+        configuration: String
+    ) async throws -> [String: String] {
+        let projectDir = (projectPath as NSString).deletingLastPathComponent
+        let projectName = (projectPath as NSString).lastPathComponent
+        let projectDirPath = FilePath(projectDir)
+
+        var arguments: [String] = [
+            "-showBuildSettings",
+            "-target", target,
+            "-json",
+            "-configuration", configuration,
+        ]
+
+        if isWorkspace {
+            arguments.append(contentsOf: ["-workspace", projectName])
+        } else {
+            arguments.append(contentsOf: ["-project", projectName])
+        }
+
+        let jsonOutput = try await Shell.execute(
+            "xcodebuild",
+            arguments: arguments,
+            workingDirectory: projectDirPath
+        )
+
+        guard let jsonData = jsonOutput.data(using: .utf8),
+            let jsonArray = try? JSONSerialization.jsonObject(with: jsonData) as? [[String: Any]]
+        else {
+            return [:]
+        }
+
+        var buildSettings: [String: String] = [:]
+
+        for targetInfo in jsonArray {
+            if let targetName = targetInfo["target"] as? String,
+                targetName == target,
+                let settings = targetInfo["buildSettings"] as? [String: Any]
+            {
+                for (key, value) in settings {
+                    if let stringValue = value as? String {
+                        buildSettings[key] = stringValue
+                    } else {
+                        buildSettings[key] = String(describing: value)
+                    }
+                }
+                break
+            }
+        }
+
+        return buildSettings
     }
 }
