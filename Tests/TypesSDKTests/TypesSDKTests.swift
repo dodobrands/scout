@@ -334,6 +334,48 @@ struct TypesSDKTests {
         #expect(identifiableResult.types.names == ["Company", "Person"])
         #expect(nameableResult.types.names == ["Company", "Person"])
     }
+
+    @Test
+    func `When searching for typealias name, should find types conforming to it`() async throws {
+        let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path, typeName: "Theme")
+        let result = try await sut.countTypes(input: input)
+
+        #expect(result.types.names == ["DarkTheme", "NeonTheme"])
+    }
+
+    @Test
+    func `When searching for original type, should find types conforming through typealias`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path, typeName: "Stylable")
+        let result = try await sut.countTypes(input: input)
+
+        #expect(result.types.names == ["DarkTheme", "LightTheme", "NeonTheme"])
+    }
+
+    @Test
+    func `When searching for base class, should find types inheriting through typealias`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path, typeName: "BaseRouter")
+        let result = try await sut.countTypes(input: input)
+
+        #expect(result.types.names == ["MainRouter", "SettingsRouter"])
+    }
+
+    @Test
+    func `When searching for chained typealias, should find types conforming to it`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory()
+        let input = TypesSDK.AnalysisInput(repoPath: samplesURL.path, typeName: "AppTheme")
+        let result = try await sut.countTypes(input: input)
+
+        #expect(result.types.names == ["NeonTheme"])
+    }
 }
 
 private func samplesDirectory() throws -> URL {
