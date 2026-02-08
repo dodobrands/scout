@@ -10,7 +10,7 @@ struct PatternOutputTests {
     @Test func encodesSingleCommit() {
         let output = PatternSDK.Output(
             commit: "abc1234def5678",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 PatternSDK.ResultItem(
                     pattern: "import SwiftUI",
@@ -32,7 +32,7 @@ struct PatternOutputTests {
             """
             {
               "commit" : "abc1234def5678",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "matches" : [
@@ -66,7 +66,7 @@ struct PatternOutputTests {
         let outputs = [
             PatternSDK.Output(
                 commit: "abc1234def5678",
-                date: "2025-01-15T10:30:00+03:00",
+                date: "2025-01-15T07:30:00Z",
                 results: [
                     PatternSDK.ResultItem(
                         pattern: "import UIKit",
@@ -78,7 +78,7 @@ struct PatternOutputTests {
             ),
             PatternSDK.Output(
                 commit: "def5678abc1234",
-                date: "2025-02-15T14:45:00+03:00",
+                date: "2025-02-15T11:45:00Z",
                 results: [
                     PatternSDK.ResultItem(
                         pattern: "import UIKit",
@@ -96,7 +96,7 @@ struct PatternOutputTests {
             [
               {
                 "commit" : "abc1234def5678",
-                "date" : "2025-01-15T10:30:00+03:00",
+                "date" : "2025-01-15T07:30:00Z",
                 "results" : [
                   {
                     "matches" : [
@@ -111,7 +111,7 @@ struct PatternOutputTests {
               },
               {
                 "commit" : "def5678abc1234",
-                "date" : "2025-02-15T14:45:00+03:00",
+                "date" : "2025-02-15T11:45:00Z",
                 "results" : [
                   {
                     "matches" : [
@@ -136,7 +136,7 @@ struct PatternOutputTests {
     @Test func encodesEmptyResults() {
         let output = PatternSDK.Output(
             commit: "abc123",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 PatternSDK.ResultItem(pattern: "import UIKit", matches: [])
             ]
@@ -146,7 +146,7 @@ struct PatternOutputTests {
             """
             {
               "commit" : "abc123",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "matches" : [

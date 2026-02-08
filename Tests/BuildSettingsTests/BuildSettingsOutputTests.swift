@@ -10,7 +10,7 @@ struct BuildSettingsOutputTests {
     @Test func encodesNullForMissingParameters() {
         let output = BuildSettingsSDK.Output(
             commit: "abc123",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 BuildSettingsSDK.ResultItem(
                     target: "MyApp",
@@ -26,7 +26,7 @@ struct BuildSettingsOutputTests {
             """
             {
               "commit" : "abc123",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "settings" : {
@@ -44,7 +44,7 @@ struct BuildSettingsOutputTests {
     @Test func encodesAllNullParameters() {
         let output = BuildSettingsSDK.Output(
             commit: "abc123",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 BuildSettingsSDK.ResultItem(
                     target: "MyApp",
@@ -60,7 +60,7 @@ struct BuildSettingsOutputTests {
             """
             {
               "commit" : "abc123",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "settings" : {
@@ -79,14 +79,14 @@ struct BuildSettingsOutputTests {
         let outputs = [
             BuildSettingsSDK.Output(
                 commit: "abc123",
-                date: "2025-01-15T10:30:00+03:00",
+                date: "2025-01-15T07:30:00Z",
                 results: [
                     BuildSettingsSDK.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.0"])
                 ]
             ),
             BuildSettingsSDK.Output(
                 commit: "def456",
-                date: "2025-02-15T14:45:00+03:00",
+                date: "2025-02-15T11:45:00Z",
                 results: [
                     BuildSettingsSDK.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.9"])
                 ]
@@ -98,7 +98,7 @@ struct BuildSettingsOutputTests {
             [
               {
                 "commit" : "abc123",
-                "date" : "2025-01-15T10:30:00+03:00",
+                "date" : "2025-01-15T07:30:00Z",
                 "results" : [
                   {
                     "settings" : {
@@ -110,7 +110,7 @@ struct BuildSettingsOutputTests {
               },
               {
                 "commit" : "def456",
-                "date" : "2025-02-15T14:45:00+03:00",
+                "date" : "2025-02-15T11:45:00Z",
                 "results" : [
                   {
                     "settings" : {
