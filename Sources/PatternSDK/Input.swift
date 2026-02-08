@@ -19,14 +19,6 @@ extension PatternSDK {
         }
     }
 
-    /// Input parameters for analysis without git operations.
-    /// Used by internal search function.
-    struct AnalysisInput: Sendable {
-        let repoPath: String
-        let extensions: [String]
-        let pattern: String
-    }
-
     /// Input parameters for PatternSDK operations.
     public struct Input: Sendable {
         public let git: GitConfiguration

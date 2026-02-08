@@ -77,7 +77,7 @@ let results = try await sut.count(input: input)
 ```
 
 **Separate git operations from analysis logic** — SDK must have two layers:
-- **Public `analyze()` method** — handles git operations (checkout, prepare repository) and orchestrates analysis across multiple commits
+- **Public `analyze()` method** — handles git operations (checkout, prepare repository) and orchestrates analysis across multiple commits. Must minimize checkouts — at most one checkout per unique commit. All metrics for the same commit must be analyzed within a single checkout
 - **Internal analysis method** — performs domain-specific analysis on current repository state without any git operations. Must accept `AnalysisInput` as its only parameter — all domain-specific fields (type name, pattern, extension, etc.) must be inside `AnalysisInput`
 - **Simplified input type** — internal analysis method uses a separate input type without git/metrics fields, but containing all parameters needed for a single analysis call
 
@@ -95,14 +95,17 @@ public struct AnalysisInput: Sendable {
 }
 
 // Public method - handles git operations
+// Groups metrics by commit to minimize checkouts (one checkout per unique commit)
 public func analyze(input: Input) async throws -> [Output] {
-    for commit in commits {
-        try await git.checkout(commit)
+    let commitToMetrics = groupByCommit(input.metrics)
+    for (commit, metrics) in commitToMetrics {
+        try await git.checkout(commit)           // one checkout per commit
         try await GitFix.prepareRepository(git: input.git)
         
-        let analysisInput = AnalysisInput(repoPath: input.git.repoPath, ...)
-        let result = try await extractData(input: analysisInput)  // internal
-        // ...
+        for metric in metrics {                  // all metrics within single checkout
+            let analysisInput = AnalysisInput(repoPath: input.git.repoPath, ...)
+            let result = try await extractData(input: analysisInput)  // internal
+        }
     }
 }
 

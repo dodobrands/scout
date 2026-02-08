@@ -2,24 +2,6 @@ import Common
 import Foundation
 import SourceKittenFramework
 
-/// Parsed Swift code object with name and inheritance information.
-public struct ObjectFromCode: Sendable {
-    /// Simple type name (e.g., "AddToCartEvent")
-    public let name: String
-    /// Full qualified type name including parent types (e.g., "Analytics.AddToCartEvent")
-    public let fullName: String
-    /// Path to the file containing this type
-    public let filePath: String
-    public let inheritedTypes: [String]
-
-    public init(name: String, fullName: String, filePath: String, inheritedTypes: [String]) {
-        self.name = name
-        self.fullName = fullName
-        self.filePath = filePath
-        self.inheritedTypes = inheritedTypes
-    }
-}
-
 /// Parser for Swift source files using SourceKitten.
 struct SwiftParser {
     /// Parses a Swift source file and extracts type definitions.
