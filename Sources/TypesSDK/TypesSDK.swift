@@ -56,11 +56,30 @@ public struct TypesSDK: Sendable {
         return absolutePath
     }
 
-    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Analyzes all commits from metrics and yields outputs incrementally.
     /// Groups metrics by commit to minimize checkouts.
     /// - Parameter input: Input parameters for the operation
-    /// - Returns: Array of outputs, one for each unique commit
-    public func analyze(input: Input) async throws -> [Output] {
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
         let repoPath = URL(filePath: input.git.repoPath)
 
         // Resolve HEAD commits to actual hashes
@@ -76,8 +95,9 @@ public struct TypesSDK: Sendable {
             }
         }
 
-        var outputs: [Output] = []
         for (hash, typeNames) in commitToTypes {
+            try Task.checkCancellation()
+
             Self.logger.debug("Processing commit: \(hash) for types: \(typeNames)")
 
             try await Shell.execute(
@@ -90,16 +110,19 @@ public struct TypesSDK: Sendable {
 
             var resultItems: [ResultItem] = []
             for typeName in typeNames {
-                let analysisInput = AnalysisInput(repoPath: input.git.repoPath, typeName: typeName)
+                let analysisInput = AnalysisInput(
+                    repoPath: input.git.repoPath,
+                    typeName: typeName
+                )
                 let result = try await countTypes(input: analysisInput)
-                resultItems.append(ResultItem(typeName: result.typeName, types: result.types))
+                resultItems.append(
+                    ResultItem(typeName: result.typeName, types: result.types)
+                )
             }
 
             let date = try await Git.commitDate(for: hash, in: repoPath)
-            outputs.append(Output(commit: hash, date: date, results: resultItems))
+            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
-
-        return outputs
     }
 
     private func findSwiftFiles(in directory: URL) -> [URL] {

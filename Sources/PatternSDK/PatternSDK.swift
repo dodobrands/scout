@@ -29,11 +29,30 @@ public struct PatternSDK: Sendable {
         return Result(pattern: input.pattern, matches: allMatches)
     }
 
-    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Analyzes all commits from metrics and yields outputs incrementally.
     /// Groups metrics by commit to minimize checkouts.
     /// - Parameter input: Input parameters for the operation
-    /// - Returns: Array of outputs, one for each unique commit
-    public func analyze(input: Input) async throws -> [Output] {
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
         let repoPath = URL(filePath: input.git.repoPath)
 
         // Resolve HEAD commits to actual hashes
@@ -49,8 +68,9 @@ public struct PatternSDK: Sendable {
             }
         }
 
-        var outputs: [Output] = []
         for (hash, patterns) in commitToPatterns {
+            try Task.checkCancellation()
+
             Self.logger.debug("Processing commit: \(hash)")
 
             try await Shell.execute(
@@ -69,14 +89,14 @@ public struct PatternSDK: Sendable {
                     pattern: pattern
                 )
                 let result = try search(input: analysisInput)
-                resultItems.append(ResultItem(pattern: result.pattern, matches: result.matches))
+                resultItems.append(
+                    ResultItem(pattern: result.pattern, matches: result.matches)
+                )
             }
 
             let date = try await Git.commitDate(for: hash, in: repoPath)
-            outputs.append(Output(commit: hash, date: date, results: resultItems))
+            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
-
-        return outputs
     }
 
     private func searchInFile(pattern: String, file: URL, repoPath: URL) throws -> [Match] {

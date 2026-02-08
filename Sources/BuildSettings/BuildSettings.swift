@@ -87,22 +87,25 @@ public struct BuildSettings: AsyncParsableCommand {
         var outputs: [BuildSettingsSDK.Output] = []
 
         do {
-            outputs = try await sdk.analyze(input: input)
+            for try await output in sdk.analyze(input: input) {
+                Self.logger.notice(
+                    "Extracted build settings for \(output.results.count) targets at \(output.commit)"
+                )
+                outputs.append(output)
+
+                if let outputPath = self.output {
+                    try outputs.writeJSON(to: outputPath)
+                }
+            }
         } catch let error as BuildSettingsSDK.AnalysisError {
             Self.logger.warning(
                 "Analysis failed",
                 metadata: ["error": "\(error.localizedDescription)"]
             )
-        }
-
-        for output in outputs {
-            Self.logger.notice(
-                "Extracted build settings for \(output.results.count) targets at \(output.commit)"
-            )
-        }
-
-        if let outputPath = output {
-            try outputs.writeJSON(to: outputPath)
+            // Write partial results collected before the error
+            if let outputPath = self.output {
+                try outputs.writeJSON(to: outputPath)
+            }
         }
 
         let summary = BuildSettingsSummary(outputs: outputs)

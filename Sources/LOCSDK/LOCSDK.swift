@@ -68,9 +68,29 @@ public struct LOCSDK: Sendable {
     }
 
     /// Analyzes lines of code for all metrics across their specified commits.
+    /// Yields outputs incrementally, one for each unique commit as it is processed.
     /// - Parameter input: Input parameters containing metrics with their commits
-    /// - Returns: Array of outputs, one for each unique commit
-    public func analyze(input: Input) async throws -> [Output] {
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
         let repoPath = URL(filePath: input.git.repoPath)
 
         try await Self.checkClocInstalled()
@@ -88,8 +108,9 @@ public struct LOCSDK: Sendable {
             }
         }
 
-        var outputs: [Output] = []
         for (hash, metrics) in commitToMetrics {
+            try Task.checkCancellation()
+
             try await Shell.execute(
                 "git",
                 arguments: ["checkout", hash],
@@ -112,10 +133,8 @@ public struct LOCSDK: Sendable {
             }
 
             let date = try await Git.commitDate(for: hash, in: repoPath)
-            outputs.append(Output(commit: hash, date: date, results: resultItems))
+            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
-
-        return outputs
     }
 
     private func foldersToAnalyze(

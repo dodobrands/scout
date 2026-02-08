@@ -53,11 +53,30 @@ public struct BuildSettingsSDK: Sendable {
         return targetsWithBuildSettings
     }
 
-    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Analyzes all commits from metrics and yields outputs incrementally.
     /// Groups metrics by commit to minimize checkouts.
     /// - Parameter input: Input parameters for the operation
-    /// - Returns: Array of outputs, one for each unique commit
-    public func analyze(input: Input) async throws -> [Output] {
+    /// - Returns: Async stream of outputs, one for each unique commit
+    public func analyze(input: Input) -> AsyncThrowingStream<Output, any Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
         let repoPath = URL(filePath: input.git.repoPath)
 
         // Resolve HEAD commits to actual hashes
@@ -73,8 +92,9 @@ public struct BuildSettingsSDK: Sendable {
             }
         }
 
-        var outputs: [Output] = []
         for (hash, requestedSettings) in commitToSettings {
+            try Task.checkCancellation()
+
             Self.logger.debug("Processing commit: \(hash)")
 
             do {
@@ -105,7 +125,9 @@ public struct BuildSettingsSDK: Sendable {
             } catch let error as AnalysisError {
                 throw error
             } catch {
-                throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
+                throw AnalysisError.buildSettingsExtractionFailed(
+                    error: error.localizedDescription
+                )
             }
 
             let requestedSettingsSet = Set(requestedSettings)
@@ -117,10 +139,8 @@ public struct BuildSettingsSDK: Sendable {
             }
 
             let date = try await Git.commitDate(for: hash, in: repoPath)
-            outputs.append(Output(commit: hash, date: date, results: resultItems))
+            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
-
-        return outputs
     }
 
     // MARK: - Setup Commands

@@ -114,18 +114,19 @@ public struct Pattern: AsyncParsableCommand {
         )
 
         let sdk = PatternSDK()
-        let outputs = try await sdk.analyze(input: input)
+        var outputs: [PatternSDK.Output] = []
 
-        for output in outputs {
+        for try await output in sdk.analyze(input: input) {
             for result in output.results {
                 Self.logger.notice(
                     "Found \(result.matches.count) matches for '\(result.pattern)' at \(output.commit)"
                 )
             }
-        }
+            outputs.append(output)
 
-        if let outputPath = output {
-            try outputs.writeJSON(to: outputPath)
+            if let outputPath = self.output {
+                try outputs.writeJSON(to: outputPath)
+            }
         }
 
         Self.logger.notice(
