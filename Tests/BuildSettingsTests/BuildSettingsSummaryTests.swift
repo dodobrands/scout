@@ -51,8 +51,6 @@ struct BuildSettingsSummaryTests {
             | `abc1234` | `MyApp` | IPHONEOS_DEPLOYMENT_TARGET: 15.0, SWIFT_VERSION: 5.0 |
             | `abc1234` | `MyFramework` | SWIFT_VERSION: 5.0 |
             | `def5678` | `MyApp` | SWIFT_VERSION: 5.9 |
-
-
             """
         }
     }
@@ -122,8 +120,6 @@ struct BuildSettingsSummaryTests {
         assertInlineSnapshot(of: summary.markdown, as: .lines) {
             """
             ## BuildSettings Summary
-
-
             """
         }
 

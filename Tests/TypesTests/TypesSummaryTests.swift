@@ -71,8 +71,6 @@ struct TypesSummaryTests {
             | `abc1234` | `UIView` | 2 |
             | `abc1234` | `UIViewController` | 1 |
             | `def5678` | `UIView` | 1 |
-
-
             """
         }
     }
@@ -135,8 +133,6 @@ struct TypesSummaryTests {
         assertInlineSnapshot(of: summary.markdown, as: .lines) {
             """
             ## CountTypes Summary
-
-
             """
         }
 

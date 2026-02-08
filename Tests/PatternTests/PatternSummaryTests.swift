@@ -55,8 +55,6 @@ struct PatternSummaryTests {
             | `abc1234` | `import SwiftUI` | 1 |
             | `abc1234` | `import UIKit` | 2 |
             | `def5678` | `import UIKit` | 1 |
-
-
             """
         }
     }
@@ -114,8 +112,6 @@ struct PatternSummaryTests {
         assertInlineSnapshot(of: summary.markdown, as: .lines) {
             """
             ## Search Summary
-
-
             """
         }
 

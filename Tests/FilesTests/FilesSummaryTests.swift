@@ -48,8 +48,6 @@ struct FilesSummaryTests {
             | `abc1234` | `.storyboard` | 2 |
             | `abc1234` | `.swift` | 1 |
             | `def5678` | `.swift` | 2 |
-
-
             """
         }
     }
@@ -100,8 +98,6 @@ struct FilesSummaryTests {
         assertInlineSnapshot(of: summary.markdown, as: .lines) {
             """
             ## CountFiles Summary
-
-
             """
         }
 

@@ -17,21 +17,22 @@ struct TypesSummary: JobSummaryFormattable {
     }
 
     var markdown: String {
-        var md = "## CountTypes Summary\n\n"
+        var lines = ["## CountTypes Summary"]
 
         if !outputs.isEmpty {
-            md += "### Type Counts\n\n"
-            md += "| Commit | Type | Count |\n"
-            md += "|--------|------|-------|\n"
+            lines.append("")
+            lines.append("### Type Counts")
+            lines.append("")
+            lines.append("| Commit | Type | Count |")
+            lines.append("|--------|------|-------|")
             for output in outputs {
                 let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
-                    md += "| `\(commit)` | `\(result.typeName)` | \(result.types.count) |\n"
+                    lines.append("| `\(commit)` | `\(result.typeName)` | \(result.types.count) |")
                 }
             }
-            md += "\n"
         }
 
-        return md
+        return lines.joined(separator: "\n")
     }
 }

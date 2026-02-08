@@ -22,12 +22,14 @@ struct BuildSettingsSummary: JobSummaryFormattable {
     }
 
     var markdown: String {
-        var md = "## BuildSettings Summary\n\n"
+        var lines = ["## BuildSettings Summary"]
 
         if !outputs.isEmpty {
-            md += "### Build Settings\n\n"
-            md += "| Commit | Target | Settings |\n"
-            md += "|--------|--------|----------|\n"
+            lines.append("")
+            lines.append("### Build Settings")
+            lines.append("")
+            lines.append("| Commit | Target | Settings |")
+            lines.append("|--------|--------|----------|")
             for output in outputs {
                 let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results.sorted(by: { $0.target < $1.target }) {
@@ -36,12 +38,11 @@ struct BuildSettingsSummary: JobSummaryFormattable {
                         .sorted(by: { $0.key < $1.key })
                         .map { "\($0.key): \($0.value ?? "null")" }
                         .joined(separator: ", ")
-                    md += "| `\(commit)` | `\(result.target)` | \(settingsStr) |\n"
+                    lines.append("| `\(commit)` | `\(result.target)` | \(settingsStr) |")
                 }
             }
-            md += "\n"
         }
 
-        return md
+        return lines.joined(separator: "\n")
     }
 }

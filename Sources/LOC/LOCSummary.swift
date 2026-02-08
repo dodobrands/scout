@@ -17,21 +17,22 @@ struct LOCSummary: JobSummaryFormattable {
     }
 
     var markdown: String {
-        var md = "## CountLOC Summary\n\n"
+        var lines = ["## CountLOC Summary"]
 
         if !outputs.isEmpty {
-            md += "### Lines of Code Counts\n\n"
-            md += "| Commit | Configuration | LOC |\n"
-            md += "|--------|---------------|-----|\n"
+            lines.append("")
+            lines.append("### Lines of Code Counts")
+            lines.append("")
+            lines.append("| Commit | Configuration | LOC |")
+            lines.append("|--------|---------------|-----|")
             for output in outputs {
                 let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
-                    md += "| `\(commit)` | \(result.metric) | \(result.linesOfCode) |\n"
+                    lines.append("| `\(commit)` | \(result.metric) | \(result.linesOfCode) |")
                 }
             }
-            md += "\n"
         }
 
-        return md
+        return lines.joined(separator: "\n")
     }
 }

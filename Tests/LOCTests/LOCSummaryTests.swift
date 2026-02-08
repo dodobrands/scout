@@ -42,8 +42,6 @@ struct LOCSummaryTests {
             | `abc1234` | Swift | Sources | 48500 |
             | `abc1234` | Swift, Objective-C | LegacyModule | 12000 |
             | `def5678` | Swift | Sources | 52000 |
-
-
             """
         }
     }
@@ -83,8 +81,6 @@ struct LOCSummaryTests {
         assertInlineSnapshot(of: summary.markdown, as: .lines) {
             """
             ## CountLOC Summary
-
-
             """
         }
 
