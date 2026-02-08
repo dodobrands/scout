@@ -74,7 +74,7 @@ public struct FilesSDK: Sendable {
             for ext in filetypes {
                 let analysisInput = AnalysisInput(
                     repoPath: input.git.repoPath,
-                    `extension`: ext
+                    extension: ext
                 )
                 let result = countFiles(input: analysisInput)
                 resultItems.append(
