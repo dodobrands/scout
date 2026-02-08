@@ -4,24 +4,32 @@ import Common
 struct BuildSettingsSummary: JobSummaryFormattable {
     let outputs: [BuildSettingsSDK.Output]
 
-    var markdown: String {
-        var md = "## BuildSettings Summary\n\n"
+    var description: String { markdown }
 
+    var markdown: String {
+        var lines = ["# Build Settings"]
+
+        guard !outputs.isEmpty else {
+            lines.append("")
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
+        }
+
+        lines.append("")
+        lines.append("| Commit | Target | Settings |")
+        lines.append("|--------|--------|----------|")
         for output in outputs {
-            md += "### Commit \(output.commit.prefix(Git.shortHashLength)) (\(output.date))\n\n"
-            md += "| Target | Settings |\n"
-            md += "|--------|----------|\n"
+            let commit = output.commit.prefix(Git.shortHashLength)
             for result in output.results.sorted(by: { $0.target < $1.target }) {
                 let settingsStr =
                     result.settings
                     .sorted(by: { $0.key < $1.key })
                     .map { "\($0.key): \($0.value ?? "null")" }
                     .joined(separator: ", ")
-                md += "| `\(result.target)` | \(settingsStr) |\n"
+                lines.append("| `\(commit)` | `\(result.target)` | \(settingsStr) |")
             }
-            md += "\n"
         }
 
-        return md
+        return lines.joined(separator: "\n")
     }
 }

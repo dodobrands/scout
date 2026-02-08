@@ -4,22 +4,28 @@ import LOCSDK
 struct LOCSummary: JobSummaryFormattable {
     let outputs: [LOCSDK.Output]
 
-    var markdown: String {
-        var md = "## CountLOC Summary\n\n"
+    var description: String { markdown }
 
-        if !outputs.isEmpty {
-            md += "### Lines of Code Counts\n\n"
-            md += "| Commit | Configuration | LOC |\n"
-            md += "|--------|---------------|-----|\n"
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    md += "| `\(commit)` | \(result.metric) | \(result.linesOfCode) |\n"
-                }
-            }
-            md += "\n"
+    var markdown: String {
+        var lines = ["# Lines of Code"]
+
+        guard !outputs.isEmpty else {
+            lines.append("")
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
         }
 
-        return md
+        lines.append("")
+        lines.append("| Commit | Configuration | LOC |")
+        lines.append("|--------|---------------|-----|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results {
+                let metric = result.metric.replacingOccurrences(of: "|", with: "\\|")
+                lines.append("| `\(commit)` | \(metric) | \(result.linesOfCode) |")
+            }
+        }
+
+        return lines.joined(separator: "\n")
     }
 }

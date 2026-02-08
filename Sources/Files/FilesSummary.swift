@@ -4,22 +4,27 @@ import FilesSDK
 struct FilesSummary: JobSummaryFormattable {
     let outputs: [FilesSDK.Output]
 
-    var markdown: String {
-        var md = "## CountFiles Summary\n\n"
+    var description: String { markdown }
 
-        if !outputs.isEmpty {
-            md += "### File Type Counts\n\n"
-            md += "| Commit | File Type | Count |\n"
-            md += "|--------|-----------|-------|\n"
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    md += "| `\(commit)` | `.\(result.filetype)` | \(result.files.count) |\n"
-                }
-            }
-            md += "\n"
+    var markdown: String {
+        var lines = ["# File Counts"]
+
+        guard !outputs.isEmpty else {
+            lines.append("")
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
         }
 
-        return md
+        lines.append("")
+        lines.append("| Commit | File Type | Count |")
+        lines.append("|--------|-----------|-------|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results {
+                lines.append("| `\(commit)` | `.\(result.filetype)` | \(result.files.count) |")
+            }
+        }
+
+        return lines.joined(separator: "\n")
     }
 }

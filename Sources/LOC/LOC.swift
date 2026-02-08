@@ -117,15 +117,8 @@ public struct LOC: AsyncParsableCommand {
 
     private func logSummary(_ summary: LOCSummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.info("Lines of code counts:")
-            for output in summary.outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    Self.logger.info("  - \(commit): \(result.metric): \(result.linesOfCode)")
-                }
-            }
+            Self.logger.info("\(summary)")
         }
-
         GitHubActionsLogHandler.writeSummary(summary)
     }
 }

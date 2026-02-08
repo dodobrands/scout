@@ -97,15 +97,8 @@ public struct Files: AsyncParsableCommand {
 
     private func logSummary(_ summary: FilesSummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.info("File type counts:")
-            for output in summary.outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    Self.logger.info("  - \(commit): \(result.filetype): \(result.files.count)")
-                }
-            }
+            Self.logger.info("\(summary)")
         }
-
         GitHubActionsLogHandler.writeSummary(summary)
     }
 }

@@ -13,3 +13,4 @@
 ## Checklist
 
 - [ ] Update `Sources/*/README.md` if public API changed
+- [ ] No warnings from our code during build

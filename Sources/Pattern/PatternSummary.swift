@@ -1,13 +1,13 @@
 import Common
-import TypesSDK
+import PatternSDK
 
-struct TypesSummary: JobSummaryFormattable {
-    let outputs: [TypesSDK.Output]
+struct PatternSummary: JobSummaryFormattable {
+    let outputs: [PatternSDK.Output]
 
     var description: String { markdown }
 
     var markdown: String {
-        var lines = ["# Type Counts"]
+        var lines = ["# Pattern Matches"]
 
         guard !outputs.isEmpty else {
             lines.append("")
@@ -16,12 +16,14 @@ struct TypesSummary: JobSummaryFormattable {
         }
 
         lines.append("")
-        lines.append("| Commit | Type | Count |")
-        lines.append("|--------|------|-------|")
+        lines.append("| Commit | Pattern | Matches |")
+        lines.append("|--------|---------|--------|")
         for output in outputs {
             let commit = output.commit.prefix(Git.shortHashLength)
             for result in output.results {
-                lines.append("| `\(commit)` | `\(result.typeName)` | \(result.types.count) |")
+                lines.append(
+                    "| `\(commit)` | `\(result.pattern)` | \(result.matches.count) |"
+                )
             }
         }
 

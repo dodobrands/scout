@@ -100,15 +100,8 @@ public struct Types: AsyncParsableCommand {
 
     private func logSummary(_ summary: TypesSummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.info("Type counts:")
-            for output in summary.outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    Self.logger.info("  - \(commit): \(result.typeName): \(result.types.count)")
-                }
-            }
+            Self.logger.info("\(summary)")
         }
-
         GitHubActionsLogHandler.writeSummary(summary)
     }
 }
