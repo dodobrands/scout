@@ -361,7 +361,8 @@ struct LOCInputPriorityTests {
             languages: ["Swift"],
             include: ["Sources"],
             exclude: [],
-            commits: nil
+            commits: nil,
+            nameTemplate: nil
         )
         let config = LOCConfig(metrics: [locMetric], git: gitConfig)
 
@@ -371,5 +372,94 @@ struct LOCInputPriorityTests {
         #expect(input.git.repoPath == "/from/config")  // from config
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["abc123"])  // from CLI
+    }
+
+    // MARK: - Name Template Priority Tests
+
+    @Test
+    func `CLI nameTemplate overrides config nameTemplate`() throws {
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil,
+            nameTemplate: "CLI: %langs%"
+        )
+        let config = LOCConfig(
+            metrics: [
+                LOCMetric(
+                    languages: ["Swift"],
+                    include: ["Sources"],
+                    exclude: [],
+                    commits: nil,
+                    nameTemplate: "Config: %langs%"
+                )
+            ],
+            git: nil
+        )
+
+        let input = LOCSDK.Input(cli: cli, config: config)
+
+        let metric = try #require(input.metrics.first)
+        #expect(metric.nameTemplate == "CLI: %langs%")
+    }
+
+    @Test
+    func `falls back to config nameTemplate when CLI nameTemplate is nil`() throws {
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil,
+            nameTemplate: nil
+        )
+        let config = LOCConfig(
+            metrics: [
+                LOCMetric(
+                    languages: ["Swift"],
+                    include: ["Sources"],
+                    exclude: [],
+                    commits: nil,
+                    nameTemplate: "Config: %langs%"
+                )
+            ],
+            git: nil
+        )
+
+        let input = LOCSDK.Input(cli: cli, config: config)
+
+        let metric = try #require(input.metrics.first)
+        #expect(metric.nameTemplate == "Config: %langs%")
+    }
+
+    @Test
+    func `falls back to default nameTemplate when both CLI and config are nil`() throws {
+        let cli = LOCCLIInputs(
+            languages: nil,
+            include: nil,
+            exclude: nil,
+            repoPath: nil,
+            commits: nil,
+            nameTemplate: nil
+        )
+        let config = LOCConfig(
+            metrics: [
+                LOCMetric(
+                    languages: ["Swift"],
+                    include: ["Sources"],
+                    exclude: [],
+                    commits: nil,
+                    nameTemplate: nil
+                )
+            ],
+            git: nil
+        )
+
+        let input = LOCSDK.Input(cli: cli, config: config)
+
+        let metric = try #require(input.metrics.first)
+        #expect(metric.nameTemplate == "%langs% | %include%")
     }
 }

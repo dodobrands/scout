@@ -13,10 +13,10 @@ struct LOCOutputTests {
             date: "2025-01-15T10:30:00+03:00",
             results: [
                 LOCSDK.ResultItem(
-                    metric: "LOC [Swift, Objective-C] [LegacyModule]",
+                    metric: "Swift, Objective-C | LegacyModule",
                     linesOfCode: 12000
                 ),
-                LOCSDK.ResultItem(metric: "LOC [Swift] [Sources]", linesOfCode: 48500),
+                LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 48500),
             ]
         )
 
@@ -28,11 +28,11 @@ struct LOCOutputTests {
               "results" : [
                 {
                   "linesOfCode" : 12000,
-                  "metric" : "LOC [Swift, Objective-C] [LegacyModule]"
+                  "metric" : "Swift, Objective-C | LegacyModule"
                 },
                 {
                   "linesOfCode" : 48500,
-                  "metric" : "LOC [Swift] [Sources]"
+                  "metric" : "Swift | Sources"
                 }
               ]
             }
@@ -46,14 +46,14 @@ struct LOCOutputTests {
                 commit: "abc1234def5678",
                 date: "2025-01-15T10:30:00+03:00",
                 results: [
-                    LOCSDK.ResultItem(metric: "LOC [Swift] [Sources]", linesOfCode: 48500)
+                    LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 48500)
                 ]
             ),
             LOCSDK.Output(
                 commit: "def5678abc1234",
                 date: "2025-02-15T14:45:00+03:00",
                 results: [
-                    LOCSDK.ResultItem(metric: "LOC [Swift] [Sources]", linesOfCode: 52000)
+                    LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 52000)
                 ]
             ),
         ]
@@ -67,7 +67,7 @@ struct LOCOutputTests {
                 "results" : [
                   {
                     "linesOfCode" : 48500,
-                    "metric" : "LOC [Swift] [Sources]"
+                    "metric" : "Swift | Sources"
                   }
                 ]
               },
@@ -77,7 +77,7 @@ struct LOCOutputTests {
                 "results" : [
                   {
                     "linesOfCode" : 52000,
-                    "metric" : "LOC [Swift] [Sources]"
+                    "metric" : "Swift | Sources"
                   }
                 ]
               }
@@ -91,7 +91,7 @@ struct LOCOutputTests {
             commit: "abc123",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                LOCSDK.ResultItem(metric: "LOC [Swift] [EmptyDir]", linesOfCode: 0)
+                LOCSDK.ResultItem(metric: "Swift | EmptyDir", linesOfCode: 0)
             ]
         )
 
@@ -103,7 +103,7 @@ struct LOCOutputTests {
               "results" : [
                 {
                   "linesOfCode" : 0,
-                  "metric" : "LOC [Swift] [EmptyDir]"
+                  "metric" : "Swift | EmptyDir"
                 }
               ]
             }
