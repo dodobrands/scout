@@ -4,17 +4,7 @@ import TypesSDK
 struct TypesSummary: JobSummaryFormattable {
     let outputs: [TypesSDK.Output]
 
-    var description: String {
-        guard !outputs.isEmpty else { return "" }
-        var lines = ["Type counts:"]
-        for output in outputs {
-            let commit = output.commit.prefix(Git.shortHashLength)
-            for result in output.results {
-                lines.append("  - \(commit): \(result.typeName): \(result.types.count)")
-            }
-        }
-        return lines.joined(separator: "\n")
-    }
+    var description: String { markdown }
 
     var markdown: String {
         var lines = ["## CountTypes Summary"]

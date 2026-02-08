@@ -4,17 +4,7 @@ import LOCSDK
 struct LOCSummary: JobSummaryFormattable {
     let outputs: [LOCSDK.Output]
 
-    var description: String {
-        guard !outputs.isEmpty else { return "" }
-        var lines = ["Lines of code counts:"]
-        for output in outputs {
-            let commit = output.commit.prefix(Git.shortHashLength)
-            for result in output.results {
-                lines.append("  - \(commit): \(result.metric): \(result.linesOfCode)")
-            }
-        }
-        return lines.joined(separator: "\n")
-    }
+    var description: String { markdown }
 
     var markdown: String {
         var lines = ["## CountLOC Summary"]

@@ -7,7 +7,7 @@ import Testing
 @Suite
 struct BuildSettingsSummaryTests {
 
-    @Test func markdownWithMultipleCommits() {
+    @Test func multipleCommits() {
         let summary = BuildSettingsSummary(
             outputs: [
                 BuildSettingsSDK.Output(
@@ -40,7 +40,7 @@ struct BuildSettingsSummaryTests {
             ]
         )
 
-        assertInlineSnapshot(of: summary.markdown, as: .lines) {
+        assertInlineSnapshot(of: summary, as: .description) {
             """
             ## BuildSettings Summary
 
@@ -55,39 +55,7 @@ struct BuildSettingsSummaryTests {
         }
     }
 
-    @Test func descriptionWithMultipleCommits() {
-        let summary = BuildSettingsSummary(
-            outputs: [
-                BuildSettingsSDK.Output(
-                    commit: "abc1234def5678",
-                    date: "2025-01-15T07:30:00Z",
-                    results: [
-                        BuildSettingsSDK.ResultItem(
-                            target: "MyApp",
-                            settings: [
-                                "SWIFT_VERSION": "5.0",
-                                "IPHONEOS_DEPLOYMENT_TARGET": "15.0",
-                            ]
-                        ),
-                        BuildSettingsSDK.ResultItem(
-                            target: "MyFramework",
-                            settings: ["SWIFT_VERSION": "5.0"]
-                        ),
-                    ]
-                )
-            ]
-        )
-
-        assertInlineSnapshot(of: summary, as: .description) {
-            """
-            Build settings:
-              - abc1234: MyApp: IPHONEOS_DEPLOYMENT_TARGET: 15.0, SWIFT_VERSION: 5.0
-              - abc1234: MyFramework: SWIFT_VERSION: 5.0
-            """
-        }
-    }
-
-    @Test func descriptionWithNullSettings() {
+    @Test func nullSettings() {
         let summary = BuildSettingsSummary(
             outputs: [
                 BuildSettingsSDK.Output(
@@ -108,8 +76,13 @@ struct BuildSettingsSummaryTests {
 
         assertInlineSnapshot(of: summary, as: .description) {
             """
-            Build settings:
-              - abc1234: MyApp: MISSING_PARAM: null, SWIFT_VERSION: 5.0
+            ## BuildSettings Summary
+
+            ### Build Settings
+
+            | Commit | Target | Settings |
+            |--------|--------|----------|
+            | `abc1234` | `MyApp` | MISSING_PARAM: null, SWIFT_VERSION: 5.0 |
             """
         }
     }
@@ -117,15 +90,9 @@ struct BuildSettingsSummaryTests {
     @Test func emptyOutputs() {
         let summary = BuildSettingsSummary(outputs: [])
 
-        assertInlineSnapshot(of: summary.markdown, as: .lines) {
-            """
-            ## BuildSettings Summary
-            """
-        }
-
         assertInlineSnapshot(of: summary, as: .description) {
             """
-
+            ## BuildSettings Summary
             """
         }
     }

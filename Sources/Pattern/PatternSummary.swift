@@ -4,17 +4,7 @@ import PatternSDK
 struct PatternSummary: JobSummaryFormattable {
     let outputs: [PatternSDK.Output]
 
-    var description: String {
-        guard !outputs.isEmpty else { return "" }
-        var lines = ["Pattern matches:"]
-        for output in outputs {
-            let commit = output.commit.prefix(Git.shortHashLength)
-            for result in output.results {
-                lines.append("  - \(commit): \(result.pattern): \(result.matches.count)")
-            }
-        }
-        return lines.joined(separator: "\n")
-    }
+    var description: String { markdown }
 
     var markdown: String {
         var lines = ["## Search Summary"]
