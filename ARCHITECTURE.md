@@ -151,7 +151,7 @@ Input data flows through three layers with priority **CLI > Config file > Defaul
 - **Config file** (`*Config` structs) — JSON deserialization with `Decodable`, all fields optional (`Bool?`, `String?`)
 - **SDK Input** (`*.Input` structs) — strictly typed public API with required fields and defaults, no `Decodable`
 
-Merging happens in `*CLIInput+CLI.swift` extensions via `init(cli:config:)` initializer on `*.Input`. Optionals are resolved with defaults at this layer (e.g., `cli.value ?? config?.value ?? defaultValue`).
+Merging happens in `*Input+CLI.swift` extensions via `init(cli:config:)` initializer on `*.Input`. Optionals are resolved with defaults at this layer (e.g., `cli.value ?? config?.value ?? defaultValue`).
 
 ## Common Module Visibility
 
