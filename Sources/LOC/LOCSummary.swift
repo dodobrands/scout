@@ -16,7 +16,8 @@ struct LOCSummary: JobSummaryFormattable {
             for output in outputs {
                 let commit = output.commit.prefix(Git.shortHashLength)
                 for result in output.results {
-                    lines.append("| `\(commit)` | \(result.metric) | \(result.linesOfCode) |")
+                    let metric = result.metric.replacingOccurrences(of: "|", with: "\\|")
+                    lines.append("| `\(commit)` | \(metric) | \(result.linesOfCode) |")
                 }
             }
         }

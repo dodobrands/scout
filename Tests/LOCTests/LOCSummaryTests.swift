@@ -37,9 +37,9 @@ struct LOCSummaryTests {
 
             | Commit | Configuration | LOC |
             |--------|---------------|-----|
-            | `abc1234` | Swift | Sources | 48500 |
-            | `abc1234` | Swift, Objective-C | LegacyModule | 12000 |
-            | `def5678` | Swift | Sources | 52000 |
+            | `abc1234` | Swift \\| Sources | 48500 |
+            | `abc1234` | Swift, Objective-C \\| LegacyModule | 12000 |
+            | `def5678` | Swift \\| Sources | 52000 |
             """
         }
     }
