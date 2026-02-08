@@ -3,92 +3,65 @@ import Foundation
 import Logging
 import System
 
-/// A single file extension metric with its commits to analyze.
-public struct FileMetricInput: Sendable, CommitResolvable {
-    /// File extension to count (e.g., "swift", "storyboard")
-    public let `extension`: String
-
-    /// Commits to analyze for this extension
-    public let commits: [String]
-
-    public init(extension: String, commits: [String] = ["HEAD"]) {
-        self.extension = `extension`
-        self.commits = commits
-    }
-
-    public func withResolvedCommits(_ commits: [String]) -> FileMetricInput {
-        FileMetricInput(extension: `extension`, commits: commits)
-    }
-}
-
-/// Input parameters for FilesSDK operations.
-public struct FilesInput: Sendable {
-    public let git: GitConfiguration
-    public let metrics: [FileMetricInput]
-
-    public init(
-        git: GitConfiguration,
-        metrics: [FileMetricInput]
-    ) {
-        self.git = git
-        self.metrics = metrics
-    }
-}
-
 /// SDK for counting files by extension.
 public struct FilesSDK: Sendable {
     private static let logger = Logger(label: "scout.FilesSDK")
 
     public init() {}
 
-    /// Result of file counting operation.
-    public struct Result: Sendable, Encodable {
-        public let commit: String
-        public let filetype: String
-        public let files: [String]
-
-        public init(commit: String = "", filetype: String, files: [URL]) {
-            self.commit = commit
-            self.filetype = filetype
-            self.files = files.map { $0.path }
-        }
-
-        public init(commit: String, filetype: String, files: [String]) {
-            self.commit = commit
-            self.filetype = filetype
-            self.files = files
-        }
+    /// Counts files for a single extension in current repository state (no checkout).
+    /// - Parameter input: Analysis input with repository path and file extension
+    /// - Returns: Result with list of matching files
+    func countFiles(input: AnalysisInput) -> Result {
+        let repoPath = URL(filePath: input.repoPath)
+        let files = findFiles(of: input.extension, in: repoPath)
+        return Result(filetype: input.extension, files: files)
     }
 
-    /// Counts files for all metrics in the input.
-    /// - Parameter input: Input parameters containing metrics and git configuration
-    /// - Returns: Array of results, one for each metric
-    func countFiles(input: FilesInput) async throws -> [Result] {
-        try await GitFix.prepareRepository(git: input.git)
-
-        let repoPath = URL(filePath: input.git.repoPath)
-        return input.metrics.map { metric in
-            let files = findFiles(of: metric.extension, in: repoPath)
-            return Result(filetype: metric.extension, files: files)
-        }
-    }
-
-    /// Checks out a commit and counts files for all metrics in input.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters containing metrics and git configuration
-    /// - Returns: Array of results, one for each metric
-    public func analyzeCommit(hash: String, input: FilesInput) async throws -> [Result] {
+    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Groups metrics by commit to minimize checkouts.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Array of outputs, one for each unique commit
+    public func analyze(input: Input) async throws -> [Output] {
         let repoPath = URL(filePath: input.git.repoPath)
 
-        try await Shell.execute(
-            "git",
-            arguments: ["checkout", hash],
-            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
         )
 
-        let results = try await countFiles(input: input)
-        return results.map { Result(commit: hash, filetype: $0.filetype, files: $0.files) }
+        // Group metrics by commit to minimize checkouts
+        var commitToFiletypes: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToFiletypes[commit, default: []].append(metric.extension)
+            }
+        }
+
+        var outputs: [Output] = []
+        for (hash, filetypes) in commitToFiletypes {
+            Self.logger.debug("Processing commit: \(hash)")
+
+            try await Shell.execute(
+                "git",
+                arguments: ["checkout", hash],
+                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+            )
+
+            try await GitFix.prepareRepository(git: input.git)
+
+            var resultItems: [ResultItem] = []
+            for ext in filetypes {
+                let analysisInput = AnalysisInput(repoPath: input.git.repoPath, `extension`: ext)
+                let result = countFiles(input: analysisInput)
+                resultItems.append(ResultItem(filetype: result.filetype, files: result.files))
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+            outputs.append(Output(commit: hash, date: date, results: resultItems))
+        }
+
+        return outputs
     }
 
     private func findFiles(of type: String, in directory: URL) -> [URL] {

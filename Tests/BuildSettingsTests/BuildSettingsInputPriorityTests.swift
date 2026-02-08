@@ -5,7 +5,7 @@ import Testing
 
 @testable import BuildSettings
 
-/// Tests for BuildSettingsInput priority: CLI > Config > Default
+/// Tests for BuildSettingsSDK.Input priority: CLI > Config > Default
 @Suite("BuildSettingsInput Priority")
 struct BuildSettingsInputPriorityTests {
 
@@ -23,7 +23,7 @@ struct BuildSettingsInputPriorityTests {
         )
 
         #expect(throws: BuildSettingsInputError.missingProject) {
-            _ = try BuildSettingsInput(cli: cli, config: nil)
+            _ = try BuildSettingsSDK.Input(cli: cli, config: nil)
         }
     }
 
@@ -47,7 +47,7 @@ struct BuildSettingsInputPriorityTests {
             git: GitFileConfig(repoPath: "/config/path")
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/cli/path")
     }
@@ -70,7 +70,7 @@ struct BuildSettingsInputPriorityTests {
             git: GitFileConfig(repoPath: "/config/path")
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/config/path")
     }
@@ -93,7 +93,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
     }
@@ -118,7 +118,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["abc123", "def456"])
@@ -142,7 +142,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["HEAD"])
@@ -168,7 +168,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.configuration == "Release")
     }
@@ -191,7 +191,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.configuration == "Debug")
     }
@@ -221,7 +221,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.setupCommands.count == 1)
         let command = try #require(input.setupCommands[safe: 0])
@@ -230,7 +230,7 @@ struct BuildSettingsInputPriorityTests {
         #expect(command.optional == true)
     }
 
-    @Test func `setupCommands defaults to empty array when config setupCommands nil`() throws {
+    @Test func `setupCommands defaults to empty when config nil`() throws {
         let cli = BuildSettingsCLIInputs(
             project: nil,
             buildSettingsParameters: nil,
@@ -248,7 +248,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.setupCommands.isEmpty)
     }
@@ -273,7 +273,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.map { $0.setting } == ["CLI_PARAM"])
     }
@@ -299,7 +299,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.map { $0.setting } == ["SWIFT_VERSION", "TARGETED_DEVICE_FAMILY"])
     }
@@ -322,7 +322,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.isEmpty)
     }
@@ -350,7 +350,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -382,7 +382,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -409,7 +409,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["HEAD"])
@@ -437,7 +437,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         #expect(input.metrics.map { $0.setting } == ["SWIFT_VERSION", "DEPLOYMENT_TARGET"])
@@ -463,7 +463,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.git.clean == true)
         #expect(input.git.fixLFS == true)
@@ -488,7 +488,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.git.clean == false)
         #expect(input.git.fixLFS == false)
@@ -515,7 +515,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.project == "MyApp.xcworkspace")
     }
@@ -538,7 +538,7 @@ struct BuildSettingsInputPriorityTests {
             git: nil
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: config)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: config)
 
         #expect(input.project == "CLIApp.xcodeproj")
     }
@@ -554,7 +554,7 @@ struct BuildSettingsInputPriorityTests {
             initializeSubmodules: false
         )
 
-        let input = try BuildSettingsInput(cli: cli, config: nil)
+        let input = try BuildSettingsSDK.Input(cli: cli, config: nil)
 
         #expect(input.project == "MyApp.xcworkspace")
     }

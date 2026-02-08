@@ -17,8 +17,8 @@ struct ClocRunner {
         for line in lines {
             if line.contains(language) {
                 let parts = line.split(whereSeparator: { $0.isWhitespace })
-                if parts.count >= 5 {
-                    return String(parts[4])
+                if let codePart = parts[safe: 4] {
+                    return String(codePart)
                 }
             }
         }

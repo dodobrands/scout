@@ -2,8 +2,10 @@ import Common
 import Foundation
 import PatternSDK
 
-extension PatternInput {
-    /// Creates PatternInput by merging CLI and file config with priority: CLI > Config > Default
+extension PatternSDK.Input {
+    /// Creates Input by merging CLI and file config with priority: CLI > Config > Default
+    ///
+    /// HEAD commits are resolved inside SDK.analyze(), not here.
     ///
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
@@ -15,12 +17,12 @@ extension PatternInput {
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
 
         // Build metrics from CLI or config
-        let metrics: [PatternMetricInput]
+        let metrics: [PatternSDK.MetricInput]
 
         if let cliPatterns = cli.patterns, !cliPatterns.isEmpty {
             // CLI patterns provided - all use same commits (from CLI or default HEAD)
             let commits = cli.commits ?? ["HEAD"]
-            metrics = cliPatterns.map { PatternMetricInput(pattern: $0, commits: commits) }
+            metrics = cliPatterns.map { PatternSDK.MetricInput(pattern: $0, commits: commits) }
         } else if let configMetrics = config?.metrics {
             // Config metrics - each has its own commits, CLI --commits overrides all
             if let cliCommits = cli.commits {
@@ -30,7 +32,7 @@ extension PatternInput {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return PatternMetricInput(pattern: metric.pattern, commits: cliCommits)
+                    return PatternSDK.MetricInput(pattern: metric.pattern, commits: cliCommits)
                 }
             } else {
                 // Use per-metric commits from config
@@ -40,7 +42,7 @@ extension PatternInput {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return PatternMetricInput(pattern: metric.pattern, commits: commits)
+                    return PatternSDK.MetricInput(pattern: metric.pattern, commits: commits)
                 }
             }
         } else {

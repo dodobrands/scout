@@ -3,97 +3,6 @@ import Foundation
 import Logging
 import System
 
-// MARK: - Public Types
-
-/// Represents an Xcode project or workspace.
-public struct ProjectOrWorkspace: Sendable {
-    public let path: String
-    public let isWorkspace: Bool
-
-    public init(path: String, isWorkspace: Bool) {
-        self.path = path
-        self.isWorkspace = isWorkspace
-    }
-}
-
-/// Represents a project with its targets.
-public struct ProjectWithTargets: Sendable {
-    public let path: String
-    public let targets: [String]
-
-    public init(path: String, targets: [String]) {
-        self.path = path
-        self.targets = targets
-    }
-}
-
-/// Represents a target with its build settings.
-public struct TargetWithBuildSettings: Sendable, Encodable {
-    public let target: String
-    public let buildSettings: [String: String]
-
-    public init(target: String, buildSettings: [String: String]) {
-        self.target = target
-        self.buildSettings = buildSettings
-    }
-}
-
-// MARK: - BuildSettingsSDK
-
-/// Represents a setup command to execute before analysis.
-public struct SetupCommand: Sendable {
-    public let command: String
-    public let workingDirectory: String?
-    public let optional: Bool
-
-    public init(command: String, workingDirectory: String? = nil, optional: Bool = false) {
-        self.command = command
-        self.workingDirectory = workingDirectory
-        self.optional = optional
-    }
-}
-
-/// A single build setting metric with its commits to analyze.
-public struct SettingMetricInput: Sendable, CommitResolvable {
-    /// Build setting name (e.g., "SWIFT_VERSION")
-    public let setting: String
-
-    /// Commits to analyze for this setting
-    public let commits: [String]
-
-    public init(setting: String, commits: [String] = ["HEAD"]) {
-        self.setting = setting
-        self.commits = commits
-    }
-
-    public func withResolvedCommits(_ commits: [String]) -> SettingMetricInput {
-        SettingMetricInput(setting: setting, commits: commits)
-    }
-}
-
-/// Input parameters for BuildSettingsSDK operations.
-public struct BuildSettingsInput: Sendable {
-    public let git: GitConfiguration
-    public let setupCommands: [SetupCommand]
-    public let metrics: [SettingMetricInput]
-    public let project: String
-    public let configuration: String
-
-    public init(
-        git: GitConfiguration,
-        setupCommands: [SetupCommand],
-        metrics: [SettingMetricInput] = [],
-        project: String,
-        configuration: String
-    ) {
-        self.git = git
-        self.setupCommands = setupCommands
-        self.metrics = metrics
-        self.project = project
-        self.configuration = configuration
-    }
-}
-
 /// SDK for extracting build settings from Xcode projects.
 public struct BuildSettingsSDK: Sendable {
     private static let logger = Logger(label: "scout.BuildSettingsSDK")
@@ -118,16 +27,12 @@ public struct BuildSettingsSDK: Sendable {
         }
     }
 
-    /// Result of build settings extraction - array of targets with their build settings.
-    public typealias Result = [TargetWithBuildSettings]
-
     /// Extracts build settings from Xcode projects in the repository.
+    /// Performs analysis on current repository state without git operations.
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Array of targets with their build settings
-    public func extractBuildSettings(input: BuildSettingsInput) async throws -> Result {
-        let repoPath = URL(filePath: input.git.repoPath)
-
-        try await GitFix.prepareRepository(git: input.git)
+    func extractBuildSettings(input: AnalysisInput) async throws -> [TargetWithBuildSettings] {
+        let repoPath = URL(filePath: input.repoPath)
 
         try await executeSetupCommands(input.setupCommands, in: repoPath)
 
@@ -148,34 +53,74 @@ public struct BuildSettingsSDK: Sendable {
         return targetsWithBuildSettings
     }
 
-    /// Checks out a commit and extracts build settings.
-    /// - Parameters:
-    ///   - hash: Commit hash to checkout
-    ///   - input: Input parameters for the operation
-    /// - Returns: Array of targets with their build settings
-    public func analyzeCommit(
-        hash: String,
-        input: BuildSettingsInput
-    ) async throws -> Result {
+    /// Analyzes all commits from metrics and returns outputs for each.
+    /// Groups metrics by commit to minimize checkouts.
+    /// - Parameter input: Input parameters for the operation
+    /// - Returns: Array of outputs, one for each unique commit
+    public func analyze(input: Input) async throws -> [Output] {
         let repoPath = URL(filePath: input.git.repoPath)
 
-        do {
-            try await Shell.execute(
-                "git",
-                arguments: ["checkout", hash],
-                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-            )
-        } catch {
-            throw AnalysisError.checkoutFailed(hash: hash, error: error.localizedDescription)
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
+        // Group metrics by commit to minimize checkouts
+        var commitToSettings: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToSettings[commit, default: []].append(metric.setting)
+            }
         }
 
-        do {
-            return try await extractBuildSettings(input: input)
-        } catch let error as AnalysisError {
-            throw error
-        } catch {
-            throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
+        var outputs: [Output] = []
+        for (hash, requestedSettings) in commitToSettings {
+            Self.logger.debug("Processing commit: \(hash)")
+
+            do {
+                try await Shell.execute(
+                    "git",
+                    arguments: ["checkout", hash],
+                    workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+                )
+            } catch {
+                throw AnalysisError.checkoutFailed(
+                    hash: hash,
+                    error: error.localizedDescription
+                )
+            }
+
+            try await GitFix.prepareRepository(git: input.git)
+
+            let analysisInput = AnalysisInput(
+                repoPath: input.git.repoPath,
+                setupCommands: input.setupCommands,
+                project: input.project,
+                configuration: input.configuration
+            )
+
+            let targets: [TargetWithBuildSettings]
+            do {
+                targets = try await extractBuildSettings(input: analysisInput)
+            } catch let error as AnalysisError {
+                throw error
+            } catch {
+                throw AnalysisError.buildSettingsExtractionFailed(error: error.localizedDescription)
+            }
+
+            let requestedSettingsSet = Set(requestedSettings)
+            let resultItems = targets.map { target in
+                let filteredSettings = target.buildSettings
+                    .filter { requestedSettingsSet.contains($0.key) }
+                    .mapValues { Optional($0) }
+                return ResultItem(target: target.target, settings: filteredSettings)
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+            outputs.append(Output(commit: hash, date: date, results: resultItems))
         }
+
+        return outputs
     }
 
     // MARK: - Setup Commands

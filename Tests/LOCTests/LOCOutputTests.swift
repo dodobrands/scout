@@ -1,20 +1,22 @@
 import Foundation
 import InlineSnapshotTesting
+import LOCSDK
 import Testing
 
-@testable import LOC
-
-/// Tests for LOCOutput JSON encoding
+/// Tests for LOCSDK.Output JSON encoding
 @Suite
 struct LOCOutputTests {
 
     @Test func encodesSingleCommit() {
-        let output = LOCOutput(
+        let output = LOCSDK.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "LOC [Swift] [Sources]": 48500,
-                "LOC [Swift, Objective-C] [LegacyModule]": 12000,
+                LOCSDK.ResultItem(
+                    metric: "LOC [Swift, Objective-C] [LegacyModule]",
+                    linesOfCode: 12000
+                ),
+                LOCSDK.ResultItem(metric: "LOC [Swift] [Sources]", linesOfCode: 48500),
             ]
         )
 
@@ -23,10 +25,16 @@ struct LOCOutputTests {
             {
               "commit" : "abc1234def5678",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "LOC [Swift, Objective-C] [LegacyModule]" : 12000,
-                "LOC [Swift] [Sources]" : 48500
-              }
+              "results" : [
+                {
+                  "linesOfCode" : 12000,
+                  "metric" : "LOC [Swift, Objective-C] [LegacyModule]"
+                },
+                {
+                  "linesOfCode" : 48500,
+                  "metric" : "LOC [Swift] [Sources]"
+                }
+              ]
             }
             """
         }
@@ -34,18 +42,18 @@ struct LOCOutputTests {
 
     @Test func encodesMultipleCommits() {
         let outputs = [
-            LOCOutput(
+            LOCSDK.Output(
                 commit: "abc1234def5678",
                 date: "2025-01-15T10:30:00+03:00",
                 results: [
-                    "LOC [Swift] [Sources]": 48500
+                    LOCSDK.ResultItem(metric: "LOC [Swift] [Sources]", linesOfCode: 48500)
                 ]
             ),
-            LOCOutput(
+            LOCSDK.Output(
                 commit: "def5678abc1234",
                 date: "2025-02-15T14:45:00+03:00",
                 results: [
-                    "LOC [Swift] [Sources]": 52000
+                    LOCSDK.ResultItem(metric: "LOC [Swift] [Sources]", linesOfCode: 52000)
                 ]
             ),
         ]
@@ -56,16 +64,22 @@ struct LOCOutputTests {
               {
                 "commit" : "abc1234def5678",
                 "date" : "2025-01-15T10:30:00+03:00",
-                "results" : {
-                  "LOC [Swift] [Sources]" : 48500
-                }
+                "results" : [
+                  {
+                    "linesOfCode" : 48500,
+                    "metric" : "LOC [Swift] [Sources]"
+                  }
+                ]
               },
               {
                 "commit" : "def5678abc1234",
                 "date" : "2025-02-15T14:45:00+03:00",
-                "results" : {
-                  "LOC [Swift] [Sources]" : 52000
-                }
+                "results" : [
+                  {
+                    "linesOfCode" : 52000,
+                    "metric" : "LOC [Swift] [Sources]"
+                  }
+                ]
               }
             ]
             """
@@ -73,11 +87,11 @@ struct LOCOutputTests {
     }
 
     @Test func encodesZeroLines() {
-        let output = LOCOutput(
+        let output = LOCSDK.Output(
             commit: "abc123",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "LOC [Swift] [EmptyDir]": 0
+                LOCSDK.ResultItem(metric: "LOC [Swift] [EmptyDir]", linesOfCode: 0)
             ]
         )
 
@@ -86,9 +100,12 @@ struct LOCOutputTests {
             {
               "commit" : "abc123",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "LOC [Swift] [EmptyDir]" : 0
-              }
+              "results" : [
+                {
+                  "linesOfCode" : 0,
+                  "metric" : "LOC [Swift] [EmptyDir]"
+                }
+              ]
             }
             """
         }

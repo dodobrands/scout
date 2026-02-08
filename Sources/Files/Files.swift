@@ -6,13 +6,6 @@ import Logging
 import System
 import SystemPackage
 
-/// JSON output structure for files command.
-struct FilesOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: [String]]
-}
-
 public struct Files: AsyncParsableCommand {
     public init() {}
 
@@ -59,10 +52,10 @@ public struct Files: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file (one-liner convenience init)
+        // Load config from file
         let fileConfig = try await FilesConfig(configPath: config)
 
-        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
+        // Build CLI inputs
         let cliInputs = FilesCLIInputs(
             filetypes: filetypes.nilIfEmpty,
             repoPath: repoPath,
@@ -72,78 +65,43 @@ public struct Files: AsyncParsableCommand {
             initializeSubmodules: initializeSubmodules ? true : nil
         )
 
-        // Merge CLI > Config > Default
-        let input = FilesInput(cli: cliInputs, config: fileConfig)
+        // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
+        let input = FilesSDK.Input(cli: cliInputs, config: fileConfig)
 
-        let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-            repoPath: repoPathURL.path
+        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
+        Self.logger.info(
+            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) file type(s)"
         )
 
         let sdk = FilesSDK()
-        var allResults: [FilesSDK.Result] = []
-        var outputResults: [FilesOutput] = []
+        let outputs = try await sdk.analyze(input: input)
 
-        // Group metrics by commits to minimize checkouts
-        var commitToFiletypes: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToFiletypes[commit, default: []].append(metric.extension)
-            }
-        }
-
-        let allCommits = Array(commitToFiletypes.keys)
-        Self.logger.info(
-            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) file type(s)",
-            metadata: [
-                "commits": .array(allCommits.map { .string($0) }),
-                "filetypes": .array(resolvedMetrics.map { .string($0.extension) }),
-            ]
-        )
-
-        for (hash, filetypes) in commitToFiletypes {
-            Self.logger.info("Processing commit: \(hash) for filetypes: \(filetypes)")
-
-            let commitInput = FilesInput(
-                git: input.git,
-                metrics: filetypes.map { FileMetricInput(extension: $0) }
-            )
-            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
-
-            var resultsDict: [String: [String]] = [:]
-            for result in results {
+        for output in outputs {
+            for result in output.results {
                 Self.logger.notice(
-                    "Found \(result.files.count) files of type '\(result.filetype)' at \(hash)"
+                    "Found \(result.files.count) files of type '\(result.filetype)' at \(output.commit)"
                 )
-                allResults.append(result)
-                resultsDict[result.filetype] = result.files
             }
-
-            let commitOutput = FilesOutput(commit: hash, date: date, results: resultsDict)
-            outputResults.append(commitOutput)
         }
 
         if let outputPath = output {
-            try outputResults.writeJSON(to: outputPath)
+            try outputs.writeJSON(to: outputPath)
         }
 
-        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
 
-        let summary = FilesSummary(results: allResults)
+        let summary = FilesSummary(outputs: outputs)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: FilesSummary) {
-        if !summary.results.isEmpty {
+        if !summary.outputs.isEmpty {
             Self.logger.info("File type counts:")
-            for result in summary.results {
-                let commit = result.commit.prefix(7)
-                Self.logger.info("  - \(commit): \(result.filetype): \(result.files.count)")
+            for output in summary.outputs {
+                let commit = output.commit.prefix(Git.shortHashLength)
+                for result in output.results {
+                    Self.logger.info("  - \(commit): \(result.filetype): \(result.files.count)")
+                }
             }
         }
 

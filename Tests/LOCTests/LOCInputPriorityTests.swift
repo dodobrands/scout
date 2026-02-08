@@ -10,7 +10,7 @@ struct LOCInputPriorityTests {
     // MARK: - RepoPath Priority Tests
 
     @Test
-    func `CLI repoPath overrides config repoPath`() {
+    func `CLI repoPath overrides config repoPath`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -21,13 +21,13 @@ struct LOCInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = LOCConfig(metrics: nil, git: gitConfig)
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/cli/path")
     }
 
     @Test
-    func `falls back to config repoPath when CLI repoPath is nil`() {
+    func `falls back to config repoPath when CLI repoPath is nil`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -38,13 +38,13 @@ struct LOCInputPriorityTests {
         let gitConfig = GitFileConfig(repoPath: "/config/path")
         let config = LOCConfig(metrics: nil, git: gitConfig)
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == "/config/path")
     }
 
     @Test
-    func `falls back to current directory when both CLI and config repoPath are nil`() {
+    func `falls back to current directory when both repoPath nil`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -54,7 +54,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: nil, git: nil)
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.git.repoPath == FileManager.default.currentDirectoryPath)
     }
@@ -71,7 +71,7 @@ struct LOCInputPriorityTests {
             commits: ["abc123", "def456"]
         )
 
-        let input = LOCInput(cli: cli, config: nil)
+        let input = LOCSDK.Input(cli: cli, config: nil)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["abc123", "def456"])
@@ -87,7 +87,7 @@ struct LOCInputPriorityTests {
             commits: nil
         )
 
-        let input = LOCInput(cli: cli, config: nil)
+        let input = LOCSDK.Input(cli: cli, config: nil)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["HEAD"])
@@ -112,7 +112,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: [locMetric], git: nil)
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -131,7 +131,7 @@ struct LOCInputPriorityTests {
             commits: nil
         )
 
-        let input = LOCInput(cli: cli, config: nil)
+        let input = LOCSDK.Input(cli: cli, config: nil)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -157,7 +157,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: [locMetric], git: nil)
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)
         let metric = try #require(input.metrics[safe: 0])
@@ -167,7 +167,7 @@ struct LOCInputPriorityTests {
     }
 
     @Test
-    func `falls back to empty metrics when both nil`() {
+    func `falls back to empty metrics when both nil`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -176,7 +176,7 @@ struct LOCInputPriorityTests {
             commits: nil
         )
 
-        let input = LOCInput(cli: cli, config: nil)
+        let input = LOCSDK.Input(cli: cli, config: nil)
 
         #expect(input.metrics.isEmpty)
     }
@@ -210,7 +210,7 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -248,7 +248,7 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         let metric0 = try #require(input.metrics[safe: 0])
@@ -278,7 +278,7 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         let metric = try #require(input.metrics.first)
         #expect(metric.commits == ["HEAD"])
@@ -317,7 +317,7 @@ struct LOCInputPriorityTests {
             git: nil
         )
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 2)
         #expect(input.metrics.map { $0.languages } == [["Swift"], ["Objective-C"]])
@@ -326,7 +326,7 @@ struct LOCInputPriorityTests {
     // MARK: - Git Flags Tests
 
     @Test
-    func `git flags from CLI are applied`() {
+    func `git flags from CLI are applied`() throws {
         let cli = LOCCLIInputs(
             languages: nil,
             include: nil,
@@ -338,7 +338,7 @@ struct LOCInputPriorityTests {
             initializeSubmodules: true
         )
 
-        let input = LOCInput(cli: cli, config: nil)
+        let input = LOCSDK.Input(cli: cli, config: nil)
 
         #expect(input.git.clean == true)
         #expect(input.git.fixLFS == true)
@@ -365,7 +365,7 @@ struct LOCInputPriorityTests {
         )
         let config = LOCConfig(metrics: [locMetric], git: gitConfig)
 
-        let input = LOCInput(cli: cli, config: config)
+        let input = LOCSDK.Input(cli: cli, config: config)
 
         #expect(input.metrics.count == 1)  // from config
         #expect(input.git.repoPath == "/from/config")  // from config

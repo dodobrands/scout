@@ -3,24 +3,28 @@ import InlineSnapshotTesting
 import PatternSDK
 import Testing
 
-@testable import Pattern
-
-/// Tests for PatternOutput JSON encoding
+/// Tests for PatternSDK.Output JSON encoding
 @Suite
 struct PatternOutputTests {
 
     @Test func encodesSingleCommit() {
-        let output = PatternOutput(
+        let output = PatternSDK.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "import UIKit": [
-                    PatternSDK.Match(file: "Sources/App.swift", line: 1),
-                    PatternSDK.Match(file: "Sources/View.swift", line: 1),
-                ],
-                "import SwiftUI": [
-                    PatternSDK.Match(file: "Sources/ContentView.swift", line: 1)
-                ],
+                PatternSDK.ResultItem(
+                    pattern: "import SwiftUI",
+                    matches: [
+                        PatternSDK.Match(file: "Sources/ContentView.swift", line: 1)
+                    ]
+                ),
+                PatternSDK.ResultItem(
+                    pattern: "import UIKit",
+                    matches: [
+                        PatternSDK.Match(file: "Sources/App.swift", line: 1),
+                        PatternSDK.Match(file: "Sources/View.swift", line: 1),
+                    ]
+                ),
             ]
         )
 
@@ -29,24 +33,30 @@ struct PatternOutputTests {
             {
               "commit" : "abc1234def5678",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "import SwiftUI" : [
-                  {
-                    "file" : "Sources\\/ContentView.swift",
-                    "line" : 1
-                  }
-                ],
-                "import UIKit" : [
-                  {
-                    "file" : "Sources\\/App.swift",
-                    "line" : 1
-                  },
-                  {
-                    "file" : "Sources\\/View.swift",
-                    "line" : 1
-                  }
-                ]
-              }
+              "results" : [
+                {
+                  "matches" : [
+                    {
+                      "file" : "Sources\\/ContentView.swift",
+                      "line" : 1
+                    }
+                  ],
+                  "pattern" : "import SwiftUI"
+                },
+                {
+                  "matches" : [
+                    {
+                      "file" : "Sources\\/App.swift",
+                      "line" : 1
+                    },
+                    {
+                      "file" : "Sources\\/View.swift",
+                      "line" : 1
+                    }
+                  ],
+                  "pattern" : "import UIKit"
+                }
+              ]
             }
             """
         }
@@ -54,23 +64,29 @@ struct PatternOutputTests {
 
     @Test func encodesMultipleCommits() {
         let outputs = [
-            PatternOutput(
+            PatternSDK.Output(
                 commit: "abc1234def5678",
                 date: "2025-01-15T10:30:00+03:00",
                 results: [
-                    "import UIKit": [
-                        PatternSDK.Match(file: "Sources/App.swift", line: 1)
-                    ]
+                    PatternSDK.ResultItem(
+                        pattern: "import UIKit",
+                        matches: [
+                            PatternSDK.Match(file: "Sources/App.swift", line: 1)
+                        ]
+                    )
                 ]
             ),
-            PatternOutput(
+            PatternSDK.Output(
                 commit: "def5678abc1234",
                 date: "2025-02-15T14:45:00+03:00",
                 results: [
-                    "import UIKit": [
-                        PatternSDK.Match(file: "Sources/App.swift", line: 1),
-                        PatternSDK.Match(file: "Sources/NewView.swift", line: 1),
-                    ]
+                    PatternSDK.ResultItem(
+                        pattern: "import UIKit",
+                        matches: [
+                            PatternSDK.Match(file: "Sources/App.swift", line: 1),
+                            PatternSDK.Match(file: "Sources/NewView.swift", line: 1),
+                        ]
+                    )
                 ]
             ),
         ]
@@ -81,30 +97,36 @@ struct PatternOutputTests {
               {
                 "commit" : "abc1234def5678",
                 "date" : "2025-01-15T10:30:00+03:00",
-                "results" : {
-                  "import UIKit" : [
-                    {
-                      "file" : "Sources\\/App.swift",
-                      "line" : 1
-                    }
-                  ]
-                }
+                "results" : [
+                  {
+                    "matches" : [
+                      {
+                        "file" : "Sources\\/App.swift",
+                        "line" : 1
+                      }
+                    ],
+                    "pattern" : "import UIKit"
+                  }
+                ]
               },
               {
                 "commit" : "def5678abc1234",
                 "date" : "2025-02-15T14:45:00+03:00",
-                "results" : {
-                  "import UIKit" : [
-                    {
-                      "file" : "Sources\\/App.swift",
-                      "line" : 1
-                    },
-                    {
-                      "file" : "Sources\\/NewView.swift",
-                      "line" : 1
-                    }
-                  ]
-                }
+                "results" : [
+                  {
+                    "matches" : [
+                      {
+                        "file" : "Sources\\/App.swift",
+                        "line" : 1
+                      },
+                      {
+                        "file" : "Sources\\/NewView.swift",
+                        "line" : 1
+                      }
+                    ],
+                    "pattern" : "import UIKit"
+                  }
+                ]
               }
             ]
             """
@@ -112,11 +134,11 @@ struct PatternOutputTests {
     }
 
     @Test func encodesEmptyResults() {
-        let output = PatternOutput(
+        let output = PatternSDK.Output(
             commit: "abc123",
             date: "2025-01-15T10:30:00+03:00",
             results: [
-                "import UIKit": []
+                PatternSDK.ResultItem(pattern: "import UIKit", matches: [])
             ]
         )
 
@@ -125,11 +147,14 @@ struct PatternOutputTests {
             {
               "commit" : "abc123",
               "date" : "2025-01-15T10:30:00+03:00",
-              "results" : {
-                "import UIKit" : [
+              "results" : [
+                {
+                  "matches" : [
 
-                ]
-              }
+                  ],
+                  "pattern" : "import UIKit"
+                }
+              ]
             }
             """
         }

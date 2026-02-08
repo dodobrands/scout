@@ -2,6 +2,9 @@ import Foundation
 import System
 
 package enum Git {
+    /// Standard length for short commit hash display (e.g., "abc1234").
+    package static let shortHashLength = 7
+
     /// Returns the current HEAD commit hash in the specified repository.
     /// - Parameter repoPath: Path to the repository as string
     /// - Returns: The HEAD commit hash

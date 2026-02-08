@@ -6,13 +6,6 @@ import Logging
 import System
 import SystemPackage
 
-/// JSON output structure for build-settings command.
-struct BuildSettingsOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: [String: String?]]
-}
-
 public struct BuildSettings: AsyncParsableCommand {
     public init() {}
 
@@ -68,10 +61,10 @@ public struct BuildSettings: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file (one-liner convenience init)
+        // Load config from file
         let fileConfig = try await BuildSettingsConfig(configPath: config)
 
-        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
+        // Build CLI inputs
         let cliInputs = BuildSettingsCLIInputs(
             project: project,
             buildSettingsParameters: buildSettingsParameters.nilIfEmpty,
@@ -82,84 +75,39 @@ public struct BuildSettings: AsyncParsableCommand {
             initializeSubmodules: initializeSubmodules ? true : nil
         )
 
-        // Merge CLI > Config > Default
-        let input = try BuildSettingsInput(cli: cliInputs, config: fileConfig)
+        // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
+        let input = try BuildSettingsSDK.Input(cli: cliInputs, config: fileConfig)
 
-        let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-            repoPath: repoPathURL.path
-        )
-
-        var outputResults: [BuildSettingsOutput] = []
-
-        // Group metrics by commits to minimize checkouts
-        var commitToSettings: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToSettings[commit, default: []].append(metric.setting)
-            }
-        }
-
-        let allCommits = Array(commitToSettings.keys)
+        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
         Self.logger.info(
-            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
-            metadata: [
-                "commits": .array(allCommits.map { Logger.MetadataValue.string($0) }),
-                "parameters": .array(
-                    resolvedMetrics.map { Logger.MetadataValue.string($0.setting) }
-                ),
-            ]
+            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) metric(s)"
         )
 
         let sdk = BuildSettingsSDK()
+        var outputs: [BuildSettingsSDK.Output] = []
 
-        for (hash, settings) in commitToSettings {
-            Self.logger.info(
-                "Starting analysis for commit",
-                metadata: ["hash": "\(hash)", "settings": "\(settings)"]
+        do {
+            outputs = try await sdk.analyze(input: input)
+        } catch let error as BuildSettingsSDK.AnalysisError {
+            Self.logger.warning(
+                "Analysis failed",
+                metadata: ["error": "\(error.localizedDescription)"]
             )
+        }
 
-            let result: BuildSettingsSDK.Result
-            do {
-                result = try await sdk.analyzeCommit(hash: hash, input: input)
-            } catch let error as BuildSettingsSDK.AnalysisError {
-                Self.logger.warning(
-                    "Skipping commit due to analysis failure",
-                    metadata: [
-                        "hash": "\(hash)",
-                        "error": "\(error.localizedDescription)",
-                    ]
-                )
-                continue
-            }
-
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
-
-            let resultsDict = result.reduce(into: [String: [String: String?]]()) { dict, target in
-                dict[target.target] = settings.reduce(into: [:]) {
-                    $0[$1] = target.buildSettings[$1]
-                }
-            }
-
+        for output in outputs {
             Self.logger.notice(
-                "Extracted build settings for \(result.count) targets at \(hash)"
+                "Extracted build settings for \(output.results.count) targets at \(output.commit)"
             )
-
-            let commitOutput = BuildSettingsOutput(commit: hash, date: date, results: resultsDict)
-            outputResults.append(commitOutput)
         }
 
         if let outputPath = output {
-            try outputResults.writeJSON(to: outputPath)
+            try outputs.writeJSON(to: outputPath)
         }
 
-        let summary = BuildSettingsSummary(results: outputResults)
+        let summary = BuildSettingsSummary(outputs: outputs)
         GitHubActionsLogHandler.writeSummary(summary)
 
-        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
+        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
     }
 }

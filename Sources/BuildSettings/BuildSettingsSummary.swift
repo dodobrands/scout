@@ -1,22 +1,23 @@
+import BuildSettingsSDK
 import Common
 
 struct BuildSettingsSummary: JobSummaryFormattable {
-    let results: [BuildSettingsOutput]
+    let outputs: [BuildSettingsSDK.Output]
 
     var markdown: String {
         var md = "## BuildSettings Summary\n\n"
 
-        for output in results {
-            md += "### Commit \(output.commit.prefix(7)) (\(output.date))\n\n"
+        for output in outputs {
+            md += "### Commit \(output.commit.prefix(Git.shortHashLength)) (\(output.date))\n\n"
             md += "| Target | Settings |\n"
             md += "|--------|----------|\n"
-            for (target, settings) in output.results.sorted(by: { $0.key < $1.key }) {
+            for result in output.results.sorted(by: { $0.target < $1.target }) {
                 let settingsStr =
-                    settings
+                    result.settings
                     .sorted(by: { $0.key < $1.key })
                     .map { "\($0.key): \($0.value ?? "null")" }
                     .joined(separator: ", ")
-                md += "| `\(target)` | \(settingsStr) |\n"
+                md += "| `\(result.target)` | \(settingsStr) |\n"
             }
             md += "\n"
         }

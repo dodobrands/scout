@@ -5,13 +5,6 @@ import LOCSDK
 import Logging
 import SystemPackage
 
-/// JSON output structure for loc command.
-struct LOCOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: Int]
-}
-
 public struct LOC: AsyncParsableCommand {
     public init() {}
 
@@ -73,10 +66,10 @@ public struct LOC: AsyncParsableCommand {
         LoggingSetup.setup(verbose: verbose)
         try await LOCSDK.checkClocInstalled()
 
-        // Load config from file (one-liner convenience init)
+        // Load config from file
         let fileConfig = try await LOCConfig(configPath: config)
 
-        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
+        // Build CLI inputs
         let cliInputs = LOCCLIInputs(
             languages: languages.nilIfEmpty,
             include: include.nilIfEmpty,
@@ -88,74 +81,41 @@ public struct LOC: AsyncParsableCommand {
             initializeSubmodules: initializeSubmodules ? true : nil
         )
 
-        // Merge CLI > Config > Default
-        let input = LOCInput(cli: cliInputs, config: fileConfig)
+        // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
+        let input = LOCSDK.Input(cli: cliInputs, config: fileConfig)
 
-        let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-            repoPath: repoPathURL.path
+        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
+        Self.logger.info(
+            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) metric(s)"
         )
 
         let sdk = LOCSDK()
-        var allResults: [LOCSDK.Result] = []
-        var outputResults: [LOCOutput] = []
+        let outputs = try await sdk.analyze(input: input)
 
-        // Group metrics by commits to minimize checkouts
-        var commitToMetrics: [String: [LOCMetricInput]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToMetrics[commit, default: []].append(metric)
-            }
-        }
-
-        let allCommits = Array(commitToMetrics.keys)
-        Self.logger.info(
-            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
-            metadata: [
-                "commits": .array(allCommits.map { .string($0) })
-            ]
-        )
-
-        for (hash, metrics) in commitToMetrics {
-            Self.logger.info("Processing commit: \(hash)")
-
-            let commitInput = LOCInput(git: input.git, metrics: metrics)
-            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
-
-            var resultsDict: [String: Int] = [:]
-            for result in results {
+        for output in outputs {
+            for result in output.results {
                 Self.logger.notice(
-                    "Found \(result.linesOfCode) lines of code for '\(result.metric)' at \(hash)"
+                    "Found \(result.linesOfCode) LOC for '\(result.metric)' at \(output.commit)"
                 )
-                allResults.append(result)
-                resultsDict[result.metric] = result.linesOfCode
             }
-
-            let commitOutput = LOCOutput(commit: hash, date: date, results: resultsDict)
-            outputResults.append(commitOutput)
         }
 
         if let outputPath = output {
-            try outputResults.writeJSON(to: outputPath)
+            try outputs.writeJSON(to: outputPath)
         }
 
-        Self.logger.notice("Summary: analyzed \(allCommits.count) commit(s)")
-
-        let summary = LOCSummary(results: allResults)
+        let summary = LOCSummary(outputs: outputs)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: LOCSummary) {
-        if !summary.results.isEmpty {
+        if !summary.outputs.isEmpty {
             Self.logger.info("Lines of code counts:")
-            for result in summary.results {
-                let commit = result.commit.prefix(7)
-                Self.logger.info("  - \(commit): \(result.metric): \(result.linesOfCode)")
+            for output in summary.outputs {
+                let commit = output.commit.prefix(Git.shortHashLength)
+                for result in output.results {
+                    Self.logger.info("  - \(commit): \(result.metric): \(result.linesOfCode)")
+                }
             }
         }
 

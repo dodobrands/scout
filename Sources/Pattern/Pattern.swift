@@ -6,13 +6,6 @@ import PatternSDK
 import System
 import SystemPackage
 
-/// JSON output structure for pattern command.
-struct PatternOutput: Encodable {
-    let commit: String
-    let date: String
-    let results: [String: [PatternSDK.Match]]
-}
-
 public struct Pattern: AsyncParsableCommand {
     public init() {}
 
@@ -22,17 +15,20 @@ public struct Pattern: AsyncParsableCommand {
     )
 
     struct Summary: JobSummaryFormattable {
-        let patternResults: [(pattern: String, matchCount: Int)]
+        let outputs: [PatternSDK.Output]
 
         var markdown: String {
             var md = "## Search Summary\n\n"
 
-            if !patternResults.isEmpty {
+            if !outputs.isEmpty {
                 md += "### Pattern Matches\n\n"
-                md += "| Pattern | Matches |\n"
-                md += "|---------|--------|\n"
-                for result in patternResults {
-                    md += "| `\(result.pattern)` | \(result.matchCount) |\n"
+                md += "| Commit | Pattern | Matches |\n"
+                md += "|--------|---------|--------|\n"
+                for output in outputs {
+                    let commit = output.commit.prefix(Git.shortHashLength)
+                    for result in output.results {
+                        md += "| `\(commit)` | `\(result.pattern)` | \(result.matches.count) |\n"
+                    }
                 }
                 md += "\n"
             }
@@ -85,111 +81,69 @@ public struct Pattern: AsyncParsableCommand {
     public func run() async throws {
         LoggingSetup.setup(verbose: verbose)
 
-        // Load config from file (one-liner convenience init)
+        // Load config from file
         let fileConfig = try await PatternConfig(configPath: config)
 
         // Parse extensions from CLI (comma-separated string)
-        let cliExtensions: [String]?
+        let parsedExtensions: [String]?
         if let extensions {
-            cliExtensions = extensions.split(separator: ",").map {
+            parsedExtensions = extensions.split(separator: ",").map {
                 String($0.trimmingCharacters(in: .whitespaces))
             }
         } else {
-            cliExtensions = nil
+            parsedExtensions = nil
         }
 
-        // Build CLI inputs (git flags are nil when not explicitly set on CLI)
+        // Build CLI inputs
         let cliInputs = PatternCLIInputs(
             patterns: patterns.nilIfEmpty,
             repoPath: repoPath,
             commits: commits.nilIfEmpty,
-            extensions: cliExtensions,
+            extensions: parsedExtensions,
             gitClean: gitClean ? true : nil,
             fixLfs: fixLfs ? true : nil,
             initializeSubmodules: initializeSubmodules ? true : nil
         )
 
-        // Merge CLI > Config > Default
-        let input = PatternInput(cli: cliInputs, config: fileConfig)
+        // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
+        let input = PatternSDK.Input(cli: cliInputs, config: fileConfig)
 
-        let repoPathURL =
-            try URL(string: input.git.repoPath)
-            ?! URLError.invalidURL(parameter: "repoPath", value: input.git.repoPath)
-
-        // Resolve HEAD commits
-        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-            repoPath: repoPathURL.path
+        let commitCount = Set(input.metrics.flatMap { $0.commits }).count
+        Self.logger.info(
+            "Will analyze \(commitCount) commit(s) for \(input.metrics.count) pattern(s)"
         )
 
         let sdk = PatternSDK()
-        var patternResults: [(pattern: String, matchCount: Int)] = []
-        var outputResults: [PatternOutput] = []
+        let outputs = try await sdk.analyze(input: input)
 
-        // Group metrics by commits to minimize checkouts
-        var commitToPatterns: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToPatterns[commit, default: []].append(metric.pattern)
-            }
-        }
-
-        let allCommits = Array(commitToPatterns.keys)
-        Self.logger.info(
-            "Will analyze \(allCommits.count) commits for \(resolvedMetrics.count) metric(s)",
-            metadata: [
-                "commits": .array(allCommits.map { .string($0) }),
-                "patterns": .array(resolvedMetrics.map { .string($0.pattern) }),
-            ]
-        )
-
-        for (hash, patterns) in commitToPatterns {
-            Self.logger.info("Processing commit: \(hash) for patterns: \(patterns)")
-
-            let commitInput = PatternInput(
-                git: input.git,
-                metrics: patterns.map { PatternMetricInput(pattern: $0) },
-                extensions: input.extensions
-            )
-            let results = try await sdk.analyzeCommit(hash: hash, input: commitInput)
-            let date = try await Git.commitDate(for: hash, in: repoPathURL)
-
-            var resultsDict: [String: [PatternSDK.Match]] = [:]
-            for result in results {
+        for output in outputs {
+            for result in output.results {
                 Self.logger.notice(
-                    "Found \(result.matches.count) matches for '\(result.pattern)' at \(hash)"
+                    "Found \(result.matches.count) matches for '\(result.pattern)' at \(output.commit)"
                 )
-                resultsDict[result.pattern] = result.matches
-
-                if let existingIndex = patternResults.firstIndex(where: {
-                    $0.pattern == result.pattern
-                }) {
-                    patternResults[existingIndex] = (result.pattern, result.matches.count)
-                } else {
-                    patternResults.append((result.pattern, result.matches.count))
-                }
             }
-
-            let commitOutput = PatternOutput(commit: hash, date: date, results: resultsDict)
-            outputResults.append(commitOutput)
         }
 
         if let outputPath = output {
-            try outputResults.writeJSON(to: outputPath)
+            try outputs.writeJSON(to: outputPath)
         }
 
         Self.logger.notice(
-            "Summary: analyzed \(allCommits.count) commit(s) for \(resolvedMetrics.count) pattern(s)"
+            "Summary: analyzed \(outputs.count) commit(s) for \(input.metrics.count) pattern(s)"
         )
 
-        let summary = Summary(patternResults: patternResults)
+        let summary = Summary(outputs: outputs)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: Summary) {
-        if !summary.patternResults.isEmpty {
+        if !summary.outputs.isEmpty {
             Self.logger.info("Pattern matches:")
-            for result in summary.patternResults {
-                Self.logger.info("  - \(result.pattern): \(result.matchCount)")
+            for output in summary.outputs {
+                let commit = output.commit.prefix(Git.shortHashLength)
+                for result in output.results {
+                    Self.logger.info("  - \(commit): \(result.pattern): \(result.matches.count)")
+                }
             }
         }
 
