@@ -14,41 +14,6 @@ public struct Pattern: AsyncParsableCommand {
         abstract: "Search for string patterns in source files"
     )
 
-    struct Summary: JobSummaryFormattable {
-        let outputs: [PatternSDK.Output]
-
-        var description: String {
-            guard !outputs.isEmpty else { return "" }
-            var lines = ["Pattern matches:"]
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    lines.append("  - \(commit): \(result.pattern): \(result.matches.count)")
-                }
-            }
-            return lines.joined(separator: "\n")
-        }
-
-        var markdown: String {
-            var md = "## Search Summary\n\n"
-
-            if !outputs.isEmpty {
-                md += "### Pattern Matches\n\n"
-                md += "| Commit | Pattern | Matches |\n"
-                md += "|--------|---------|--------|\n"
-                for output in outputs {
-                    let commit = output.commit.prefix(Git.shortHashLength)
-                    for result in output.results {
-                        md += "| `\(commit)` | `\(result.pattern)` | \(result.matches.count) |\n"
-                    }
-                }
-                md += "\n"
-            }
-
-            return md
-        }
-    }
-
     @Option(name: [.long, .short], help: "Path to repository (default: current directory)")
     public var repoPath: String?
 
@@ -145,11 +110,11 @@ public struct Pattern: AsyncParsableCommand {
             "Summary: analyzed \(outputs.count) commit(s) for \(input.metrics.count) pattern(s)"
         )
 
-        let summary = Summary(outputs: outputs)
+        let summary = PatternSummary(outputs: outputs)
         logSummary(summary)
     }
 
-    private func logSummary(_ summary: Summary) {
+    private func logSummary(_ summary: PatternSummary) {
         if !summary.outputs.isEmpty {
             Self.logger.info("\(summary)")
         }
