@@ -9,15 +9,19 @@ struct FilesSummary: JobSummaryFormattable {
     var markdown: String {
         var lines = ["# File Counts"]
 
-        if !outputs.isEmpty {
+        guard !outputs.isEmpty else {
             lines.append("")
-            lines.append("| Commit | File Type | Count |")
-            lines.append("|--------|-----------|-------|")
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    lines.append("| `\(commit)` | `.\(result.filetype)` | \(result.files.count) |")
-                }
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
+        }
+
+        lines.append("")
+        lines.append("| Commit | File Type | Count |")
+        lines.append("|--------|-----------|-------|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results {
+                lines.append("| `\(commit)` | `.\(result.filetype)` | \(result.files.count) |")
             }
         }
 

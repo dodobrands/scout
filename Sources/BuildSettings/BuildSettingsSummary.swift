@@ -9,20 +9,24 @@ struct BuildSettingsSummary: JobSummaryFormattable {
     var markdown: String {
         var lines = ["# Build Settings"]
 
-        if !outputs.isEmpty {
+        guard !outputs.isEmpty else {
             lines.append("")
-            lines.append("| Commit | Target | Settings |")
-            lines.append("|--------|--------|----------|")
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results.sorted(by: { $0.target < $1.target }) {
-                    let settingsStr =
-                        result.settings
-                        .sorted(by: { $0.key < $1.key })
-                        .map { "\($0.key): \($0.value ?? "null")" }
-                        .joined(separator: ", ")
-                    lines.append("| `\(commit)` | `\(result.target)` | \(settingsStr) |")
-                }
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
+        }
+
+        lines.append("")
+        lines.append("| Commit | Target | Settings |")
+        lines.append("|--------|--------|----------|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results.sorted(by: { $0.target < $1.target }) {
+                let settingsStr =
+                    result.settings
+                    .sorted(by: { $0.key < $1.key })
+                    .map { "\($0.key): \($0.value ?? "null")" }
+                    .joined(separator: ", ")
+                lines.append("| `\(commit)` | `\(result.target)` | \(settingsStr) |")
             }
         }
 

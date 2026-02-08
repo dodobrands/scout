@@ -89,6 +89,8 @@ struct BuildSettingsSummaryTests {
         assertInlineSnapshot(of: summary, as: .description) {
             """
             # Build Settings
+
+            No results.
             """
         }
     }

@@ -50,6 +50,8 @@ struct LOCSummaryTests {
         assertInlineSnapshot(of: summary, as: .description) {
             """
             # Lines of Code
+
+            No results.
             """
         }
     }

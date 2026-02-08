@@ -63,6 +63,8 @@ struct PatternSummaryTests {
         assertInlineSnapshot(of: summary, as: .description) {
             """
             # Pattern Matches
+
+            No results.
             """
         }
     }

@@ -56,6 +56,8 @@ struct FilesSummaryTests {
         assertInlineSnapshot(of: summary, as: .description) {
             """
             # File Counts
+
+            No results.
             """
         }
     }

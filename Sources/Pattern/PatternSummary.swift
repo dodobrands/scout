@@ -9,17 +9,21 @@ struct PatternSummary: JobSummaryFormattable {
     var markdown: String {
         var lines = ["# Pattern Matches"]
 
-        if !outputs.isEmpty {
+        guard !outputs.isEmpty else {
             lines.append("")
-            lines.append("| Commit | Pattern | Matches |")
-            lines.append("|--------|---------|--------|")
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    lines.append(
-                        "| `\(commit)` | `\(result.pattern)` | \(result.matches.count) |"
-                    )
-                }
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
+        }
+
+        lines.append("")
+        lines.append("| Commit | Pattern | Matches |")
+        lines.append("|--------|---------|--------|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results {
+                lines.append(
+                    "| `\(commit)` | `\(result.pattern)` | \(result.matches.count) |"
+                )
             }
         }
 

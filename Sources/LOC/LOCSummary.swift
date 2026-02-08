@@ -9,16 +9,20 @@ struct LOCSummary: JobSummaryFormattable {
     var markdown: String {
         var lines = ["# Lines of Code"]
 
-        if !outputs.isEmpty {
+        guard !outputs.isEmpty else {
             lines.append("")
-            lines.append("| Commit | Configuration | LOC |")
-            lines.append("|--------|---------------|-----|")
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    let metric = result.metric.replacingOccurrences(of: "|", with: "\\|")
-                    lines.append("| `\(commit)` | \(metric) | \(result.linesOfCode) |")
-                }
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
+        }
+
+        lines.append("")
+        lines.append("| Commit | Configuration | LOC |")
+        lines.append("|--------|---------------|-----|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results {
+                let metric = result.metric.replacingOccurrences(of: "|", with: "\\|")
+                lines.append("| `\(commit)` | \(metric) | \(result.linesOfCode) |")
             }
         }
 

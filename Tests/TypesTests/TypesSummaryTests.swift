@@ -79,6 +79,8 @@ struct TypesSummaryTests {
         assertInlineSnapshot(of: summary, as: .description) {
             """
             # Type Counts
+
+            No results.
             """
         }
     }

@@ -9,15 +9,19 @@ struct TypesSummary: JobSummaryFormattable {
     var markdown: String {
         var lines = ["# Type Counts"]
 
-        if !outputs.isEmpty {
+        guard !outputs.isEmpty else {
             lines.append("")
-            lines.append("| Commit | Type | Count |")
-            lines.append("|--------|------|-------|")
-            for output in outputs {
-                let commit = output.commit.prefix(Git.shortHashLength)
-                for result in output.results {
-                    lines.append("| `\(commit)` | `\(result.typeName)` | \(result.types.count) |")
-                }
+            lines.append("No results.")
+            return lines.joined(separator: "\n")
+        }
+
+        lines.append("")
+        lines.append("| Commit | Type | Count |")
+        lines.append("|--------|------|-------|")
+        for output in outputs {
+            let commit = output.commit.prefix(Git.shortHashLength)
+            for result in output.results {
+                lines.append("| `\(commit)` | `\(result.typeName)` | \(result.types.count) |")
             }
         }
 
