@@ -223,4 +223,4 @@ When using `--output`, results are saved as JSON array. Each found type includes
 
 ## See Also
 
-- [CodeReader](../CodeReader/README.md) — Code parsing library
+- [Common](../Common/README.md) — Shared utilities library
