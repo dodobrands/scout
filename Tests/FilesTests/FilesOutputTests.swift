@@ -10,7 +10,7 @@ struct FilesOutputTests {
     @Test func encodesSingleCommit() {
         let output = FilesSDK.Output(
             commit: "abc1234def5678",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 FilesSDK.ResultItem(
                     filetype: "storyboard",
@@ -27,7 +27,7 @@ struct FilesOutputTests {
             """
             {
               "commit" : "abc1234def5678",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "files" : [
@@ -53,7 +53,7 @@ struct FilesOutputTests {
         let outputs = [
             FilesSDK.Output(
                 commit: "abc1234def5678",
-                date: "2025-01-15T10:30:00+03:00",
+                date: "2025-01-15T07:30:00Z",
                 results: [
                     FilesSDK.ResultItem(filetype: "storyboard", files: ["Main.storyboard"]),
                     FilesSDK.ResultItem(filetype: "swift", files: ["Sources/App.swift"]),
@@ -61,7 +61,7 @@ struct FilesOutputTests {
             ),
             FilesSDK.Output(
                 commit: "def5678abc1234",
-                date: "2025-02-15T14:45:00+03:00",
+                date: "2025-02-15T11:45:00Z",
                 results: [
                     FilesSDK.ResultItem(filetype: "storyboard", files: ["Main.storyboard"]),
                     FilesSDK.ResultItem(
@@ -77,7 +77,7 @@ struct FilesOutputTests {
             [
               {
                 "commit" : "abc1234def5678",
-                "date" : "2025-01-15T10:30:00+03:00",
+                "date" : "2025-01-15T07:30:00Z",
                 "results" : [
                   {
                     "files" : [
@@ -95,7 +95,7 @@ struct FilesOutputTests {
               },
               {
                 "commit" : "def5678abc1234",
-                "date" : "2025-02-15T14:45:00+03:00",
+                "date" : "2025-02-15T11:45:00Z",
                 "results" : [
                   {
                     "files" : [
@@ -120,7 +120,7 @@ struct FilesOutputTests {
     @Test func encodesEmptyResults() {
         let output = FilesSDK.Output(
             commit: "abc123",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 FilesSDK.ResultItem(filetype: "swift", files: [])
             ]
@@ -130,7 +130,7 @@ struct FilesOutputTests {
             """
             {
               "commit" : "abc123",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "files" : [

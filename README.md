@@ -50,7 +50,7 @@ scout types UIView UIViewController View --output results.json
 [
   {
     "commit": "abc1234def5678",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": {
       "UIView": ["CustomButton", "HeaderView", "CardView"],
       "UIViewController": ["HomeViewController", "SettingsViewController"],
@@ -76,7 +76,7 @@ scout files swift storyboard xib --output results.json
 [
   {
     "commit": "abc1234def5678",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": {
       "swift": ["Sources/App.swift", "Sources/Model.swift"],
       "storyboard": ["Main.storyboard"],
@@ -102,7 +102,7 @@ scout pattern "import UIKit" "import SwiftUI" --output results.json
 [
   {
     "commit": "abc1234def5678",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": {
       "import UIKit": [
         { "file": "Sources/App.swift", "line": 1 }
@@ -131,7 +131,7 @@ scout loc --config loc.json --output results.json
 [
   {
     "commit": "abc1234def5678",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": {
       "LOC [Swift] [Sources]": 48500
     }
@@ -155,7 +155,7 @@ scout build-settings --config build.json --output results.json
 [
   {
     "commit": "abc1234def5678",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": {
       "MyApp": {
         "SWIFT_VERSION": "5.0",
@@ -194,12 +194,12 @@ When analyzing multiple commits, the output is an array:
 [
   {
     "commit": "abc123",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": { "UIView": ["Button", "Card"] }
   },
   {
     "commit": "def456",
-    "date": "2025-02-15T14:45:00+03:00",
+    "date": "2025-02-15T11:45:00Z",
     "results": { "UIView": ["Button", "Card", "Header"] }
   }
 ]

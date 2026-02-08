@@ -10,7 +10,7 @@ struct LOCOutputTests {
     @Test func encodesSingleCommit() {
         let output = LOCSDK.Output(
             commit: "abc1234def5678",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 LOCSDK.ResultItem(
                     metric: "Swift, Objective-C | LegacyModule",
@@ -24,7 +24,7 @@ struct LOCOutputTests {
             """
             {
               "commit" : "abc1234def5678",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "linesOfCode" : 12000,
@@ -44,14 +44,14 @@ struct LOCOutputTests {
         let outputs = [
             LOCSDK.Output(
                 commit: "abc1234def5678",
-                date: "2025-01-15T10:30:00+03:00",
+                date: "2025-01-15T07:30:00Z",
                 results: [
                     LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 48500)
                 ]
             ),
             LOCSDK.Output(
                 commit: "def5678abc1234",
-                date: "2025-02-15T14:45:00+03:00",
+                date: "2025-02-15T11:45:00Z",
                 results: [
                     LOCSDK.ResultItem(metric: "Swift | Sources", linesOfCode: 52000)
                 ]
@@ -63,7 +63,7 @@ struct LOCOutputTests {
             [
               {
                 "commit" : "abc1234def5678",
-                "date" : "2025-01-15T10:30:00+03:00",
+                "date" : "2025-01-15T07:30:00Z",
                 "results" : [
                   {
                     "linesOfCode" : 48500,
@@ -73,7 +73,7 @@ struct LOCOutputTests {
               },
               {
                 "commit" : "def5678abc1234",
-                "date" : "2025-02-15T14:45:00+03:00",
+                "date" : "2025-02-15T11:45:00Z",
                 "results" : [
                   {
                     "linesOfCode" : 52000,
@@ -89,7 +89,7 @@ struct LOCOutputTests {
     @Test func encodesZeroLines() {
         let output = LOCSDK.Output(
             commit: "abc123",
-            date: "2025-01-15T10:30:00+03:00",
+            date: "2025-01-15T07:30:00Z",
             results: [
                 LOCSDK.ResultItem(metric: "Swift | EmptyDir", linesOfCode: 0)
             ]
@@ -99,7 +99,7 @@ struct LOCOutputTests {
             """
             {
               "commit" : "abc123",
-              "date" : "2025-01-15T10:30:00+03:00",
+              "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
                   "linesOfCode" : 0,

@@ -170,7 +170,7 @@ When using `--output`, results are saved as JSON array. Each found type includes
 [
   {
     "commit": "abc1234def5678",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": [
       {
         "typeName": "UIView",
@@ -195,7 +195,7 @@ When using `--output`, results are saved as JSON array. Each found type includes
 [
   {
     "commit": "abc1234def5678",
-    "date": "2025-01-15T10:30:00+03:00",
+    "date": "2025-01-15T07:30:00Z",
     "results": [
       {
         "typeName": "UIView",
@@ -207,7 +207,7 @@ When using `--output`, results are saved as JSON array. Each found type includes
   },
   {
     "commit": "def5678abc1234",
-    "date": "2025-02-15T14:45:00+03:00",
+    "date": "2025-02-15T11:45:00Z",
     "results": [
       {
         "typeName": "UIView",
