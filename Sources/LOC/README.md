@@ -241,7 +241,7 @@ When using `--output`, results are saved as JSON array:
 ]
 ```
 
-> **Note:** The `metric` field uses the template defined by `--name-template` flag or `nameTemplate` config field. Default format is `"%langs% | %include%"`. To recreate the legacy format, use: `"nameTemplate": "LOC [%langs%] [%include%]"`
+> **Note:** The `metric` field uses the template defined by `--name-template` flag or `nameTemplate` config field. Default format is `"%langs% | %include%"`. To use the previous internal format, specify: `"nameTemplate": "LOC [%langs%] [%include%]"`
 
 ## Requirements
 
