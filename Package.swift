@@ -149,7 +149,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Types",
+            name: "TypesCLI",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -168,7 +168,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Files",
+            name: "FilesCLI",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -187,7 +187,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "Pattern",
+            name: "PatternCLI",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -206,7 +206,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "LOC",
+            name: "LOCCLI",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -225,7 +225,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "BuildSettings",
+            name: "BuildSettingsCLI",
             dependencies: [
                 .product(
                     name: "ArgumentParser",
@@ -250,11 +250,11 @@ let package = Package(
                     name: "ArgumentParser",
                     package: "swift-argument-parser"
                 ),
-                "Types",
-                "Files",
-                "Pattern",
-                "LOC",
-                "BuildSettings",
+                "TypesCLI",
+                "FilesCLI",
+                "PatternCLI",
+                "LOCCLI",
+                "BuildSettingsCLI",
             ]
         ),
         .testTarget(
@@ -274,9 +274,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "TypesTests",
+            name: "TypesCLITests",
             dependencies: [
-                "Types",
+                "TypesCLI",
                 "TypesSDK",
                 "Common",
                 .product(
@@ -301,9 +301,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "FilesTests",
+            name: "FilesCLITests",
             dependencies: [
-                "Files",
+                "FilesCLI",
                 "FilesSDK",
                 "Common",
                 .product(
@@ -328,9 +328,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "PatternTests",
+            name: "PatternCLITests",
             dependencies: [
-                "Pattern",
+                "PatternCLI",
                 "PatternSDK",
                 "Common",
                 .product(
@@ -355,9 +355,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "LOCTests",
+            name: "LOCCLITests",
             dependencies: [
-                "LOC",
+                "LOCCLI",
                 "LOCSDK",
                 "Common",
                 .product(
@@ -382,9 +382,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "BuildSettingsTests",
+            name: "BuildSettingsCLITests",
             dependencies: [
-                "BuildSettings",
+                "BuildSettingsCLI",
                 "BuildSettingsSDK",
                 "Common",
                 .product(

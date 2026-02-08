@@ -1,9 +1,9 @@
 import ArgumentParser
-import BuildSettings
-import Files
-import LOC
-import Pattern
-import Types
+import BuildSettingsCLI
+import FilesCLI
+import LOCCLI
+import PatternCLI
+import TypesCLI
 
 @main
 struct Scout: AsyncParsableCommand {
@@ -12,11 +12,11 @@ struct Scout: AsyncParsableCommand {
         abstract: "Code analysis toolkit for mobile repositories",
         version: scoutVersion,
         subcommands: [
-            Types.self,
-            Files.self,
-            Pattern.self,
-            LOC.self,
-            BuildSettings.self,
+            TypesCLI.self,
+            FilesCLI.self,
+            PatternCLI.self,
+            LOCCLI.self,
+            BuildSettingsCLI.self,
         ]
     )
 }
