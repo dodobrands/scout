@@ -132,9 +132,12 @@ scout loc --config loc.json --output results.json
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T07:30:00Z",
-    "results": {
-      "LOC [Swift] [Sources]": 48500
-    }
+    "results": [
+      {
+        "metric": "Swift | Sources",
+        "linesOfCode": 48500
+      }
+    ]
   }
 ]
 ```
