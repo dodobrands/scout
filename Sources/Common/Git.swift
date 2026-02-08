@@ -17,17 +17,23 @@ package enum Git {
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Returns the commit timestamp in ISO 8601 format.
+    /// Returns the commit timestamp in ISO 8601 format (UTC).
     /// - Parameters:
     ///   - hash: Commit hash
     ///   - repoPath: Path to the repository
-    /// - Returns: The commit timestamp string
+    /// - Returns: The commit timestamp string in UTC (e.g. `2025-01-15T07:30:00Z`)
     package static func commitDate(for hash: String, in repoPath: URL) async throws -> String {
         let result = try await Shell.execute(
             "git",
             arguments: ["show", "-s", "--format=%cI", hash],
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
-        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+        let raw = result.trimmingCharacters(in: .whitespacesAndNewlines)
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        guard let date = formatter.date(from: raw) else {
+            throw ParseError.invalidDateFormat(string: raw, format: "ISO 8601")
+        }
+        return formatter.string(from: date)
     }
 }
