@@ -108,7 +108,8 @@ struct LOCInputPriorityTests {
             languages: ["Swift"],
             include: ["Sources"],
             exclude: ["Vendor"],
-            commits: nil
+            commits: nil,
+            nameTemplate: nil
         )
         let config = LOCConfig(metrics: [locMetric], git: nil)
 
@@ -153,7 +154,8 @@ struct LOCInputPriorityTests {
             languages: ["Swift"],
             include: ["Sources"],
             exclude: ["Vendor"],
-            commits: nil
+            commits: nil,
+            nameTemplate: nil
         )
         let config = LOCConfig(metrics: [locMetric], git: nil)
 
@@ -198,13 +200,15 @@ struct LOCInputPriorityTests {
                     languages: ["Swift"],
                     include: ["Sources"],
                     exclude: [],
-                    commits: ["abc123", "def456"]
+                    commits: ["abc123", "def456"],
+                    nameTemplate: nil
                 ),
                 LOCMetric(
                     languages: ["Objective-C"],
                     include: ["Legacy"],
                     exclude: [],
-                    commits: ["ghi789"]
+                    commits: ["ghi789"],
+                    nameTemplate: nil
                 ),
             ],
             git: nil
@@ -236,13 +240,15 @@ struct LOCInputPriorityTests {
                     languages: ["Swift"],
                     include: ["Sources"],
                     exclude: [],
-                    commits: ["abc123"]
+                    commits: ["abc123"],
+                    nameTemplate: nil
                 ),
                 LOCMetric(
                     languages: ["Objective-C"],
                     include: ["Legacy"],
                     exclude: [],
-                    commits: ["def456"]
+                    commits: ["def456"],
+                    nameTemplate: nil
                 ),
             ],
             git: nil
@@ -272,7 +278,8 @@ struct LOCInputPriorityTests {
                     languages: ["Swift"],
                     include: ["Sources"],
                     exclude: [],
-                    commits: nil
+                    commits: nil,
+                    nameTemplate: nil
                 )
             ],
             git: nil
@@ -299,19 +306,22 @@ struct LOCInputPriorityTests {
                     languages: ["Swift"],
                     include: ["Sources"],
                     exclude: [],
-                    commits: ["abc123"]
+                    commits: ["abc123"],
+                    nameTemplate: nil
                 ),
                 LOCMetric(
                     languages: ["Kotlin"],
                     include: ["Android"],
                     exclude: [],
-                    commits: []
+                    commits: [],
+                    nameTemplate: nil
                 ),
                 LOCMetric(
                     languages: ["Objective-C"],
                     include: ["Legacy"],
                     exclude: [],
-                    commits: nil
+                    commits: nil,
+                    nameTemplate: nil
                 ),
             ],
             git: nil
