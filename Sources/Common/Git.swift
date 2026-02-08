@@ -29,9 +29,9 @@ package enum Git {
             workingDirectory: FilePath(repoPath.path(percentEncoded: false))
         )
         let raw = result.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let date = iso8601Formatter.date(from: raw) else {
+        guard let date = ISO8601DateFormatter.utc.date(from: raw) else {
             throw ParseError.invalidDateFormat(string: raw, format: "ISO 8601")
         }
-        return iso8601Formatter.string(from: date)
+        return ISO8601DateFormatter.utc.string(from: date)
     }
 }
