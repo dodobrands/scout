@@ -26,61 +26,64 @@ public struct FilesSDK: Sendable {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let repoPath = URL(filePath: input.git.repoPath)
-
-                    // Resolve HEAD commits to actual hashes
-                    let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-                        repoPath: input.git.repoPath
-                    )
-
-                    // Group metrics by commit to minimize checkouts
-                    var commitToFiletypes: [String: [String]] = [:]
-                    for metric in resolvedMetrics {
-                        for commit in metric.commits {
-                            commitToFiletypes[commit, default: []].append(metric.extension)
-                        }
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
                     }
-
-                    for (hash, filetypes) in commitToFiletypes {
-                        try Task.checkCancellation()
-
-                        Self.logger.debug("Processing commit: \(hash)")
-
-                        try await Shell.execute(
-                            "git",
-                            arguments: ["checkout", hash],
-                            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-                        )
-
-                        try await GitFix.prepareRepository(git: input.git)
-
-                        var resultItems: [ResultItem] = []
-                        for ext in filetypes {
-                            let analysisInput = AnalysisInput(
-                                repoPath: input.git.repoPath,
-                                `extension`: ext
-                            )
-                            let result = countFiles(input: analysisInput)
-                            resultItems.append(
-                                ResultItem(filetype: result.filetype, files: result.files)
-                            )
-                        }
-
-                        let date = try await Git.commitDate(for: hash, in: repoPath)
-                        continuation.yield(
-                            Output(commit: hash, date: date, results: resultItems)
-                        )
-                    }
-
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)
                 }
             }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
 
-            continuation.onTermination = { _ in
-                task.cancel()
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
+        // Group metrics by commit to minimize checkouts
+        var commitToFiletypes: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToFiletypes[commit, default: []].append(metric.extension)
             }
+        }
+
+        for (hash, filetypes) in commitToFiletypes {
+            try Task.checkCancellation()
+
+            Self.logger.debug("Processing commit: \(hash)")
+
+            try await Shell.execute(
+                "git",
+                arguments: ["checkout", hash],
+                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+            )
+
+            try await GitFix.prepareRepository(git: input.git)
+
+            var resultItems: [ResultItem] = []
+            for ext in filetypes {
+                let analysisInput = AnalysisInput(
+                    repoPath: input.git.repoPath,
+                    `extension`: ext
+                )
+                let result = countFiles(input: analysisInput)
+                resultItems.append(
+                    ResultItem(filetype: result.filetype, files: result.files)
+                )
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
     }
 

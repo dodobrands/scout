@@ -37,62 +37,65 @@ public struct PatternSDK: Sendable {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let repoPath = URL(filePath: input.git.repoPath)
-
-                    // Resolve HEAD commits to actual hashes
-                    let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-                        repoPath: input.git.repoPath
-                    )
-
-                    // Group metrics by commit to minimize checkouts
-                    var commitToPatterns: [String: [String]] = [:]
-                    for metric in resolvedMetrics {
-                        for commit in metric.commits {
-                            commitToPatterns[commit, default: []].append(metric.pattern)
-                        }
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
                     }
-
-                    for (hash, patterns) in commitToPatterns {
-                        try Task.checkCancellation()
-
-                        Self.logger.debug("Processing commit: \(hash)")
-
-                        try await Shell.execute(
-                            "git",
-                            arguments: ["checkout", hash],
-                            workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-                        )
-
-                        try await GitFix.prepareRepository(git: input.git)
-
-                        var resultItems: [ResultItem] = []
-                        for pattern in patterns {
-                            let analysisInput = AnalysisInput(
-                                repoPath: input.git.repoPath,
-                                extensions: input.extensions,
-                                pattern: pattern
-                            )
-                            let result = try search(input: analysisInput)
-                            resultItems.append(
-                                ResultItem(pattern: result.pattern, matches: result.matches)
-                            )
-                        }
-
-                        let date = try await Git.commitDate(for: hash, in: repoPath)
-                        continuation.yield(
-                            Output(commit: hash, date: date, results: resultItems)
-                        )
-                    }
-
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)
                 }
             }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
 
-            continuation.onTermination = { _ in
-                task.cancel()
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
+        // Group metrics by commit to minimize checkouts
+        var commitToPatterns: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToPatterns[commit, default: []].append(metric.pattern)
             }
+        }
+
+        for (hash, patterns) in commitToPatterns {
+            try Task.checkCancellation()
+
+            Self.logger.debug("Processing commit: \(hash)")
+
+            try await Shell.execute(
+                "git",
+                arguments: ["checkout", hash],
+                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+            )
+
+            try await GitFix.prepareRepository(git: input.git)
+
+            var resultItems: [ResultItem] = []
+            for pattern in patterns {
+                let analysisInput = AnalysisInput(
+                    repoPath: input.git.repoPath,
+                    extensions: input.extensions,
+                    pattern: pattern
+                )
+                let result = try search(input: analysisInput)
+                resultItems.append(
+                    ResultItem(pattern: result.pattern, matches: result.matches)
+                )
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
     }
 

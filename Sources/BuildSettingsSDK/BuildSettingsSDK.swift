@@ -61,82 +61,85 @@ public struct BuildSettingsSDK: Sendable {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let repoPath = URL(filePath: input.git.repoPath)
-
-                    // Resolve HEAD commits to actual hashes
-                    let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
-                        repoPath: input.git.repoPath
-                    )
-
-                    // Group metrics by commit to minimize checkouts
-                    var commitToSettings: [String: [String]] = [:]
-                    for metric in resolvedMetrics {
-                        for commit in metric.commits {
-                            commitToSettings[commit, default: []].append(metric.setting)
-                        }
+                    try await performAnalysis(input: input) { output in
+                        continuation.yield(output)
                     }
-
-                    for (hash, requestedSettings) in commitToSettings {
-                        try Task.checkCancellation()
-
-                        Self.logger.debug("Processing commit: \(hash)")
-
-                        do {
-                            try await Shell.execute(
-                                "git",
-                                arguments: ["checkout", hash],
-                                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-                            )
-                        } catch {
-                            throw AnalysisError.checkoutFailed(
-                                hash: hash,
-                                error: error.localizedDescription
-                            )
-                        }
-
-                        try await GitFix.prepareRepository(git: input.git)
-
-                        let analysisInput = AnalysisInput(
-                            repoPath: input.git.repoPath,
-                            setupCommands: input.setupCommands,
-                            project: input.project,
-                            configuration: input.configuration
-                        )
-
-                        let targets: [TargetWithBuildSettings]
-                        do {
-                            targets = try await extractBuildSettings(input: analysisInput)
-                        } catch let error as AnalysisError {
-                            throw error
-                        } catch {
-                            throw AnalysisError.buildSettingsExtractionFailed(
-                                error: error.localizedDescription
-                            )
-                        }
-
-                        let requestedSettingsSet = Set(requestedSettings)
-                        let resultItems = targets.map { target in
-                            let filteredSettings = target.buildSettings
-                                .filter { requestedSettingsSet.contains($0.key) }
-                                .mapValues { Optional($0) }
-                            return ResultItem(target: target.target, settings: filteredSettings)
-                        }
-
-                        let date = try await Git.commitDate(for: hash, in: repoPath)
-                        continuation.yield(
-                            Output(commit: hash, date: date, results: resultItems)
-                        )
-                    }
-
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)
                 }
             }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
 
-            continuation.onTermination = { _ in
-                task.cancel()
+    private func performAnalysis(
+        input: Input,
+        onOutput: (Output) -> Void
+    ) async throws {
+        let repoPath = URL(filePath: input.git.repoPath)
+
+        // Resolve HEAD commits to actual hashes
+        let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
+            repoPath: input.git.repoPath
+        )
+
+        // Group metrics by commit to minimize checkouts
+        var commitToSettings: [String: [String]] = [:]
+        for metric in resolvedMetrics {
+            for commit in metric.commits {
+                commitToSettings[commit, default: []].append(metric.setting)
             }
+        }
+
+        for (hash, requestedSettings) in commitToSettings {
+            try Task.checkCancellation()
+
+            Self.logger.debug("Processing commit: \(hash)")
+
+            do {
+                try await Shell.execute(
+                    "git",
+                    arguments: ["checkout", hash],
+                    workingDirectory: FilePath(repoPath.path(percentEncoded: false))
+                )
+            } catch {
+                throw AnalysisError.checkoutFailed(
+                    hash: hash,
+                    error: error.localizedDescription
+                )
+            }
+
+            try await GitFix.prepareRepository(git: input.git)
+
+            let analysisInput = AnalysisInput(
+                repoPath: input.git.repoPath,
+                setupCommands: input.setupCommands,
+                project: input.project,
+                configuration: input.configuration
+            )
+
+            let targets: [TargetWithBuildSettings]
+            do {
+                targets = try await extractBuildSettings(input: analysisInput)
+            } catch let error as AnalysisError {
+                throw error
+            } catch {
+                throw AnalysisError.buildSettingsExtractionFailed(
+                    error: error.localizedDescription
+                )
+            }
+
+            let requestedSettingsSet = Set(requestedSettings)
+            let resultItems = targets.map { target in
+                let filteredSettings = target.buildSettings
+                    .filter { requestedSettingsSet.contains($0.key) }
+                    .mapValues { Optional($0) }
+                return ResultItem(target: target.target, settings: filteredSettings)
+            }
+
+            let date = try await Git.commitDate(for: hash, in: repoPath)
+            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
     }
 
