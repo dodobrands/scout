@@ -1,6 +1,6 @@
 import Foundation
 
-enum CommandParserError: Error {
+package enum CommandParserError: Error {
     case invalidCommand(String)
 }
 
@@ -13,12 +13,12 @@ extension CommandParserError: LocalizedError {
     }
 }
 
-struct ParsedCommand {
-    let executable: String
-    let arguments: [String]
+package struct ParsedCommand {
+    package let executable: String
+    package let arguments: [String]
 }
 
-struct CommandParser {
+package struct CommandParser {
     /// Parses a command string into executable and arguments.
     ///
     /// Handles single quotes: content inside single quotes is treated as a single argument.
@@ -30,7 +30,7 @@ struct CommandParser {
     ///
     /// Example: `sed -i '' -n '1p; /tuist/p' .tool-versions`
     /// Returns: executable: "sed", arguments: ["-i", "''", "-n", "'1p; /tuist/p'", ".tool-versions"]
-    static func parse(_ command: String) throws -> ParsedCommand {
+    package static func parse(_ command: String) throws -> ParsedCommand {
         let trimmed = command.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else {
             throw CommandParserError.invalidCommand(command)
@@ -85,12 +85,12 @@ struct CommandParser {
     }
 
     /// Represents a command prepared for execution with executable and arguments.
-    struct PreparedCommand {
+    package struct PreparedCommand {
         /// Executable to run (e.g., "/bin/sh" for shell commands, or "mise" for direct commands)
-        let executable: String
+        package let executable: String
 
         /// Arguments to pass to executable
-        let arguments: [String]
+        package let arguments: [String]
     }
 
     /// Prepares a command string for execution, determining whether to use shell or direct execution.
@@ -98,7 +98,7 @@ struct CommandParser {
     /// - Parameter command: Command string to prepare
     /// - Returns: PreparedCommand with executable and arguments ready to execute
     /// - Throws: CommandParserError if command is invalid
-    static func prepareExecution(_ command: String) throws -> PreparedCommand {
+    package static func prepareExecution(_ command: String) throws -> PreparedCommand {
         // Check if command contains shell operators (pipes, redirects, etc.)
         if requiresShellExecution(command) {
             // Execute through shell for commands with pipes, redirects, etc.
