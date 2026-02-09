@@ -96,7 +96,9 @@ struct CommandParserTests {
         }
 
         @Test
-        func `When parsing tuist generate with flag, should split into executable and arguments`() throws {
+        func `When parsing tuist generate with flag, should split into executable and arguments`()
+            throws
+        {
             let result = try CommandParser.parse("tuist generate --no-open")
             #expect(result.executable == "tuist")
             #expect(result.arguments == ["generate", "--no-open"])
