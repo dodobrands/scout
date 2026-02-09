@@ -161,10 +161,16 @@ public struct BuildSettings: Sendable {
             )
 
             do {
+                let prepared = try CommandParser.prepareExecution(setupCommand.command)
                 _ = try await Shell.execute(
-                    "/bin/bash",
-                    arguments: ["-c", setupCommand.command],
+                    prepared.executable,
+                    arguments: prepared.arguments,
                     workingDirectory: workingDirPath
+                )
+            } catch let error as CommandParserError {
+                throw AnalysisError.setupCommandFailed(
+                    command: setupCommand.command,
+                    error: error.localizedDescription
                 )
             } catch {
                 if setupCommand.optional {
