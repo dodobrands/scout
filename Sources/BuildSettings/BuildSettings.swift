@@ -11,18 +11,16 @@ public struct BuildSettings: Sendable {
 
     /// Error that can occur during analysis.
     public enum AnalysisError: Error, LocalizedError {
-        case setupCommandFailed(command: String, commit: String?, error: String)
-        case buildSettingsExtractionFailed(commit: String?, error: String)
+        case setupCommandFailed(command: String, commit: String, error: String)
+        case buildSettingsExtractionFailed(commit: String, error: String)
         case checkoutFailed(hash: String, error: String)
 
         public var errorDescription: String? {
             switch self {
             case .setupCommandFailed(let command, let commit, let error):
-                let commitInfo = commit.map { " at commit \($0)" } ?? ""
-                return "Setup command '\(command)' failed\(commitInfo): \(error)"
+                return "Setup command '\(command)' failed at commit \(commit): \(error)"
             case .buildSettingsExtractionFailed(let commit, let error):
-                let commitInfo = commit.map { " at commit \($0)" } ?? ""
-                return "Build settings extraction failed\(commitInfo): \(error)"
+                return "Build settings extraction failed at commit \(commit): \(error)"
             case .checkoutFailed(let hash, let error):
                 return "Failed to checkout \(hash): \(error)"
             }
@@ -35,7 +33,7 @@ public struct BuildSettings: Sendable {
     /// - Returns: Array of targets with their build settings
     func extractBuildSettings(
         input: AnalysisInput,
-        commit: String? = nil
+        commit: String
     ) async throws -> [TargetWithBuildSettings] {
         let repoPath = URL(filePath: input.repoPath)
 
@@ -149,7 +147,7 @@ public struct BuildSettings: Sendable {
     private func executeSetupCommands(
         _ commands: [SetupCommand],
         in repoPath: URL,
-        commit: String? = nil
+        commit: String
     ) async throws {
         for setupCommand in commands {
             let workingDirPath: FilePath
@@ -163,10 +161,8 @@ public struct BuildSettings: Sendable {
             var metadata: Logger.Metadata = [
                 "command": "\(setupCommand.command)",
                 "workingDirectory": "\(workingDirPath.string)",
+                "commit": "\(commit)",
             ]
-            if let commit {
-                metadata["commit"] = "\(commit)"
-            }
 
             Self.logger.info("Executing setup command", metadata: metadata)
 
@@ -185,16 +181,13 @@ public struct BuildSettings: Sendable {
                 )
             } catch {
                 if setupCommand.optional {
-                    var warningMetadata: Logger.Metadata = [
-                        "command": "\(setupCommand.command)",
-                        "error": "\(error.localizedDescription)",
-                    ]
-                    if let commit {
-                        warningMetadata["commit"] = "\(commit)"
-                    }
                     Self.logger.warning(
                         "Optional setup command failed, continuing",
-                        metadata: warningMetadata
+                        metadata: [
+                            "command": "\(setupCommand.command)",
+                            "error": "\(error.localizedDescription)",
+                            "commit": "\(commit)",
+                        ]
                     )
                 } else {
                     throw AnalysisError.setupCommandFailed(
@@ -212,7 +205,7 @@ public struct BuildSettings: Sendable {
     private func resolveProject(
         path: String,
         repoPath: URL,
-        commit: String? = nil
+        commit: String
     ) throws -> [ProjectOrWorkspace] {
         let fileManager = FileManager.default
 
@@ -225,13 +218,12 @@ public struct BuildSettings: Sendable {
         }
 
         guard fileManager.fileExists(atPath: resolvedPath) else {
-            var metadata: Logger.Metadata = ["path": "\(resolvedPath)"]
-            if let commit {
-                metadata["commit"] = "\(commit)"
-            }
             Self.logger.warning(
                 "Project or workspace not found, skipping",
-                metadata: metadata
+                metadata: [
+                    "path": "\(resolvedPath)",
+                    "commit": "\(commit)",
+                ]
             )
             return []
         }

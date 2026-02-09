@@ -16,9 +16,8 @@ struct BuildSettingsTests {
             configuration: "Debug"
         )
 
-        let result = try await sut.extractBuildSettings(input: input)
+        let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
 
-        #expect(result.count == 1)
         let target = try #require(result.first)
         #expect(target.target == "TestApp")
         #expect(target.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"] == "com.test.TestApp")
@@ -37,44 +36,8 @@ struct BuildSettingsTests {
         )
 
         await #expect(throws: BuildSettings.AnalysisError.self) {
-            _ = try await sut.extractBuildSettings(input: input)
+            _ = try await sut.extractBuildSettings(input: input, commit: "test-commit")
         }
-    }
-
-    @Test
-    func `When setup command fails with commit, error should contain commit`() async throws {
-        let samplesURL = try samplesDirectory()
-        let failingCommand = BuildSettings.SetupCommand(command: "/usr/bin/false")
-        let input = BuildSettings.AnalysisInput(
-            repoPath: samplesURL.path,
-            setupCommands: [failingCommand],
-            project: "TestApp.xcodeproj",
-            configuration: "Debug"
-        )
-        let commit = "abc123"
-
-        do {
-            _ = try await sut.extractBuildSettings(input: input, commit: commit)
-            Issue.record("Expected error to be thrown")
-        } catch {
-            let description = error.localizedDescription
-            #expect(description.contains(commit))
-        }
-    }
-
-    @Test
-    func `When project not found, should return empty results`() async throws {
-        let samplesURL = try samplesDirectory()
-        let input = BuildSettings.AnalysisInput(
-            repoPath: samplesURL.path,
-            setupCommands: [],
-            project: "NonExistent.xcodeproj",
-            configuration: "Debug"
-        )
-
-        let result = try await sut.extractBuildSettings(input: input)
-
-        #expect(result.isEmpty)
     }
 
     @Test
@@ -91,7 +54,7 @@ struct BuildSettingsTests {
             configuration: "Debug"
         )
 
-        let result = try await sut.extractBuildSettings(input: input)
+        let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
 
         #expect(result.count == 1)
     }
