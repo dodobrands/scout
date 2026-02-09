@@ -14,8 +14,8 @@ struct TestMetric: CommitResolvable {
 @Suite("groupedByCommit")
 struct GroupedByCommitTests {
 
-    @Test("preserves chronological order of commits")
-    func preservesOrder() {
+    @Test
+    func `When grouping metrics, should preserve chronological order of commits`() {
         let metrics = [
             TestMetric(name: "A", commits: ["commit-1", "commit-2", "commit-3"]),
             TestMetric(name: "B", commits: ["commit-1", "commit-3"]),
@@ -26,8 +26,8 @@ struct GroupedByCommitTests {
         #expect(Array(grouped.keys) == ["commit-1", "commit-2", "commit-3"])
     }
 
-    @Test("groups metrics belonging to the same commit")
-    func groupsMetrics() {
+    @Test
+    func `When metrics share a commit, should group them together`() {
         let metrics = [
             TestMetric(name: "A", commits: ["commit-1"]),
             TestMetric(name: "B", commits: ["commit-1"]),
@@ -39,15 +39,15 @@ struct GroupedByCommitTests {
         #expect(grouped["commit-1"]?.map(\.name) == ["A", "B"])
     }
 
-    @Test("returns empty dictionary for empty input")
-    func emptyInput() {
+    @Test
+    func `When input is empty, should return empty dictionary`() {
         let metrics: [TestMetric] = []
         let grouped = metrics.groupedByCommit()
         #expect(grouped.isEmpty)
     }
 
-    @Test("handles metrics with no commits")
-    func metricsWithNoCommits() {
+    @Test
+    func `When metric has no commits, should skip it`() {
         let metrics = [
             TestMetric(name: "A", commits: []),
             TestMetric(name: "B", commits: ["commit-1"]),
@@ -59,8 +59,8 @@ struct GroupedByCommitTests {
         #expect(grouped["commit-1"]?.map(\.name) == ["B"])
     }
 
-    @Test("preserves order with many commits")
-    func manyCommits() {
+    @Test
+    func `When grouping many commits, should preserve order`() {
         let commitHashes = (1...100).map { "hash-\(String(format: "%03d", $0))" }
         let metrics = [
             TestMetric(name: "metric", commits: commitHashes),
