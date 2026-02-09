@@ -43,7 +43,8 @@ public struct BuildSettings: Sendable {
 
         let foundProjectsAndWorkspaces = try resolveProject(
             path: input.project,
-            repoPath: repoPath
+            repoPath: repoPath,
+            commit: commit
         )
 
         let projectsWithTargets = try await getTargetsForAllProjects(
@@ -210,7 +211,8 @@ public struct BuildSettings: Sendable {
 
     private func resolveProject(
         path: String,
-        repoPath: URL
+        repoPath: URL,
+        commit: String? = nil
     ) throws -> [ProjectOrWorkspace] {
         let fileManager = FileManager.default
 
@@ -223,9 +225,13 @@ public struct BuildSettings: Sendable {
         }
 
         guard fileManager.fileExists(atPath: resolvedPath) else {
+            var metadata: Logger.Metadata = ["path": "\(resolvedPath)"]
+            if let commit {
+                metadata["commit"] = "\(commit)"
+            }
             Self.logger.warning(
-                "Project or workspace not found",
-                metadata: ["path": "\(resolvedPath)"]
+                "Project or workspace not found, skipping",
+                metadata: metadata
             )
             return []
         }
