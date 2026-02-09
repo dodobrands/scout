@@ -124,7 +124,7 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 | `metrics[].setting` | `String` | Yes | Build setting name (e.g., `SWIFT_VERSION`) |
 | `metrics[].commits` | `[String]?` | No | Commits for this setting (default: `["HEAD"]`) |
 | `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit |
-| `setupCommands[].command` | `String` | Yes | Shell command to execute |
+| `setupCommands[].command` | `String` | Yes | Command to execute (simple commands run directly, shell operators like `\|`, `&&` trigger `/bin/sh`) |
 | `setupCommands[].workingDirectory` | `String` | No | Directory relative to repo root |
 | `setupCommands[].optional` | `Bool` | No | If `true`, analysis continues even if command fails (default: `false`) |
 | `git` | `Object` | No | [Git configuration](../Common/GitConfiguration.md) |
