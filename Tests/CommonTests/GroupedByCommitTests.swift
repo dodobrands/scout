@@ -63,7 +63,7 @@ struct GroupedByCommitTests {
     func `When grouping many commits, should preserve order`() {
         let commitHashes = (1...100).map { "hash-\(String(format: "%03d", $0))" }
         let metrics = [
-            TestMetric(name: "metric", commits: commitHashes),
+            TestMetric(name: "metric", commits: commitHashes)
         ]
 
         let grouped = metrics.groupedByCommit()
