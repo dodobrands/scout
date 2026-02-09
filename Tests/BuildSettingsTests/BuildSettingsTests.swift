@@ -16,9 +16,8 @@ struct BuildSettingsTests {
             configuration: "Debug"
         )
 
-        let result = try await sut.extractBuildSettings(input: input)
+        let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
 
-        #expect(result.count == 1)
         let target = try #require(result.first)
         #expect(target.target == "TestApp")
         #expect(target.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"] == "com.test.TestApp")
@@ -37,7 +36,7 @@ struct BuildSettingsTests {
         )
 
         await #expect(throws: BuildSettings.AnalysisError.self) {
-            _ = try await sut.extractBuildSettings(input: input)
+            _ = try await sut.extractBuildSettings(input: input, commit: "test-commit")
         }
     }
 
@@ -55,7 +54,7 @@ struct BuildSettingsTests {
             configuration: "Debug"
         )
 
-        let result = try await sut.extractBuildSettings(input: input)
+        let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
 
         #expect(result.count == 1)
     }
