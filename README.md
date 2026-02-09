@@ -208,6 +208,8 @@ When analyzing multiple commits, the output is an array:
 ]
 ```
 
+Commits are processed in the order they are provided.
+
 Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.
 
 ## Requirements

@@ -88,25 +88,21 @@ public struct Types: Sendable {
         )
 
         // Group metrics by commit to minimize checkouts
-        var commitToTypes: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToTypes[commit, default: []].append(metric.type)
-            }
-        }
+        let commitToTypes = resolvedMetrics.groupedByCommit()
 
-        for (hash, typeNames) in commitToTypes {
+        for (hash, metrics) in commitToTypes {
             try Task.checkCancellation()
 
+            let typeNames = metrics.map(\.type)
             Self.logger.debug("Processing commit: \(hash) for types: \(typeNames)")
 
             try await Git.checkout(hash: hash, git: input.git)
 
             var resultItems: [ResultItem] = []
-            for typeName in typeNames {
+            for metric in metrics {
                 let analysisInput = AnalysisInput(
                     repoPath: input.git.repoPath,
-                    typeName: typeName
+                    typeName: metric.type
                 )
                 let result = try await countTypes(input: analysisInput)
                 resultItems.append(
