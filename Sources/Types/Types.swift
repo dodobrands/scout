@@ -100,13 +100,7 @@ public struct Types: Sendable {
 
             Self.logger.debug("Processing commit: \(hash) for types: \(typeNames)")
 
-            try await Shell.execute(
-                "git",
-                arguments: ["checkout", hash],
-                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-            )
-
-            try await GitFix.prepareRepository(git: input.git)
+            try await Git.checkout(hash: hash, git: input.git)
 
             var resultItems: [ResultItem] = []
             for typeName in typeNames {
