@@ -11,16 +11,18 @@ public struct BuildSettings: Sendable {
 
     /// Error that can occur during analysis.
     public enum AnalysisError: Error, LocalizedError {
-        case setupCommandFailed(command: String, error: String)
-        case buildSettingsExtractionFailed(error: String)
+        case setupCommandFailed(command: String, commit: String?, error: String)
+        case buildSettingsExtractionFailed(commit: String?, error: String)
         case checkoutFailed(hash: String, error: String)
 
         public var errorDescription: String? {
             switch self {
-            case .setupCommandFailed(let command, let error):
-                return "Setup command '\(command)' failed: \(error)"
-            case .buildSettingsExtractionFailed(let error):
-                return "Build settings extraction failed: \(error)"
+            case .setupCommandFailed(let command, let commit, let error):
+                let commitInfo = commit.map { " at commit \($0)" } ?? ""
+                return "Setup command '\(command)' failed\(commitInfo): \(error)"
+            case .buildSettingsExtractionFailed(let commit, let error):
+                let commitInfo = commit.map { " at commit \($0)" } ?? ""
+                return "Build settings extraction failed\(commitInfo): \(error)"
             case .checkoutFailed(let hash, let error):
                 return "Failed to checkout \(hash): \(error)"
             }
@@ -31,10 +33,13 @@ public struct BuildSettings: Sendable {
     /// Performs analysis on current repository state without git operations.
     /// - Parameter input: Input parameters for the operation
     /// - Returns: Array of targets with their build settings
-    func extractBuildSettings(input: AnalysisInput) async throws -> [TargetWithBuildSettings] {
+    func extractBuildSettings(
+        input: AnalysisInput,
+        commit: String? = nil
+    ) async throws -> [TargetWithBuildSettings] {
         let repoPath = URL(filePath: input.repoPath)
 
-        try await executeSetupCommands(input.setupCommands, in: repoPath)
+        try await executeSetupCommands(input.setupCommands, in: repoPath, commit: commit)
 
         let foundProjectsAndWorkspaces = try resolveProject(
             path: input.project,
@@ -115,11 +120,12 @@ public struct BuildSettings: Sendable {
 
             let targets: [TargetWithBuildSettings]
             do {
-                targets = try await extractBuildSettings(input: analysisInput)
+                targets = try await extractBuildSettings(input: analysisInput, commit: hash)
             } catch let error as AnalysisError {
                 throw error
             } catch {
                 throw AnalysisError.buildSettingsExtractionFailed(
+                    commit: hash,
                     error: error.localizedDescription
                 )
             }
@@ -141,7 +147,8 @@ public struct BuildSettings: Sendable {
 
     private func executeSetupCommands(
         _ commands: [SetupCommand],
-        in repoPath: URL
+        in repoPath: URL,
+        commit: String? = nil
     ) async throws {
         for setupCommand in commands {
             let workingDirPath: FilePath
@@ -152,13 +159,15 @@ public struct BuildSettings: Sendable {
                 workingDirPath = FilePath(repoPath.path(percentEncoded: false))
             }
 
-            Self.logger.info(
-                "Executing setup command",
-                metadata: [
-                    "command": "\(setupCommand.command)",
-                    "workingDirectory": "\(workingDirPath.string)",
-                ]
-            )
+            var metadata: Logger.Metadata = [
+                "command": "\(setupCommand.command)",
+                "workingDirectory": "\(workingDirPath.string)",
+            ]
+            if let commit {
+                metadata["commit"] = "\(commit)"
+            }
+
+            Self.logger.info("Executing setup command", metadata: metadata)
 
             do {
                 let prepared = try CommandParser.prepareExecution(setupCommand.command)
@@ -170,20 +179,26 @@ public struct BuildSettings: Sendable {
             } catch let error as CommandParserError {
                 throw AnalysisError.setupCommandFailed(
                     command: setupCommand.command,
+                    commit: commit,
                     error: error.localizedDescription
                 )
             } catch {
                 if setupCommand.optional {
+                    var warningMetadata: Logger.Metadata = [
+                        "command": "\(setupCommand.command)",
+                        "error": "\(error.localizedDescription)",
+                    ]
+                    if let commit {
+                        warningMetadata["commit"] = "\(commit)"
+                    }
                     Self.logger.warning(
                         "Optional setup command failed, continuing",
-                        metadata: [
-                            "command": "\(setupCommand.command)",
-                            "error": "\(error.localizedDescription)",
-                        ]
+                        metadata: warningMetadata
                     )
                 } else {
                     throw AnalysisError.setupCommandFailed(
                         command: setupCommand.command,
+                        commit: commit,
                         error: error.localizedDescription
                     )
                 }
