@@ -78,7 +78,7 @@ public struct FilesCLI: AsyncParsableCommand {
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {
-                Self.logger.notice(
+                Self.logger.info(
                     "Found \(result.files.count) files of type '\(result.filetype)' at \(output.commit)"
                 )
             }

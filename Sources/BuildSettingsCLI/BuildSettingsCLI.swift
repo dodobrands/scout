@@ -88,7 +88,7 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
 
         do {
             for try await output in sdk.analyze(input: input) {
-                Self.logger.notice(
+                Self.logger.info(
                     "Extracted build settings for \(output.results.count) targets at \(output.commit)"
                 )
                 outputs.append(output)

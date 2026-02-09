@@ -100,7 +100,7 @@ public struct LOCCLI: AsyncParsableCommand {
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {
-                Self.logger.notice(
+                Self.logger.info(
                     "Found \(result.linesOfCode) LOC for '\(result.metric)' at \(output.commit)"
                 )
             }
@@ -110,6 +110,8 @@ public struct LOCCLI: AsyncParsableCommand {
                 try outputs.writeJSON(to: outputPath)
             }
         }
+
+        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
 
         let summary = LOCCLISummary(outputs: outputs)
         logSummary(summary)

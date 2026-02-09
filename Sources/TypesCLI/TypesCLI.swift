@@ -81,7 +81,7 @@ public struct TypesCLI: AsyncParsableCommand {
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {
-                Self.logger.notice(
+                Self.logger.info(
                     "Found \(result.types.count) types inherited from \(result.typeName) at \(output.commit)"
                 )
             }
