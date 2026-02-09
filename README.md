@@ -208,7 +208,7 @@ When analyzing multiple commits, the output is an array:
 ]
 ```
 
-Commits are processed in the order they are provided. If you pass commits sorted chronologically, results will be in chronological order.
+Commits are processed in the order they are provided.
 
 Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.
 

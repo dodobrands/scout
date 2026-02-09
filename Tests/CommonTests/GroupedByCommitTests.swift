@@ -15,7 +15,7 @@ struct TestMetric: CommitResolvable {
 struct GroupedByCommitTests {
 
     @Test
-    func `When grouping metrics, should preserve chronological order of commits`() {
+    func `When grouping metrics, should preserve input order of commits`() {
         let metrics = [
             TestMetric(name: "A", commits: ["commit-1", "commit-2", "commit-3"]),
             TestMetric(name: "B", commits: ["commit-1", "commit-3"]),

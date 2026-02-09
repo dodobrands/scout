@@ -21,7 +21,6 @@ extension Array where Element: CommitResolvable {
     }
 
     /// Groups metrics by commit hash, preserving the order commits first appear.
-    /// This ensures chronological order is maintained when commits arrive sorted by timestamp.
     package func groupedByCommit() -> OrderedDictionary<String, [Element]> {
         var result: OrderedDictionary<String, [Element]> = [:]
         for metric in self {
