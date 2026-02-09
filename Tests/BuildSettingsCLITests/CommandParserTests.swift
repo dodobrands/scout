@@ -89,6 +89,20 @@ struct CommandParserTests {
         }
 
         @Test
+        func `When parsing tuist install, should split into executable and argument`() throws {
+            let result = try CommandParser.parse("tuist install")
+            #expect(result.executable == "tuist")
+            #expect(result.arguments == ["install"])
+        }
+
+        @Test
+        func `When parsing tuist generate with flag, should split into executable and arguments`() throws {
+            let result = try CommandParser.parse("tuist generate --no-open")
+            #expect(result.executable == "tuist")
+            #expect(result.arguments == ["generate", "--no-open"])
+        }
+
+        @Test
         func `When parsing command with unclosed quote, should throw error`() throws {
             #expect(throws: CommandParserError.self) {
                 try CommandParser.parse("echo 'hello")
