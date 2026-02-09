@@ -232,7 +232,7 @@ public struct BuildSettings: Sendable {
         // .xcworkspace is a directory bundle, so the path may end with "/".
         let normalizedPath =
             resolvedPath.hasSuffix("/") ? String(resolvedPath.dropLast()) : resolvedPath
-        let isWorkspace = normalizedPath.hasSuffix(".xcworkspace")
+        let isWorkspace = ProjectOrWorkspace.isWorkspace(path: resolvedPath)
         return [ProjectOrWorkspace(path: normalizedPath, isWorkspace: isWorkspace)]
     }
 

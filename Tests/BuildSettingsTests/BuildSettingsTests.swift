@@ -39,23 +39,17 @@ struct BuildSettingsTests {
         #expect(result.isEmpty)
     }
 
-    @Test
-    func `When project path has trailing slash, should detect workspace correctly`() async throws {
-        let samplesURL = try samplesDirectory()
-        // .xcworkspace is a directory bundle; URL.appendingPathComponent adds trailing slash.
-        // Before the fix, this would fail because xcodebuild was called with -project flag.
-        let input = BuildSettings.AnalysisInput(
-            repoPath: samplesURL.path,
-            setupCommands: [],
-            project: "TestApp.xcodeproj/project.xcworkspace",
-            configuration: "Debug"
-        )
-
-        let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
-
-        // Embedded workspace only has schemes, not targets — empty is expected.
-        // The key assertion is that it doesn't throw (would fail with -project flag).
-        #expect(result.isEmpty)
+    @Test(arguments: [
+        ("App.xcworkspace", true),
+        ("App.xcworkspace/", true),
+        ("App.xcodeproj", false),
+        ("App.xcodeproj/", false),
+        ("/absolute/path/App.xcworkspace", true),
+        ("/absolute/path/App.xcworkspace/", true),
+        ("/absolute/path/App.xcodeproj", false),
+    ])
+    func `isWorkspace detection`(path: String, expected: Bool) {
+        #expect(ProjectOrWorkspace.isWorkspace(path: path) == expected)
     }
 
     @Test
