@@ -98,19 +98,13 @@ public struct BuildSettings: Sendable {
             Self.logger.debug("Processing commit: \(hash)")
 
             do {
-                try await Shell.execute(
-                    "git",
-                    arguments: ["checkout", hash],
-                    workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-                )
+                try await Git.checkout(hash: hash, git: input.git)
             } catch {
                 throw AnalysisError.checkoutFailed(
                     hash: hash,
                     error: error.localizedDescription
                 )
             }
-
-            try await GitFix.prepareRepository(git: input.git)
 
             let analysisInput = AnalysisInput(
                 repoPath: input.git.repoPath,

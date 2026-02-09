@@ -111,13 +111,7 @@ public struct LOC: Sendable {
         for (hash, metrics) in commitToMetrics {
             try Task.checkCancellation()
 
-            try await Shell.execute(
-                "git",
-                arguments: ["checkout", hash],
-                workingDirectory: FilePath(repoPath.path(percentEncoded: false))
-            )
-
-            try await GitFix.prepareRepository(git: input.git)
+            try await Git.checkout(hash: hash, git: input.git)
 
             var resultItems: [ResultItem] = []
             for metric in metrics {
