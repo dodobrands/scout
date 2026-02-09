@@ -117,7 +117,7 @@ public struct LOCCLI: AsyncParsableCommand {
 
     private func logSummary(_ summary: LOCCLISummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.notice("\(summary)")
+            Self.logger.info("\(summary)")
         }
         GitHubActionsLogHandler.writeSummary(summary)
     }

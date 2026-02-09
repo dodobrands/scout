@@ -95,7 +95,7 @@ public struct FilesCLI: AsyncParsableCommand {
 
     private func logSummary(_ summary: FilesCLISummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.notice("\(summary)")
+            Self.logger.info("\(summary)")
         }
         GitHubActionsLogHandler.writeSummary(summary)
     }

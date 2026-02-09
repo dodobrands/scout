@@ -112,7 +112,7 @@ public struct PatternCLI: AsyncParsableCommand {
 
     private func logSummary(_ summary: PatternCLISummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.notice("\(summary)")
+            Self.logger.info("\(summary)")
         }
         GitHubActionsLogHandler.writeSummary(summary)
     }
