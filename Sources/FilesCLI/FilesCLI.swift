@@ -78,7 +78,7 @@ public struct FilesCLI: AsyncParsableCommand {
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {
-                Self.logger.notice(
+                Self.logger.info(
                     "Found \(result.files.count) files of type '\(result.filetype)' at \(output.commit)"
                 )
             }
@@ -88,8 +88,6 @@ public struct FilesCLI: AsyncParsableCommand {
                 try outputs.writeJSON(to: outputPath)
             }
         }
-
-        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
 
         let summary = FilesCLISummary(outputs: outputs)
         logSummary(summary)

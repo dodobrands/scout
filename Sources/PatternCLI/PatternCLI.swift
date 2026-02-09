@@ -95,7 +95,7 @@ public struct PatternCLI: AsyncParsableCommand {
 
         for try await output in sdk.analyze(input: input) {
             for result in output.results {
-                Self.logger.notice(
+                Self.logger.info(
                     "Found \(result.matches.count) matches for '\(result.pattern)' at \(output.commit)"
                 )
             }
@@ -105,10 +105,6 @@ public struct PatternCLI: AsyncParsableCommand {
                 try outputs.writeJSON(to: outputPath)
             }
         }
-
-        Self.logger.notice(
-            "Summary: analyzed \(outputs.count) commit(s) for \(input.metrics.count) pattern(s)"
-        )
 
         let summary = PatternCLISummary(outputs: outputs)
         logSummary(summary)
