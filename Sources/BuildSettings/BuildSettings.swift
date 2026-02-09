@@ -154,7 +154,7 @@ public struct BuildSettings: Sendable {
                 workingDirPath = FilePath(repoPath.path(percentEncoded: false))
             }
 
-            var metadata: Logger.Metadata = [
+            let metadata: Logger.Metadata = [
                 "command": "\(setupCommand.command)",
                 "workingDirectory": "\(workingDirPath.string)",
                 "commit": "\(commit)",
