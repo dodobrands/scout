@@ -101,12 +101,7 @@ public struct LOC: Sendable {
         )
 
         // Group metrics by commit to minimize checkouts
-        var commitToMetrics: [String: [MetricInput]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToMetrics[commit, default: []].append(metric)
-            }
-        }
+        let commitToMetrics = resolvedMetrics.groupedByCommit()
 
         for (hash, metrics) in commitToMetrics {
             try Task.checkCancellation()

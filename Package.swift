@@ -56,6 +56,10 @@ let package = Package(
             url: "https://github.com/pointfreeco/swift-snapshot-testing",
             from: "1.0.0"
         ),
+        .package(
+            url: "https://github.com/apple/swift-collections",
+            .upToNextMajor(from: "1.1.0")
+        ),
     ],
     targets: [
         .target(
@@ -72,6 +76,10 @@ let package = Package(
                 .product(
                     name: "LoggingOSLog",
                     package: "swift-log-oslog"
+                ),
+                .product(
+                    name: "OrderedCollections",
+                    package: "swift-collections"
                 ),
             ],
             exclude: ["README.md", "GitConfiguration.md"],
@@ -255,6 +263,15 @@ let package = Package(
                 "PatternCLI",
                 "LOCCLI",
                 "BuildSettingsCLI",
+            ]
+        ),
+        .testTarget(
+            name: "CommonTests",
+            dependencies: [
+                "Common",
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
             ]
         ),
         .testTarget(

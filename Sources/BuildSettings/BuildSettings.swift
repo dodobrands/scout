@@ -89,16 +89,12 @@ public struct BuildSettings: Sendable {
         )
 
         // Group metrics by commit to minimize checkouts
-        var commitToSettings: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToSettings[commit, default: []].append(metric.setting)
-            }
-        }
+        let commitToSettings = resolvedMetrics.groupedByCommit()
 
-        for (hash, requestedSettings) in commitToSettings {
+        for (hash, metrics) in commitToSettings {
             try Task.checkCancellation()
 
+            let requestedSettings = metrics.map(\.setting)
             Self.logger.debug("Processing commit: \(hash)")
 
             do {

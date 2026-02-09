@@ -50,14 +50,9 @@ public struct Files: Sendable {
         )
 
         // Group metrics by commit to minimize checkouts
-        var commitToFiletypes: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToFiletypes[commit, default: []].append(metric.extension)
-            }
-        }
+        let commitToFiletypes = resolvedMetrics.groupedByCommit()
 
-        for (hash, filetypes) in commitToFiletypes {
+        for (hash, metrics) in commitToFiletypes {
             try Task.checkCancellation()
 
             Self.logger.debug("Processing commit: \(hash)")
@@ -65,10 +60,10 @@ public struct Files: Sendable {
             try await Git.checkout(hash: hash, git: input.git)
 
             var resultItems: [ResultItem] = []
-            for ext in filetypes {
+            for metric in metrics {
                 let analysisInput = AnalysisInput(
                     repoPath: input.git.repoPath,
-                    extension: ext
+                    extension: metric.extension
                 )
                 let result = countFiles(input: analysisInput)
                 resultItems.append(

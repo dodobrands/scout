@@ -61,14 +61,9 @@ public struct Pattern: Sendable {
         )
 
         // Group metrics by commit to minimize checkouts
-        var commitToPatterns: [String: [String]] = [:]
-        for metric in resolvedMetrics {
-            for commit in metric.commits {
-                commitToPatterns[commit, default: []].append(metric.pattern)
-            }
-        }
+        let commitToPatterns = resolvedMetrics.groupedByCommit()
 
-        for (hash, patterns) in commitToPatterns {
+        for (hash, metrics) in commitToPatterns {
             try Task.checkCancellation()
 
             Self.logger.debug("Processing commit: \(hash)")
@@ -76,11 +71,11 @@ public struct Pattern: Sendable {
             try await Git.checkout(hash: hash, git: input.git)
 
             var resultItems: [ResultItem] = []
-            for pattern in patterns {
+            for metric in metrics {
                 let analysisInput = AnalysisInput(
                     repoPath: input.git.repoPath,
                     extensions: input.extensions,
-                    pattern: pattern
+                    pattern: metric.pattern
                 )
                 let result = try search(input: analysisInput)
                 resultItems.append(
