@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import BuildSettingsCLI
+@testable import Common
 
 @Suite("CommandParser")
 struct CommandParserTests {
@@ -86,6 +86,22 @@ struct CommandParserTests {
             #expect(throws: CommandParserError.self) {
                 try CommandParser.parse("   ")
             }
+        }
+
+        @Test
+        func `When parsing tuist install, should split into executable and argument`() throws {
+            let result = try CommandParser.parse("tuist install")
+            #expect(result.executable == "tuist")
+            #expect(result.arguments == ["install"])
+        }
+
+        @Test
+        func `When parsing tuist generate with flag, should split into executable and arguments`()
+            throws
+        {
+            let result = try CommandParser.parse("tuist generate --no-open")
+            #expect(result.executable == "tuist")
+            #expect(result.arguments == ["generate", "--no-open"])
         }
 
         @Test

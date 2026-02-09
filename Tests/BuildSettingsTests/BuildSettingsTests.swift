@@ -28,7 +28,7 @@ struct BuildSettingsTests {
     @Test
     func `When setup command fails, should throw error`() async throws {
         let samplesURL = try samplesDirectory()
-        let failingCommand = BuildSettings.SetupCommand(command: "exit 1")
+        let failingCommand = BuildSettings.SetupCommand(command: "/usr/bin/false")
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [failingCommand],
@@ -45,7 +45,7 @@ struct BuildSettingsTests {
     func `When optional setup command fails, should continue`() async throws {
         let samplesURL = try samplesDirectory()
         let optionalFailingCommand = BuildSettings.SetupCommand(
-            command: "exit 1",
+            command: "/usr/bin/false",
             optional: true
         )
         let input = BuildSettings.AnalysisInput(

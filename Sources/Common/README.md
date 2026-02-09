@@ -24,6 +24,7 @@ Provides common functionality including:
 ### Core Utilities
 
 - **`Shell`** — Safe shell command execution without shell interpretation
+- **`CommandParser`** — Parses command strings into executable and arguments, with smart shell detection
 - **`UnwrapOrThrow`** — Custom `?!` operator for unwrapping optionals or throwing errors
 - **`LoggingSetup`** — Structured logging configuration
 - **`GitHubActionsLogHandler`** — GitHub Actions compatible log handler with job summaries
@@ -39,6 +40,7 @@ Provides common functionality including:
 - **`ParseError`** — JSON and structure parsing errors
 - **`URLError`** — URL validation errors
 - **`ShellError`** — Shell command execution errors
+- **`CommandParserError`** — Command string parsing errors
 
 ## Usage
 
@@ -113,6 +115,43 @@ let output = try await Shell.execute(
 )
 ```
 
+### `CommandParser`
+
+#### `parse(_:)`
+
+Parses a command string into executable and arguments, handling single-quoted strings.
+
+**Parameters:**
+- `_ command: String` — Command string (e.g., `"tuist generate --no-open"`)
+
+**Returns:** `ParsedCommand` with `executable` and `arguments`
+
+**Throws:** `CommandParserError` for empty or malformed commands
+
+#### `prepareExecution(_:)`
+
+Prepares a command for execution, automatically choosing direct or shell execution.
+
+Simple commands (e.g., `tuist install`) are executed directly. Commands with shell operators (`|`, `&&`, `||`, `;`, `>`, `<`, `&`) are routed through `/bin/sh -c`.
+
+**Parameters:**
+- `_ command: String` — Command string to prepare
+
+**Returns:** `PreparedCommand` with `executable` and `arguments` ready for `Shell.execute()`
+
+**Throws:** `CommandParserError` for invalid commands
+
+**Example:**
+```swift
+let prepared = try CommandParser.prepareExecution("tuist generate --no-open")
+// prepared.executable == "tuist"
+// prepared.arguments == ["generate", "--no-open"]
+
+let piped = try CommandParser.prepareExecution("cat file | grep pattern")
+// piped.executable == "/bin/sh"
+// piped.arguments == ["-c", "cat file | grep pattern"]
+```
+
 ### Custom Operator `?!`
 
 Unwraps an optional or throws an error.
@@ -153,6 +192,14 @@ public enum URLError: Error {
 public enum ShellError: Error {
     case executionFailed(executable: String, arguments: [String], underlyingError: String)
     case processFailed(executable: String, arguments: [String], exitCode: TerminationStatus, error: String)
+}
+```
+
+### `CommandParserError`
+
+```swift
+package enum CommandParserError: Error {
+    case invalidCommand(String)
 }
 ```
 
