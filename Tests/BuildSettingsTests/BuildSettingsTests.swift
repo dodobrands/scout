@@ -25,6 +25,34 @@ struct BuildSettingsTests {
     }
 
     @Test
+    func `When project not found, should return empty`() async throws {
+        let samplesURL = try samplesDirectory()
+        let input = BuildSettings.AnalysisInput(
+            repoPath: samplesURL.path,
+            setupCommands: [],
+            project: "NonExistent.xcodeproj",
+            configuration: "Debug"
+        )
+
+        let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
+
+        #expect(result.isEmpty)
+    }
+
+    @Test(arguments: [
+        ("App.xcworkspace", true),
+        ("App.xcworkspace/", true),
+        ("App.xcodeproj", false),
+        ("App.xcodeproj/", false),
+        ("/absolute/path/App.xcworkspace", true),
+        ("/absolute/path/App.xcworkspace/", true),
+        ("/absolute/path/App.xcodeproj", false),
+    ])
+    func `isWorkspace detection`(path: String, expected: Bool) {
+        #expect(ProjectOrWorkspace.isWorkspace(path: path) == expected)
+    }
+
+    @Test
     func `When setup command fails, should throw error`() async throws {
         let samplesURL = try samplesDirectory()
         let failingCommand = BuildSettings.SetupCommand(command: "/usr/bin/false")
