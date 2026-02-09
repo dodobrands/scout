@@ -35,6 +35,11 @@ Provides common functionality including:
 - **`Array+NilIfEmpty`** — `nilIfEmpty` property for arrays
 - **`Sequence+ConcurrentMap`** — `concurrentMap` for parallel async operations
 
+### Commit Grouping
+
+- **`CommitResolvable`** — Protocol for metric types with commits that may need HEAD resolution
+- **`groupedByCommit()`** — Groups metrics by commit hash into `OrderedDictionary`, preserving the order commits first appear. This ensures chronological order is maintained when commits arrive sorted by timestamp.
+
 ### Error Types
 
 - **`ParseError`** — JSON and structure parsing errors
