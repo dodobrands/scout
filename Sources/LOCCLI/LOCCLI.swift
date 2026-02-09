@@ -111,15 +111,13 @@ public struct LOCCLI: AsyncParsableCommand {
             }
         }
 
-        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
-
         let summary = LOCCLISummary(outputs: outputs)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: LOCCLISummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.info("\(summary)")
+            Self.logger.notice("\(summary)")
         }
         GitHubActionsLogHandler.writeSummary(summary)
     }

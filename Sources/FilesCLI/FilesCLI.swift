@@ -89,15 +89,13 @@ public struct FilesCLI: AsyncParsableCommand {
             }
         }
 
-        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
-
         let summary = FilesCLISummary(outputs: outputs)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: FilesCLISummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.info("\(summary)")
+            Self.logger.notice("\(summary)")
         }
         GitHubActionsLogHandler.writeSummary(summary)
     }

@@ -110,10 +110,8 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
 
         let summary = BuildSettingsCLISummary(outputs: outputs)
         if !summary.outputs.isEmpty {
-            Self.logger.info("\(summary)")
+            Self.logger.notice("\(summary)")
         }
         GitHubActionsLogHandler.writeSummary(summary)
-
-        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
     }
 }

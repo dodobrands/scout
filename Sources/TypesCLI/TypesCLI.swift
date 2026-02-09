@@ -92,15 +92,13 @@ public struct TypesCLI: AsyncParsableCommand {
             }
         }
 
-        Self.logger.notice("Summary: analyzed \(outputs.count) commit(s)")
-
         let summary = TypesCLISummary(outputs: outputs)
         logSummary(summary)
     }
 
     private func logSummary(_ summary: TypesCLISummary) {
         if !summary.outputs.isEmpty {
-            Self.logger.info("\(summary)")
+            Self.logger.notice("\(summary)")
         }
         GitHubActionsLogHandler.writeSummary(summary)
     }
