@@ -10,6 +10,21 @@
 
 Code analysis toolkit for iOS/macOS repositories. Analyze any commit in your git history to track metrics over time — from the first commit to the latest. Build dashboards showing how your codebase evolves: type counts, file distributions, lines of code, and more.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tools](#tools)
+  - [types](#types)
+  - [files](#files)
+  - [pattern](#pattern)
+  - [loc](#loc)
+  - [build-settings](#build-settings)
+- [Configuration](#configuration)
+- [Analyzing Git History](#analyzing-git-history)
+  - [Best Practices for Config and Output Paths](#best-practices-for-config-and-output-paths)
+- [Requirements](#requirements)
+
 ## Installation
 
 ### Using mise (recommended)
@@ -236,6 +251,30 @@ When analyzing multiple commits, the output is an array:
 Commits are processed in the order they are provided.
 
 Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.
+
+### Best Practices for Config and Output Paths
+
+When analyzing historical commits, Scout checks out each commit in the working tree. If `--git-clean` is enabled, it runs `git clean -ffdx` which **removes all untracked and ignored files** — including config files and output results placed inside the repository directory.
+
+To avoid losing files during analysis:
+
+1. **Place config and output paths outside the repository.** For example, on GitHub Actions use `$RUNNER_TEMP`:
+   ```bash
+   cp scout-config.json "$RUNNER_TEMP/scout-config.json"
+
+   scout types --config "$RUNNER_TEMP/scout-config.json" \
+               --output "$RUNNER_TEMP/results.json" \
+               --commits abc123 def456
+   ```
+
+2. **Or pass all parameters via CLI flags** instead of relying on config files in the working tree:
+   ```bash
+   scout types UIView UIViewController \
+               --output /tmp/results.json \
+               --commits abc123 def456
+   ```
+
+This applies to `--config` and `--output` paths for all commands (`types`, `files`, `pattern`, `loc`, `build-settings`).
 
 ## Requirements
 

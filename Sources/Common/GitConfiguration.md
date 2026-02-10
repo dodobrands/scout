@@ -45,6 +45,8 @@ Runs `git clean -ffdx && git reset --hard HEAD` before each commit analysis:
 
 Useful for repositories with generated files or build artifacts.
 
+> **Warning:** `git clean -ffdx` removes all untracked files, including config files and output results placed inside the repository. When using `--git-clean`, place `--config` and `--output` paths **outside the repository** (e.g., `$RUNNER_TEMP` on GitHub Actions) or pass all parameters via CLI flags.
+
 ### Fix LFS (`--fix-lfs` / `fixLFS`)
 
 Fixes repositories with broken LFS commits where:
