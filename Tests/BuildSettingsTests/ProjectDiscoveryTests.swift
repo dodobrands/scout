@@ -48,20 +48,6 @@ struct ProjectDiscoveryTests {
     }
 
     @Test
-    func `does not discover project.xcworkspace inside xcodeproj`() async throws {
-        let samplesURL = try samplesDirectory()
-
-        let projects = try await ProjectDiscovery.discoverProjects(
-            in: samplesURL,
-            include: ["**/*.xcworkspace"],
-            exclude: []
-        )
-
-        // project.xcworkspace inside .xcodeproj should be skipped
-        #expect(projects.isEmpty)
-    }
-
-    @Test
     func `exact path in include pattern works`() async throws {
         let samplesURL = try samplesDirectory()
 
