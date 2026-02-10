@@ -67,9 +67,10 @@ public struct BuildSettings: Sendable {
             )
         }
 
+        let projectPaths = discoveredProjects.map(\.path).joined(separator: ", ")
         Self.logger.debug(
             "Discovered \(discoveredProjects.count) project(s)",
-            metadata: ["commit": "\(commit)"]
+            metadata: ["commit": "\(commit)", "projects": "\(projectPaths)"]
         )
 
         let projectsWithTargets = try await getTargetsForAllProjects(
