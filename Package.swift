@@ -60,6 +60,10 @@ let package = Package(
             url: "https://github.com/apple/swift-collections",
             .upToNextMajor(from: "1.1.0")
         ),
+        .package(
+            url: "https://github.com/davbeck/swift-glob.git",
+            .upToNextMajor(from: "0.2.0")
+        ),
     ],
     targets: [
         .target(
@@ -80,6 +84,10 @@ let package = Package(
                 .product(
                     name: "OrderedCollections",
                     package: "swift-collections"
+                ),
+                .product(
+                    name: "Glob",
+                    package: "swift-glob"
                 ),
             ],
             exclude: ["README.md", "GitConfiguration.md"],

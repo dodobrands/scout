@@ -1,5 +1,5 @@
 {
-  "originHash" : "8fc628dfc1faa55959bb94d311b4293272ce7e33cb4b621c20dfca5076a7e835",
+  "originHash" : "19e95ff5bd957d6a4d640190cb98011fcb5e603e54a3a6651a0aedaecdcbe0ad",
   "pins" : [
     {
       "identity" : "sourcekitten",
@@ -35,6 +35,15 @@
       "state" : {
         "revision" : "2a2a938798236b8fa0bc57c453ee9de9f9ec3ab0",
         "version" : "1.4.1"
+      }
+    },
+    {
+      "identity" : "swift-glob",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/davbeck/swift-glob.git",
+      "state" : {
+        "revision" : "07ba6f47d903a0b1b59f12ca70d6de9949b975d6",
+        "version" : "0.2.0"
       }
     },
     {
