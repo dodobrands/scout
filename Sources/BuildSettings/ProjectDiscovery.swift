@@ -41,11 +41,6 @@ struct ProjectDiscovery: Sendable {
 
             let fullPath = element.path(percentEncoded: false)
 
-            // Skip project.xcworkspace inside .xcodeproj bundles
-            if fullPath.contains("/project.xcworkspace") {
-                continue
-            }
-
             // Get relative path from repoPath
             let relativePath = relativePath(fullPath: fullPath, repoPath: repoPathString)
 

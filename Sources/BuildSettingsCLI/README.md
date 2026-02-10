@@ -91,7 +91,7 @@ scout build-settings --include "App/**/*.xcodeproj" --config build-settings-conf
 ```json
 {
   "projects": {
-    "include": ["DodoPizza/**/*.xcodeproj"],
+    "include": ["MyApp/**/*.xcodeproj"],
     "continueOnMissing": true
   },
   "configuration": "Debug",
@@ -101,8 +101,8 @@ scout build-settings --include "App/**/*.xcodeproj" --config build-settings-conf
   ],
   "setupCommands": [
     { "command": "mise install", "optional": true },
-    { "command": "tuist install", "workingDirectory": "DodoPizza" },
-    { "command": "tuist generate --no-open", "workingDirectory": "DodoPizza" }
+    { "command": "tuist install", "workingDirectory": "MyApp" },
+    { "command": "tuist generate --no-open", "workingDirectory": "MyApp" }
   ]
 }
 ```
@@ -159,11 +159,10 @@ Examples:
 | Pattern | Matches |
 |---------|---------|
 | `**/*.xcodeproj` | All `.xcodeproj` files in any directory |
-| `DodoPizza/**/*.xcodeproj` | All `.xcodeproj` files under `DodoPizza/` |
+| `MyApp/**/*.xcodeproj` | All `.xcodeproj` files under `MyApp/` |
 | `App/App.xcodeproj` | Specific project at exact path |
 | `Pods/**` | Everything under `Pods/` (useful for exclude) |
 
-> **Note:** `project.xcworkspace` bundles inside `.xcodeproj` are automatically excluded from discovery.
 
 ### Per-Metric Commits (Config Only)
 
@@ -283,13 +282,13 @@ scout build-settings --config config.json --continue-on-missing-project
 ```json
 {
   "projects": {
-    "include": ["DodoPizza/**/*.xcodeproj"],
+    "include": ["MyApp/**/*.xcodeproj"],
     "continueOnMissing": true
   },
   "setupCommands": [
     { "command": "mise install", "optional": true },
-    { "command": "tuist install", "workingDirectory": "DodoPizza", "optional": true },
-    { "command": "tuist generate --no-open", "workingDirectory": "DodoPizza", "optional": true }
+    { "command": "tuist install", "workingDirectory": "MyApp", "optional": true },
+    { "command": "tuist generate --no-open", "workingDirectory": "MyApp", "optional": true }
   ],
   "metrics": [
     { "setting": "SWIFT_STRICT_CONCURRENCY" }
