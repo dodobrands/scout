@@ -150,8 +150,7 @@ public struct BuildSettings: Sendable {
                 let emptyResults = requestedSettings.map {
                     ResultItem(setting: $0, targets: [:])
                 }
-                let date =
-                    (try? await Git.commitDate(for: hash, in: repoPath)) ?? ""
+                let date = try await Git.commitDate(for: hash, in: repoPath)
                 onOutput(Output(commit: hash, date: date, results: emptyResults))
             }
         }
