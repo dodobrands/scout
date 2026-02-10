@@ -15,15 +15,12 @@ struct BuildSettingsCLISummaryTests {
                     date: "2025-01-15T07:30:00Z",
                     results: [
                         BuildSettings.ResultItem(
-                            target: "MyApp",
-                            settings: [
-                                "SWIFT_VERSION": "5.0",
-                                "IPHONEOS_DEPLOYMENT_TARGET": "15.0",
-                            ]
+                            setting: "IPHONEOS_DEPLOYMENT_TARGET",
+                            targets: ["MyApp": "15.0"]
                         ),
                         BuildSettings.ResultItem(
-                            target: "MyFramework",
-                            settings: ["SWIFT_VERSION": "5.0"]
+                            setting: "SWIFT_VERSION",
+                            targets: ["MyApp": "5.0", "MyFramework": "5.0"]
                         ),
                     ]
                 ),
@@ -32,8 +29,8 @@ struct BuildSettingsCLISummaryTests {
                     date: "2025-02-15T11:45:00Z",
                     results: [
                         BuildSettings.ResultItem(
-                            target: "MyApp",
-                            settings: ["SWIFT_VERSION": "5.9"]
+                            setting: "SWIFT_VERSION",
+                            targets: ["MyApp": "5.9"]
                         )
                     ]
                 ),
@@ -44,16 +41,16 @@ struct BuildSettingsCLISummaryTests {
             """
             # Build Settings
 
-            | Commit | Target | Settings |
-            |--------|--------|----------|
-            | `abc1234` | `MyApp` | IPHONEOS_DEPLOYMENT_TARGET: 15.0, SWIFT_VERSION: 5.0 |
-            | `abc1234` | `MyFramework` | SWIFT_VERSION: 5.0 |
-            | `def5678` | `MyApp` | SWIFT_VERSION: 5.9 |
+            | Commit | Setting | Targets |
+            |--------|---------|---------|
+            | `abc1234` | IPHONEOS_DEPLOYMENT_TARGET | MyApp: 15.0 |
+            | `abc1234` | SWIFT_VERSION | MyApp: 5.0, MyFramework: 5.0 |
+            | `def5678` | SWIFT_VERSION | MyApp: 5.9 |
             """
         }
     }
 
-    @Test func nullSettings() {
+    @Test func nullTargetValue() {
         let summary = BuildSettingsCLISummary(
             outputs: [
                 BuildSettings.Output(
@@ -61,10 +58,10 @@ struct BuildSettingsCLISummaryTests {
                     date: "2025-01-15T07:30:00Z",
                     results: [
                         BuildSettings.ResultItem(
-                            target: "MyApp",
-                            settings: [
-                                "MISSING_PARAM": nil,
-                                "SWIFT_VERSION": "5.0",
+                            setting: "SWIFT_VERSION",
+                            targets: [
+                                "MyApp": "5.0",
+                                "MyFramework": nil,
                             ]
                         )
                     ]
@@ -76,9 +73,36 @@ struct BuildSettingsCLISummaryTests {
             """
             # Build Settings
 
-            | Commit | Target | Settings |
-            |--------|--------|----------|
-            | `abc1234` | `MyApp` | MISSING_PARAM: null, SWIFT_VERSION: 5.0 |
+            | Commit | Setting | Targets |
+            |--------|---------|---------|
+            | `abc1234` | SWIFT_VERSION | MyApp: 5.0, MyFramework: null |
+            """
+        }
+    }
+
+    @Test func emptyTargets() {
+        let summary = BuildSettingsCLISummary(
+            outputs: [
+                BuildSettings.Output(
+                    commit: "abc1234def5678",
+                    date: "2025-01-15T07:30:00Z",
+                    results: [
+                        BuildSettings.ResultItem(
+                            setting: "SWIFT_VERSION",
+                            targets: [:]
+                        )
+                    ]
+                )
+            ]
+        )
+
+        assertInlineSnapshot(of: summary, as: .description) {
+            """
+            # Build Settings
+
+            | Commit | Setting | Targets |
+            |--------|---------|---------|
+            | `abc1234` | SWIFT_VERSION | — |
             """
         }
     }

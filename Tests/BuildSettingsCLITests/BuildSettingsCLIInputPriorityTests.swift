@@ -558,4 +558,60 @@ struct BuildSettingsCLIInputPriorityTests {
 
         #expect(input.project == "MyApp.xcworkspace")
     }
+
+    // MARK: - continueOnMissingProject priority
+
+    @Test func `continueOnMissingProject defaults to false`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: "App.xcworkspace",
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil
+        )
+
+        let input = try BuildSettings.Input(cli: cli, config: nil)
+
+        #expect(input.continueOnMissingProject == false)
+    }
+
+    @Test func `CLI continueOnMissingProject overrides config`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: nil,
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil,
+            continueOnMissingProject: true
+        )
+        let config = BuildSettingsCLIConfig(
+            setupCommands: nil,
+            metrics: nil,
+            project: "App.xcworkspace",
+            configuration: nil,
+            continueOnMissingProject: false
+        )
+
+        let input = try BuildSettings.Input(cli: cli, config: config)
+
+        #expect(input.continueOnMissingProject == true)
+    }
+
+    @Test func `falls back to config continueOnMissingProject when CLI is nil`() throws {
+        let cli = BuildSettingsCLIInputs(
+            project: nil,
+            buildSettingsParameters: nil,
+            repoPath: nil,
+            commits: nil
+        )
+        let config = BuildSettingsCLIConfig(
+            setupCommands: nil,
+            metrics: nil,
+            project: "App.xcworkspace",
+            configuration: nil,
+            continueOnMissingProject: true
+        )
+
+        let input = try BuildSettings.Input(cli: cli, config: config)
+
+        #expect(input.continueOnMissingProject == true)
+    }
 }

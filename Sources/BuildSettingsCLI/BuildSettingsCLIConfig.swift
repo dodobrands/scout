@@ -45,19 +45,24 @@ struct BuildSettingsCLIConfig: Sendable {
     /// Git operations configuration (file layer - all fields optional)
     let git: GitFileConfig?
 
+    /// Continue analysis when project/workspace is not found at a commit
+    let continueOnMissingProject: Bool?
+
     /// Initialize configuration directly (for testing)
     init(
         setupCommands: [SetupCommand]?,
         metrics: [SettingMetric]?,
         project: String?,
         configuration: String?,
-        git: GitFileConfig? = nil
+        git: GitFileConfig? = nil,
+        continueOnMissingProject: Bool? = nil
     ) {
         self.setupCommands = setupCommands
         self.metrics = metrics
         self.project = project
         self.configuration = configuration
         self.git = git
+        self.continueOnMissingProject = continueOnMissingProject
     }
 
     /// Initialize configuration from JSON file at given path, or default path if nil.
@@ -100,6 +105,7 @@ struct BuildSettingsCLIConfig: Sendable {
             self.project = variables.project
             self.configuration = variables.configuration
             self.git = variables.git
+            self.continueOnMissingProject = variables.continueOnMissingProject
         } catch let decodingError as DecodingError {
             throw BuildSettingsCLIConfigError.invalidJSON(
                 path: configPathString,
@@ -119,6 +125,7 @@ struct BuildSettingsCLIConfig: Sendable {
         let project: String?
         let configuration: String?
         let git: GitFileConfig?
+        let continueOnMissingProject: Bool?
     }
 }
 

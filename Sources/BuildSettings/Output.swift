@@ -1,12 +1,12 @@
 extension BuildSettings {
-    /// A single build settings result item for a target.
+    /// A single build settings result item for a requested setting.
     public struct ResultItem: Sendable, Encodable {
-        public let target: String
-        public let settings: [String: String?]
+        public let setting: String
+        public let targets: [String: String?]
 
-        public init(target: String, settings: [String: String?]) {
-            self.target = target
-            self.settings = settings
+        public init(setting: String, targets: [String: String?]) {
+            self.setting = setting
+            self.targets = targets
         }
     }
 

@@ -44,6 +44,8 @@ extension BuildSettings.Input {
 
         // Git configuration merges CLI > FileConfig > Default
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
+        let continueOnMissingProject =
+            cli.continueOnMissingProject ?? config?.continueOnMissingProject ?? false
 
         // Build metrics from CLI or config
         let metrics: [BuildSettings.MetricInput]
@@ -88,7 +90,8 @@ extension BuildSettings.Input {
             setupCommands: setupCommands,
             metrics: metrics,
             project: project,
-            configuration: configuration
+            configuration: configuration,
+            continueOnMissingProject: continueOnMissingProject
         )
     }
 }

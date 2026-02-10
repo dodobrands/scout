@@ -26,19 +26,22 @@ extension BuildSettings {
         public let metrics: [MetricInput]
         public let project: String
         public let configuration: String
+        public let continueOnMissingProject: Bool
 
         public init(
             git: GitConfiguration,
             setupCommands: [SetupCommand],
             metrics: [MetricInput] = [],
             project: String,
-            configuration: String
+            configuration: String,
+            continueOnMissingProject: Bool = false
         ) {
             self.git = git
             self.setupCommands = setupCommands
             self.metrics = metrics
             self.project = project
             self.configuration = configuration
+            self.continueOnMissingProject = continueOnMissingProject
         }
     }
 }

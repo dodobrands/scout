@@ -56,6 +56,12 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
     @Flag(help: "Initialize submodules (reset and update to correct commits)")
     public var initializeSubmodules: Bool = false
 
+    @Flag(
+        help:
+            "Continue analysis when project/workspace is not found at a commit (default: fail)"
+    )
+    public var continueOnMissingProject: Bool = false
+
     static let logger = Logger(label: "scout.ExtractBuildSettings")
 
     public func run() async throws {
@@ -72,7 +78,8 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
             commits: commits.nilIfEmpty,
             gitClean: gitClean ? true : nil,
             fixLfs: fixLfs ? true : nil,
-            initializeSubmodules: initializeSubmodules ? true : nil
+            initializeSubmodules: initializeSubmodules ? true : nil,
+            continueOnMissingProject: continueOnMissingProject ? true : nil
         )
 
         // Merge CLI > Config > Default (HEAD commits resolved in SDK.analyze)
@@ -86,23 +93,12 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
         let sdk = BuildSettings()
         var outputs: [BuildSettings.Output] = []
 
-        do {
-            for try await output in sdk.analyze(input: input) {
-                Self.logger.info(
-                    "Extracted build settings for \(output.results.count) targets at \(output.commit)"
-                )
-                outputs.append(output)
-
-                if let outputPath = self.output {
-                    try outputs.writeJSON(to: outputPath)
-                }
-            }
-        } catch let error as BuildSettings.AnalysisError {
-            Self.logger.warning(
-                "Analysis failed",
-                metadata: ["error": "\(error.localizedDescription)"]
+        for try await output in sdk.analyze(input: input) {
+            Self.logger.info(
+                "Extracted build settings for \(output.results.count) setting(s) at \(output.commit)"
             )
-            // Write partial results collected before the error
+            outputs.append(output)
+
             if let outputPath = self.output {
                 try outputs.writeJSON(to: outputPath)
             }
