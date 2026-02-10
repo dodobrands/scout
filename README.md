@@ -10,6 +10,21 @@
 
 Code analysis toolkit for iOS/macOS repositories. Analyze any commit in your git history to track metrics over time — from the first commit to the latest. Build dashboards showing how your codebase evolves: type counts, file distributions, lines of code, and more.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tools](#tools)
+  - [types](#types)
+  - [files](#files)
+  - [pattern](#pattern)
+  - [loc](#loc)
+  - [build-settings](#build-settings)
+- [Configuration](#configuration)
+- [Analyzing Git History](#analyzing-git-history)
+  - [Best Practices for Config and Output Paths](#best-practices-for-config-and-output-paths)
+- [Requirements](#requirements)
+
 ## Installation
 
 ### Using mise (recommended)
