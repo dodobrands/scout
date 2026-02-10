@@ -67,7 +67,7 @@ public struct BuildSettings: Sendable {
             )
         }
 
-        Self.logger.info(
+        Self.logger.debug(
             "Discovered \(discoveredProjects.count) project(s)",
             metadata: ["commit": "\(commit)"]
         )
