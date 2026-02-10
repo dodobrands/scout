@@ -1,5 +1,5 @@
-import Common
 import Foundation
+import Glob
 import Logging
 
 /// Discovers Xcode projects (.xcodeproj) in a directory using glob include/exclude patterns.
@@ -17,55 +17,33 @@ struct ProjectDiscovery: Sendable {
         in repoPath: URL,
         include: [String],
         exclude: [String]
-    ) -> [DiscoveredProject] {
-        let fileManager = FileManager.default
+    ) async throws -> [DiscoveredProject] {
+        let includePatterns = try include.map { try Glob.Pattern($0) }
+        let excludePatterns = try exclude.map { try Glob.Pattern($0) }
         let repoPathString = repoPath.path(percentEncoded: false)
 
-        guard
-            let enumerator = fileManager.enumerator(
-                at: repoPath,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles],
-                errorHandler: nil
-            )
-        else {
-            return []
-        }
+        let results = try await Glob.search(
+            directory: repoPath,
+            include: includePatterns,
+            exclude: excludePatterns
+        )
 
         var projects: [DiscoveredProject] = []
-
-        while let element = enumerator.nextObject() as? URL {
-            guard element.pathExtension == "xcodeproj" else {
+        for try await url in results {
+            guard url.pathExtension == "xcodeproj" else {
                 continue
             }
 
-            let fullPath = element.path(percentEncoded: false)
-
-            // Get relative path from repoPath
-            let relativePath = relativePath(fullPath: fullPath, repoPath: repoPathString)
-
-            // Check include patterns
-            guard GlobMatcher.matchesAny(path: relativePath, patterns: include) else {
-                continue
-            }
-
-            // Check exclude patterns
-            if GlobMatcher.matchesAny(path: relativePath, patterns: exclude) {
-                continue
-            }
-
-            // Strip trailing slash
+            let fullPath = url.path(percentEncoded: false)
             let normalizedPath =
                 fullPath.hasSuffix("/") ? String(fullPath.dropLast()) : fullPath
             projects.append(DiscoveredProject(path: normalizedPath))
 
+            let relativePath = relativePath(fullPath: fullPath, repoPath: repoPathString)
             logger.debug(
                 "Discovered project",
                 metadata: ["path": "\(relativePath)"]
             )
-
-            // Don't descend into .xcodeproj bundles
-            enumerator.skipDescendants()
         }
 
         return projects.sorted { $0.path < $1.path }

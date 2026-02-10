@@ -158,6 +158,10 @@ let package = Package(
                     name: "Logging",
                     package: "swift-log"
                 ),
+                .product(
+                    name: "Glob",
+                    package: "swift-glob"
+                ),
                 "Common",
             ],
             swiftSettings: [

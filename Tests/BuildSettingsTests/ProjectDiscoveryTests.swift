@@ -7,10 +7,10 @@ import Testing
 struct ProjectDiscoveryTests {
 
     @Test
-    func `discovers xcodeproj matching include pattern`() throws {
+    func `discovers xcodeproj matching include pattern`() async throws {
         let samplesURL = try samplesDirectory()
 
-        let projects = ProjectDiscovery.discoverProjects(
+        let projects = try await ProjectDiscovery.discoverProjects(
             in: samplesURL,
             include: ["**/*.xcodeproj"],
             exclude: []
@@ -22,10 +22,10 @@ struct ProjectDiscoveryTests {
     }
 
     @Test
-    func `returns empty when include pattern does not match`() throws {
+    func `returns empty when include pattern does not match`() async throws {
         let samplesURL = try samplesDirectory()
 
-        let projects = ProjectDiscovery.discoverProjects(
+        let projects = try await ProjectDiscovery.discoverProjects(
             in: samplesURL,
             include: ["NonExistent/**/*.xcodeproj"],
             exclude: []
@@ -35,10 +35,10 @@ struct ProjectDiscoveryTests {
     }
 
     @Test
-    func `exclude pattern filters out matching projects`() throws {
+    func `exclude pattern filters out matching projects`() async throws {
         let samplesURL = try samplesDirectory()
 
-        let projects = ProjectDiscovery.discoverProjects(
+        let projects = try await ProjectDiscovery.discoverProjects(
             in: samplesURL,
             include: ["**/*.xcodeproj"],
             exclude: ["TestApp.xcodeproj"]
@@ -48,10 +48,10 @@ struct ProjectDiscoveryTests {
     }
 
     @Test
-    func `does not discover project.xcworkspace inside xcodeproj`() throws {
+    func `does not discover project.xcworkspace inside xcodeproj`() async throws {
         let samplesURL = try samplesDirectory()
 
-        let projects = ProjectDiscovery.discoverProjects(
+        let projects = try await ProjectDiscovery.discoverProjects(
             in: samplesURL,
             include: ["**/*.xcworkspace"],
             exclude: []
@@ -62,10 +62,10 @@ struct ProjectDiscoveryTests {
     }
 
     @Test
-    func `exact path in include pattern works`() throws {
+    func `exact path in include pattern works`() async throws {
         let samplesURL = try samplesDirectory()
 
-        let projects = ProjectDiscovery.discoverProjects(
+        let projects = try await ProjectDiscovery.discoverProjects(
             in: samplesURL,
             include: ["TestApp.xcodeproj"],
             exclude: []

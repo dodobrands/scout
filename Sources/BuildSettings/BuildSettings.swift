@@ -43,7 +43,7 @@ public struct BuildSettings: Sendable {
 
         try await executeSetupCommands(input.setupCommands, in: repoPath, commit: commit)
 
-        let discoveredProjects = ProjectDiscovery.discoverProjects(
+        let discoveredProjects = try await ProjectDiscovery.discoverProjects(
             in: repoPath,
             include: input.projects.include,
             exclude: input.projects.exclude
