@@ -57,6 +57,7 @@ periphery scan --skip-build --strict
 
 **Checklist:**
 - [ ] Update `Sources/*/README.md` if public API changed
+- [ ] Update `README.md` output examples if output format changed
 
 **Never force push (`git push --force` or `--force-with-lease`) without explicit user request.**
 
@@ -79,6 +80,7 @@ See @ARCHITECTURE.md for detailed coding conventions, SDK API design patterns, a
 ## Documentation Updates
 
 When changing public APIs of any tool, update all relevant READMEs in `Sources/*/README.md`.
+When changing output format, also update the corresponding output example in the main `README.md`.
 
 ## Issues
 
