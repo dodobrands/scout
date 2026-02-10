@@ -1,16 +1,24 @@
 import Common
 
 extension BuildSettings {
-    /// Project configuration for build settings analysis.
-    public struct Project: Sendable {
-        /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)
-        public let path: String
+    /// Configuration for discovering Xcode projects (.xcodeproj) via glob patterns.
+    public struct ProjectsConfig: Sendable {
+        /// Glob patterns to include (e.g., `["**/*.xcodeproj"]`)
+        public let include: [String]
 
-        /// Continue analysis when project is not found at a commit
+        /// Glob patterns to exclude (e.g., `["Pods/**"]`)
+        public let exclude: [String]
+
+        /// Continue analysis when no projects are found at a commit
         public let continueOnMissing: Bool
 
-        public init(path: String, continueOnMissing: Bool = false) {
-            self.path = path
+        public init(
+            include: [String],
+            exclude: [String] = [],
+            continueOnMissing: Bool = false
+        ) {
+            self.include = include
+            self.exclude = exclude
             self.continueOnMissing = continueOnMissing
         }
     }
@@ -38,20 +46,20 @@ extension BuildSettings {
         public let git: GitConfiguration
         public let setupCommands: [SetupCommand]
         public let metrics: [MetricInput]
-        public let project: Project
+        public let projects: ProjectsConfig
         public let configuration: String
 
         public init(
             git: GitConfiguration,
             setupCommands: [SetupCommand],
             metrics: [MetricInput] = [],
-            project: Project,
+            projects: ProjectsConfig,
             configuration: String
         ) {
             self.git = git
             self.setupCommands = setupCommands
             self.metrics = metrics
-            self.project = project
+            self.projects = projects
             self.configuration = configuration
         }
     }

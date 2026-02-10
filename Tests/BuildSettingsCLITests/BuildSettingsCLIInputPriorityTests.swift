@@ -9,11 +9,12 @@ import Testing
 @Suite("BuildSettingsCLIInput Priority")
 struct BuildSettingsCLIInputPriorityTests {
 
-    // MARK: - project required
+    // MARK: - include required
 
-    @Test func `throws error when project is missing`() {
+    @Test func `throws error when include is missing`() {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -22,7 +23,7 @@ struct BuildSettingsCLIInputPriorityTests {
             initializeSubmodules: false
         )
 
-        #expect(throws: BuildSettingsCLIInputError.missingProject) {
+        #expect(throws: BuildSettingsCLIInputError.missingInclude) {
             _ = try BuildSettings.Input(cli: cli, config: nil)
         }
     }
@@ -31,7 +32,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `CLI repoPath overrides config repoPath`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: "/cli/path",
             commits: nil,
@@ -42,7 +44,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: GitFileConfig(repoPath: "/config/path")
         )
@@ -54,7 +56,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `falls back to config repoPath when CLI is nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -65,7 +68,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: GitFileConfig(repoPath: "/config/path")
         )
@@ -77,7 +80,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `falls back to current directory when both repoPath nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -88,7 +92,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -102,7 +106,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `CLI commits override default`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: ["SWIFT_VERSION"],
             repoPath: nil,
             commits: ["abc123", "def456"],
@@ -113,7 +118,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -126,7 +131,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `falls back to HEAD when CLI commits nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: ["SWIFT_VERSION"],
             repoPath: nil,
             commits: nil,
@@ -137,7 +143,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -152,7 +158,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `config configuration is used`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -163,7 +170,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: "Release",
             git: nil
         )
@@ -175,7 +182,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `falls back to Debug when configuration nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -186,7 +194,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -200,7 +208,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `setupCommands from config are converted`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -216,7 +225,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: [setupCommand],
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -232,7 +241,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `setupCommands defaults to empty when config nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -243,7 +253,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -257,7 +267,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `CLI buildSettingsParameters override config metrics`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: ["CLI_PARAM"],
             repoPath: nil,
             commits: nil,
@@ -268,7 +279,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: [SettingMetric(setting: "CONFIG_PARAM", commits: nil)],
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -280,7 +291,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `metrics from config are used when CLI is nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -294,7 +306,7 @@ struct BuildSettingsCLIInputPriorityTests {
                 SettingMetric(setting: "SWIFT_VERSION", commits: nil),
                 SettingMetric(setting: "TARGETED_DEVICE_FAMILY", commits: nil),
             ],
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -306,7 +318,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `metrics defaults to empty when both nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -317,7 +330,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -331,7 +344,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `config metrics use per-metric commits`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -345,7 +359,7 @@ struct BuildSettingsCLIInputPriorityTests {
                 SettingMetric(setting: "SWIFT_VERSION", commits: ["abc123", "def456"]),
                 SettingMetric(setting: "DEPLOYMENT_TARGET", commits: ["ghi789"]),
             ],
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -363,7 +377,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `CLI commits override all config per-metric commits`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: ["override123"],
@@ -377,7 +392,7 @@ struct BuildSettingsCLIInputPriorityTests {
                 SettingMetric(setting: "SWIFT_VERSION", commits: ["abc123"]),
                 SettingMetric(setting: "DEPLOYMENT_TARGET", commits: ["def456"]),
             ],
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -393,7 +408,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `config metrics with nil commits default to HEAD`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -404,7 +420,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: [SettingMetric(setting: "SWIFT_VERSION", commits: nil)],
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -417,7 +433,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `config metrics with empty commits array are skipped`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -432,7 +449,7 @@ struct BuildSettingsCLIInputPriorityTests {
                 SettingMetric(setting: "EXCLUDED_SETTING", commits: []),
                 SettingMetric(setting: "DEPLOYMENT_TARGET", commits: nil),
             ],
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -447,7 +464,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `git flags from CLI are applied`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: "/test/path",
             commits: nil,
@@ -458,7 +476,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -472,7 +490,8 @@ struct BuildSettingsCLIInputPriorityTests {
 
     @Test func `git flags default to false`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -483,7 +502,7 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace"),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
@@ -495,11 +514,12 @@ struct BuildSettingsCLIInputPriorityTests {
         #expect(input.git.initializeSubmodules == false)
     }
 
-    // MARK: - project is passed through
+    // MARK: - include/exclude passed through
 
-    @Test func `project from config is passed to input`() throws {
+    @Test func `include from config is passed to input`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -510,19 +530,20 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "MyApp.xcworkspace"),
+            projects: .init(include: ["DodoPizza/**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
 
         let input = try BuildSettings.Input(cli: cli, config: config)
 
-        #expect(input.project.path == "MyApp.xcworkspace")
+        #expect(input.projects.include == ["DodoPizza/**/*.xcodeproj"])
     }
 
-    @Test func `CLI project overrides config project`() throws {
+    @Test func `CLI include overrides config include`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: "CLIApp.xcodeproj",
+            include: ["CLI/**/*.xcodeproj"],
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -533,19 +554,20 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "ConfigApp.xcworkspace"),
+            projects: .init(include: ["Config/**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
             configuration: nil,
             git: nil
         )
 
         let input = try BuildSettings.Input(cli: cli, config: config)
 
-        #expect(input.project.path == "CLIApp.xcodeproj")
+        #expect(input.projects.include == ["CLI/**/*.xcodeproj"])
     }
 
-    @Test func `CLI project works without config`() throws {
+    @Test func `CLI include works without config`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: "MyApp.xcworkspace",
+            include: ["**/*.xcodeproj"],
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -556,14 +578,15 @@ struct BuildSettingsCLIInputPriorityTests {
 
         let input = try BuildSettings.Input(cli: cli, config: nil)
 
-        #expect(input.project.path == "MyApp.xcworkspace")
+        #expect(input.projects.include == ["**/*.xcodeproj"])
     }
 
-    // MARK: - continueOnMissingProject priority
+    // MARK: - continueOnMissing priority
 
-    @Test func `continueOnMissingProject defaults to false`() throws {
+    @Test func `continueOnMissing defaults to false`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: "App.xcworkspace",
+            include: ["**/*.xcodeproj"],
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil
@@ -571,12 +594,13 @@ struct BuildSettingsCLIInputPriorityTests {
 
         let input = try BuildSettings.Input(cli: cli, config: nil)
 
-        #expect(input.project.continueOnMissing == false)
+        #expect(input.projects.continueOnMissing == false)
     }
 
     @Test func `CLI continueOnMissingProject overrides config`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil,
@@ -585,18 +609,19 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace", continueOnMissing: false),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: false),
             configuration: nil
         )
 
         let input = try BuildSettings.Input(cli: cli, config: config)
 
-        #expect(input.project.continueOnMissing == true)
+        #expect(input.projects.continueOnMissing == true)
     }
 
-    @Test func `falls back to config continueOnMissingProject when CLI is nil`() throws {
+    @Test func `falls back to config continueOnMissing when CLI is nil`() throws {
         let cli = BuildSettingsCLIInputs(
-            project: nil,
+            include: nil,
+            exclude: nil,
             buildSettingsParameters: nil,
             repoPath: nil,
             commits: nil
@@ -604,12 +629,12 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            project: .init(path: "App.xcworkspace", continueOnMissing: true),
+            projects: .init(include: ["**/*.xcodeproj"], exclude: nil, continueOnMissing: true),
             configuration: nil
         )
 
         let input = try BuildSettings.Input(cli: cli, config: config)
 
-        #expect(input.project.continueOnMissing == true)
+        #expect(input.projects.continueOnMissing == true)
     }
 }

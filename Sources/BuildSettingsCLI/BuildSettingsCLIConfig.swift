@@ -29,18 +29,16 @@ struct BuildSettingsCLIConfig: Sendable {
         let optional: Bool?
     }
 
-    /// Project configuration from JSON file.
-    struct ProjectConfig: Sendable, Decodable {
-        /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)
-        let path: String
+    /// Projects configuration from JSON file.
+    struct ProjectsFileConfig: Sendable, Decodable {
+        /// Glob patterns to include (e.g., `["**/*.xcodeproj"]`)
+        let include: [String]
 
-        /// Continue analysis when project is not found at a commit
+        /// Glob patterns to exclude (e.g., `["Pods/**"]`)
+        let exclude: [String]?
+
+        /// Continue analysis when no projects are found at a commit
         let continueOnMissing: Bool?
-
-        init(path: String, continueOnMissing: Bool? = nil) {
-            self.path = path
-            self.continueOnMissing = continueOnMissing
-        }
     }
 
     /// Commands to setup project, executed sequentially.
@@ -49,8 +47,8 @@ struct BuildSettingsCLIConfig: Sendable {
     /// Build settings metrics to collect with optional per-metric commits
     let metrics: [SettingMetric]?
 
-    /// Project configuration (path and options)
-    let project: ProjectConfig?
+    /// Projects configuration (include/exclude patterns)
+    let projects: ProjectsFileConfig?
 
     /// Build configuration name (e.g., "Debug", "Release")
     let configuration: String?
@@ -62,13 +60,13 @@ struct BuildSettingsCLIConfig: Sendable {
     init(
         setupCommands: [SetupCommand]?,
         metrics: [SettingMetric]?,
-        project: ProjectConfig?,
+        projects: ProjectsFileConfig?,
         configuration: String?,
         git: GitFileConfig? = nil
     ) {
         self.setupCommands = setupCommands
         self.metrics = metrics
-        self.project = project
+        self.projects = projects
         self.configuration = configuration
         self.git = git
     }
@@ -110,7 +108,7 @@ struct BuildSettingsCLIConfig: Sendable {
             let variables = try decoder.decode(Variables.self, from: fileData)
             self.setupCommands = variables.setupCommands
             self.metrics = variables.metrics
-            self.project = variables.project
+            self.projects = variables.projects
             self.configuration = variables.configuration
             self.git = variables.git
         } catch let decodingError as DecodingError {
@@ -129,7 +127,7 @@ struct BuildSettingsCLIConfig: Sendable {
     private struct Variables: Decodable {
         let setupCommands: [SetupCommand]?
         let metrics: [SettingMetric]?
-        let project: ProjectConfig?
+        let projects: ProjectsFileConfig?
         let configuration: String?
         let git: GitFileConfig?
     }
