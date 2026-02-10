@@ -18,10 +18,18 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
     public var repoPath: String?
 
     @Option(
-        name: [.long, .short],
-        help: "Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)"
+        name: .long,
+        parsing: .upToNextOption,
+        help: "Glob patterns to discover .xcodeproj files (e.g., '**/*.xcodeproj')"
     )
-    public var project: String?
+    public var include: [String] = []
+
+    @Option(
+        name: .long,
+        parsing: .upToNextOption,
+        help: "Glob patterns to exclude from discovery (e.g., 'Pods/**')"
+    )
+    public var exclude: [String] = []
 
     @Option(help: "Path to configuration JSON file")
     public var config: String?
@@ -58,7 +66,7 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
 
     @Flag(
         help:
-            "Continue analysis when project/workspace is not found at a commit (default: fail)"
+            "Continue analysis when no projects are found at a commit (default: fail)"
     )
     public var continueOnMissingProject: Bool = false
 
@@ -72,7 +80,8 @@ public struct BuildSettingsCLI: AsyncParsableCommand {
 
         // Build CLI inputs
         let cliInputs = BuildSettingsCLIInputs(
-            project: project,
+            include: include.nilIfEmpty,
+            exclude: exclude.nilIfEmpty,
             buildSettingsParameters: buildSettingsParameters.nilIfEmpty,
             repoPath: repoPath,
             commits: commits.nilIfEmpty,

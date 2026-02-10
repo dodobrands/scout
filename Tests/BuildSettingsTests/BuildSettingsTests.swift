@@ -12,7 +12,9 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
+            projects: BuildSettings.ProjectsConfig(
+                include: ["TestApp.xcodeproj"]
+            ),
             configuration: "Debug"
         )
 
@@ -25,13 +27,13 @@ struct BuildSettingsTests {
     }
 
     @Test
-    func `When project not found and continueOnMissingProject, should return empty`() async throws {
+    func `When no projects found and continueOnMissing, should return empty`() async throws {
         let samplesURL = try samplesDirectory()
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: BuildSettings.Project(
-                path: "NonExistent.xcodeproj",
+            projects: BuildSettings.ProjectsConfig(
+                include: ["NonExistent/**/*.xcodeproj"],
                 continueOnMissing: true
             ),
             configuration: "Debug"
@@ -43,31 +45,20 @@ struct BuildSettingsTests {
     }
 
     @Test
-    func `When project not found and not continueOnMissingProject, should throw`() async throws {
+    func `When no projects found and not continueOnMissing, should throw`() async throws {
         let samplesURL = try samplesDirectory()
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: BuildSettings.Project(path: "NonExistent.xcodeproj"),
+            projects: BuildSettings.ProjectsConfig(
+                include: ["NonExistent/**/*.xcodeproj"]
+            ),
             configuration: "Debug"
         )
 
         await #expect(throws: BuildSettings.AnalysisError.self) {
             _ = try await sut.extractBuildSettings(input: input, commit: "test-commit")
         }
-    }
-
-    @Test(arguments: [
-        ("App.xcworkspace", true),
-        ("App.xcworkspace/", true),
-        ("App.xcodeproj", false),
-        ("App.xcodeproj/", false),
-        ("/absolute/path/App.xcworkspace", true),
-        ("/absolute/path/App.xcworkspace/", true),
-        ("/absolute/path/App.xcodeproj", false),
-    ])
-    func `isWorkspace detection`(path: String, expected: Bool) {
-        #expect(ProjectOrWorkspace.isWorkspace(path: path) == expected)
     }
 
     @Test
@@ -77,7 +68,9 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [failingCommand],
-            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
+            projects: BuildSettings.ProjectsConfig(
+                include: ["TestApp.xcodeproj"]
+            ),
             configuration: "Debug"
         )
 
@@ -96,7 +89,9 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [optionalFailingCommand],
-            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
+            projects: BuildSettings.ProjectsConfig(
+                include: ["TestApp.xcodeproj"]
+            ),
             configuration: "Debug"
         )
 

@@ -15,12 +15,13 @@ extension BuildSettings.SetupCommand {
 
 /// Error when required configuration is missing.
 enum BuildSettingsCLIInputError: Error, LocalizedError {
-    case missingProject
+    case missingInclude
 
     var errorDescription: String? {
         switch self {
-        case .missingProject:
-            return "project is required (via --project or in configuration file)"
+        case .missingInclude:
+            return
+                "projects include patterns are required (via --include or projects.include in configuration file)"
         }
     }
 }
@@ -33,23 +34,29 @@ extension BuildSettings.Input {
     /// - Parameters:
     ///   - cli: Raw CLI inputs from ArgumentParser
     ///   - config: Configuration loaded from JSON file (optional)
-    /// - Throws: `BuildSettingsCLIInputError.missingProject` if project not provided
+    /// - Throws: `BuildSettingsCLIInputError.missingInclude` if include patterns not provided
     init(cli: BuildSettingsCLIInputs, config: BuildSettingsCLIConfig?) throws {
-        guard let projectPath = cli.project ?? config?.project?.path else {
-            throw BuildSettingsCLIInputError.missingProject
+        // Merge include patterns: CLI > Config
+        let include = cli.include ?? config?.projects?.include
+        guard let include, !include.isEmpty else {
+            throw BuildSettingsCLIInputError.missingInclude
         }
+
+        let exclude = cli.exclude ?? config?.projects?.exclude ?? []
+        let continueOnMissing =
+            cli.continueOnMissingProject ?? config?.projects?.continueOnMissing ?? false
+
+        let projects = BuildSettings.ProjectsConfig(
+            include: include,
+            exclude: exclude,
+            continueOnMissing: continueOnMissing
+        )
 
         let setupCommands = config?.setupCommands?.map(BuildSettings.SetupCommand.init) ?? []
         let configuration = config?.configuration ?? "Debug"
 
         // Git configuration merges CLI > FileConfig > Default
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
-        let continueOnMissing =
-            cli.continueOnMissingProject ?? config?.project?.continueOnMissing ?? false
-        let project = BuildSettings.Project(
-            path: projectPath,
-            continueOnMissing: continueOnMissing
-        )
 
         // Build metrics from CLI or config
         let metrics: [BuildSettings.MetricInput]
@@ -93,7 +100,7 @@ extension BuildSettings.Input {
             git: gitConfig,
             setupCommands: setupCommands,
             metrics: metrics,
-            project: project,
+            projects: projects,
             configuration: configuration
         )
     }

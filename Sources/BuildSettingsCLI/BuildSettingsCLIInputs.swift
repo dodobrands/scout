@@ -3,8 +3,11 @@ import Foundation
 
 /// Raw CLI inputs from ArgumentParser. All fields are optional.
 struct BuildSettingsCLIInputs: Sendable {
-    /// Path to Xcode workspace or project
-    let project: String?
+    /// Glob patterns to include for project discovery
+    let include: [String]?
+
+    /// Glob patterns to exclude from project discovery
+    let exclude: [String]?
 
     /// Build settings parameters to collect (e.g., ["SWIFT_VERSION", "IPHONEOS_DEPLOYMENT_TARGET"])
     let buildSettingsParameters: [String]?
@@ -15,11 +18,12 @@ struct BuildSettingsCLIInputs: Sendable {
     /// Git configuration from CLI flags
     let git: GitCLIInputs
 
-    /// Continue analysis when project/workspace is not found at a commit
+    /// Continue analysis when no projects are found at a commit
     let continueOnMissingProject: Bool?
 
     init(
-        project: String?,
+        include: [String]?,
+        exclude: [String]?,
         buildSettingsParameters: [String]?,
         repoPath: String?,
         commits: [String]?,
@@ -28,7 +32,8 @@ struct BuildSettingsCLIInputs: Sendable {
         initializeSubmodules: Bool? = nil,
         continueOnMissingProject: Bool? = nil
     ) {
-        self.project = project
+        self.include = include
+        self.exclude = exclude
         self.buildSettingsParameters = buildSettingsParameters
         self.commits = commits
         self.git = GitCLIInputs(

@@ -14,7 +14,7 @@ public struct BuildSettings: Sendable {
         case setupCommandFailed(command: String, commit: String, error: String)
         case buildSettingsExtractionFailed(commit: String, error: String)
         case checkoutFailed(hash: String, error: String)
-        case projectNotFound(path: String, commit: String)
+        case noProjectsFound(include: [String], commit: String)
 
         public var errorDescription: String? {
             switch self {
@@ -24,8 +24,9 @@ public struct BuildSettings: Sendable {
                 return "Build settings extraction failed at commit \(commit): \(error)"
             case .checkoutFailed(let hash, let error):
                 return "Failed to checkout \(hash): \(error)"
-            case .projectNotFound(let path, let commit):
-                return "Project or workspace not found at '\(path)' for commit \(commit)"
+            case .noProjectsFound(let include, let commit):
+                return
+                    "No .xcodeproj found matching patterns \(include) for commit \(commit)"
             }
         }
     }
@@ -42,19 +43,41 @@ public struct BuildSettings: Sendable {
 
         try await executeSetupCommands(input.setupCommands, in: repoPath, commit: commit)
 
-        let foundProjectsAndWorkspaces = try resolveProject(
-            path: input.project.path,
-            repoPath: repoPath,
-            commit: commit,
-            continueOnMissing: input.project.continueOnMissing
+        let discoveredProjects = try await ProjectDiscovery.discoverProjects(
+            in: repoPath,
+            include: input.projects.include,
+            exclude: input.projects.exclude
+        )
+
+        if discoveredProjects.isEmpty {
+            if input.projects.continueOnMissing {
+                Self.logger.warning(
+                    "No projects found matching include patterns, skipping",
+                    metadata: [
+                        "include": "\(input.projects.include)",
+                        "exclude": "\(input.projects.exclude)",
+                        "commit": "\(commit)",
+                    ]
+                )
+                return []
+            }
+            throw AnalysisError.noProjectsFound(
+                include: input.projects.include,
+                commit: commit
+            )
+        }
+
+        let projectPaths = discoveredProjects.map(\.path).joined(separator: ", ")
+        Self.logger.debug(
+            "Discovered \(discoveredProjects.count) project(s)",
+            metadata: ["commit": "\(commit)", "projects": "\(projectPaths)"]
         )
 
         let projectsWithTargets = try await getTargetsForAllProjects(
-            foundProjectsAndWorkspaces: foundProjectsAndWorkspaces
+            discoveredProjects: discoveredProjects
         )
         let targetsWithBuildSettings = try await getBuildSettingsForAllTargets(
             projectsWithTargets: projectsWithTargets,
-            foundProjectsAndWorkspaces: foundProjectsAndWorkspaces,
             configuration: input.configuration
         )
 
@@ -107,7 +130,7 @@ public struct BuildSettings: Sendable {
                 let analysisInput = AnalysisInput(
                     repoPath: input.git.repoPath,
                     setupCommands: input.setupCommands,
-                    project: input.project,
+                    projects: input.projects,
                     configuration: input.configuration
                 )
 
@@ -129,7 +152,7 @@ public struct BuildSettings: Sendable {
                 let resultItems = requestedSettings.map { setting in
                     var targetValues: [String: String?] = [:]
                     for target in targets {
-                        targetValues[target.target] = target.buildSettings[setting] ?? nil
+                        targetValues[target.target] = target.buildSettings[setting]
                     }
                     return ResultItem(setting: setting, targets: targetValues)
                 }
@@ -214,72 +237,25 @@ public struct BuildSettings: Sendable {
         }
     }
 
-    // MARK: - Project Discovery
-
-    private func resolveProject(
-        path: String,
-        repoPath: URL,
-        commit: String,
-        continueOnMissing: Bool
-    ) throws -> [ProjectOrWorkspace] {
-        let fileManager = FileManager.default
-
-        // Resolve path: if relative, join with repoPath; if absolute, use as-is
-        let resolvedPath: String
-        if path.hasPrefix("/") {
-            resolvedPath = path
-        } else {
-            resolvedPath = repoPath.appendingPathComponent(path).path(percentEncoded: false)
-        }
-
-        guard fileManager.fileExists(atPath: resolvedPath) else {
-            if continueOnMissing {
-                Self.logger.warning(
-                    "Project or workspace not found, skipping",
-                    metadata: [
-                        "path": "\(resolvedPath)",
-                        "commit": "\(commit)",
-                    ]
-                )
-                return []
-            }
-            throw AnalysisError.projectNotFound(path: resolvedPath, commit: commit)
-        }
-
-        // Strip trailing slash that URL.appendingPathComponent adds for directories.
-        // .xcworkspace is a directory bundle, so the path may end with "/".
-        let normalizedPath =
-            resolvedPath.hasSuffix("/") ? String(resolvedPath.dropLast()) : resolvedPath
-        let isWorkspace = ProjectOrWorkspace.isWorkspace(path: resolvedPath)
-        return [ProjectOrWorkspace(path: normalizedPath, isWorkspace: isWorkspace)]
-    }
+    // MARK: - Target Discovery
 
     private func getTargetsForAllProjects(
-        foundProjectsAndWorkspaces: [ProjectOrWorkspace]
+        discoveredProjects: [DiscoveredProject]
     ) async throws -> [ProjectWithTargets] {
-        return try await foundProjectsAndWorkspaces.concurrentMap { project in
-            let targets = try await self.getTargetsFromProject(
-                projectPath: project.path,
-                isWorkspace: project.isWorkspace
-            )
+        return try await discoveredProjects.concurrentMap { project in
+            let targets = try await self.getTargetsFromProject(projectPath: project.path)
             return ProjectWithTargets(path: project.path, targets: targets)
         }
     }
 
     private func getTargetsFromProject(
-        projectPath: String,
-        isWorkspace: Bool
+        projectPath: String
     ) async throws -> [String] {
         let projectDir = (projectPath as NSString).deletingLastPathComponent
         let projectName = (projectPath as NSString).lastPathComponent
         let projectDirPath = FilePath(projectDir)
 
-        var arguments: [String] = ["-list", "-json"]
-        if isWorkspace {
-            arguments.append(contentsOf: ["-workspace", projectName])
-        } else {
-            arguments.append(contentsOf: ["-project", projectName])
-        }
+        let arguments: [String] = ["-list", "-json", "-project", projectName]
 
         let jsonOutput = try await Shell.execute(
             "xcodebuild",
@@ -293,51 +269,25 @@ public struct BuildSettings: Sendable {
             return []
         }
 
-        var targets: [String] = []
-
-        if let workspace = json["workspace"] as? [String: Any] {
-            if let projects = workspace["projects"] as? [[String: Any]] {
-                for project in projects {
-                    if let projectTargets = project["targets"] as? [String] {
-                        targets.append(contentsOf: projectTargets)
-                    }
-                }
-            }
-        } else if let project = json["project"] as? [String: Any] {
-            if let projectTargets = project["targets"] as? [String] {
-                targets.append(contentsOf: projectTargets)
-            }
+        if let project = json["project"] as? [String: Any],
+            let projectTargets = project["targets"] as? [String]
+        {
+            return projectTargets.sorted()
         }
 
-        return targets.sorted()
+        return []
     }
 
     // MARK: - Build Settings Extraction
 
     private func getBuildSettingsForAllTargets(
         projectsWithTargets: [ProjectWithTargets],
-        foundProjectsAndWorkspaces: [ProjectOrWorkspace],
         configuration: String
     ) async throws -> [TargetWithBuildSettings] {
-        var projectInfoMap: [String: ProjectOrWorkspace] = [:]
-        for project in foundProjectsAndWorkspaces {
-            projectInfoMap[project.path] = project
-        }
-
-        var allTargets: [(target: String, projectPath: String, isWorkspace: Bool)] = []
+        var allTargets: [(target: String, projectPath: String)] = []
         for projectWithTargets in projectsWithTargets {
-            guard let projectInfo = projectInfoMap[projectWithTargets.path] else {
-                continue
-            }
-
             for target in projectWithTargets.targets {
-                allTargets.append(
-                    (
-                        target: target,
-                        projectPath: projectWithTargets.path,
-                        isWorkspace: projectInfo.isWorkspace
-                    )
-                )
+                allTargets.append((target: target, projectPath: projectWithTargets.path))
             }
         }
 
@@ -345,7 +295,6 @@ public struct BuildSettings: Sendable {
             let buildSettings = try await self.getBuildSettingsForTarget(
                 target: targetInfo.target,
                 projectPath: targetInfo.projectPath,
-                isWorkspace: targetInfo.isWorkspace,
                 configuration: configuration
             )
             return TargetWithBuildSettings(
@@ -358,25 +307,19 @@ public struct BuildSettings: Sendable {
     private func getBuildSettingsForTarget(
         target: String,
         projectPath: String,
-        isWorkspace: Bool,
         configuration: String
     ) async throws -> [String: String] {
         let projectDir = (projectPath as NSString).deletingLastPathComponent
         let projectName = (projectPath as NSString).lastPathComponent
         let projectDirPath = FilePath(projectDir)
 
-        var arguments: [String] = [
+        let arguments: [String] = [
             "-showBuildSettings",
             "-target", target,
             "-json",
             "-configuration", configuration,
+            "-project", projectName,
         ]
-
-        if isWorkspace {
-            arguments.append(contentsOf: ["-workspace", projectName])
-        } else {
-            arguments.append(contentsOf: ["-project", projectName])
-        }
 
         let jsonOutput = try await Shell.execute(
             "xcodebuild",
