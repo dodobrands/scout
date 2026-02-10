@@ -530,7 +530,11 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            projects: .init(include: ["DodoPizza/**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
+            projects: .init(
+                include: ["DodoPizza/**/*.xcodeproj"],
+                exclude: nil,
+                continueOnMissing: nil
+            ),
             configuration: nil,
             git: nil
         )
@@ -554,7 +558,11 @@ struct BuildSettingsCLIInputPriorityTests {
         let config = BuildSettingsCLIConfig(
             setupCommands: nil,
             metrics: nil,
-            projects: .init(include: ["Config/**/*.xcodeproj"], exclude: nil, continueOnMissing: nil),
+            projects: .init(
+                include: ["Config/**/*.xcodeproj"],
+                exclude: nil,
+                continueOnMissing: nil
+            ),
             configuration: nil,
             git: nil
         )
