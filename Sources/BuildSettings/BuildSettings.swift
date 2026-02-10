@@ -152,7 +152,7 @@ public struct BuildSettings: Sendable {
                 let resultItems = requestedSettings.map { setting in
                     var targetValues: [String: String?] = [:]
                     for target in targets {
-                        targetValues[target.target] = target.buildSettings[setting] ?? nil
+                        targetValues[target.target] = target.buildSettings[setting]
                     }
                     return ResultItem(setting: setting, targets: targetValues)
                 }
