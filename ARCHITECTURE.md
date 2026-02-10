@@ -171,6 +171,33 @@ guard let item = array[safe: 0] else { return }
 
 ## Testing
 
+### Test Naming
+
+All test functions must use backtick-enclosed human-readable names:
+
+```swift
+// Bad
+@Test func encodesSingleCommit() { ... }
+
+// Good
+@Test func `encodes single commit`() { ... }
+```
+
+### No @Suite Macro
+
+Do not use `@Suite` on test structs — the struct name already serves as the suite identifier:
+
+```swift
+// Bad
+@Suite("CommandParser")
+struct CommandParserTests { ... }
+
+// Good
+struct CommandParserTests { ... }
+```
+
+### Assertions
+
 Use `try #require` instead of `#expect` with optionals:
 
 ```swift
