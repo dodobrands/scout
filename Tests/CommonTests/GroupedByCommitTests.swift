@@ -11,7 +11,6 @@ struct TestMetric: CommitResolvable {
     }
 }
 
-@Suite("groupedByCommit")
 struct GroupedByCommitTests {
 
     @Test

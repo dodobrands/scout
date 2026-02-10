@@ -3,7 +3,6 @@ import Testing
 
 @testable import BuildSettings
 
-@Suite("ProjectDiscovery")
 struct ProjectDiscoveryTests {
 
     @Test

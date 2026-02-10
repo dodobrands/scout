@@ -4,10 +4,9 @@ import Testing
 
 @testable import LOCCLI
 
-@Suite
 struct LOCCLISummaryTests {
 
-    @Test func multipleCommits() {
+    @Test func `multiple commits`() {
         let summary = LOCCLISummary(
             outputs: [
                 LOC.Output(
@@ -44,7 +43,7 @@ struct LOCCLISummaryTests {
         }
     }
 
-    @Test func emptyOutputs() {
+    @Test func `empty outputs`() {
         let summary = LOCCLISummary(outputs: [])
 
         assertInlineSnapshot(of: summary, as: .description) {

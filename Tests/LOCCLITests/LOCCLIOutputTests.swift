@@ -4,10 +4,9 @@ import LOC
 import Testing
 
 /// Tests for LOC.Output JSON encoding
-@Suite
 struct LOCCLIOutputTests {
 
-    @Test func encodesSingleCommit() {
+    @Test func `encodes single commit`() {
         let output = LOC.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T07:30:00Z",
@@ -40,7 +39,7 @@ struct LOCCLIOutputTests {
         }
     }
 
-    @Test func encodesMultipleCommits() {
+    @Test func `encodes multiple commits`() {
         let outputs = [
             LOC.Output(
                 commit: "abc1234def5678",
@@ -86,7 +85,7 @@ struct LOCCLIOutputTests {
         }
     }
 
-    @Test func encodesZeroLines() {
+    @Test func `encodes zero lines`() {
         let output = LOC.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",

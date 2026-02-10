@@ -4,10 +4,9 @@ import Testing
 
 @testable import FilesCLI
 
-@Suite
 struct FilesCLISummaryTests {
 
-    @Test func multipleCommits() {
+    @Test func `multiple commits`() {
         let summary = FilesCLISummary(
             outputs: [
                 Files.Output(
@@ -50,7 +49,7 @@ struct FilesCLISummaryTests {
         }
     }
 
-    @Test func emptyOutputs() {
+    @Test func `empty outputs`() {
         let summary = FilesCLISummary(outputs: [])
 
         assertInlineSnapshot(of: summary, as: .description) {
