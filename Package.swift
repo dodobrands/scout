@@ -85,10 +85,6 @@ let package = Package(
                     name: "OrderedCollections",
                     package: "swift-collections"
                 ),
-                .product(
-                    name: "Glob",
-                    package: "swift-glob"
-                ),
             ],
             exclude: ["README.md", "GitConfiguration.md"],
             swiftSettings: [
