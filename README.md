@@ -51,11 +51,21 @@ scout types UIView UIViewController View --output results.json
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T07:30:00Z",
-    "results": {
-      "UIView": ["CustomButton", "HeaderView", "CardView"],
-      "UIViewController": ["HomeViewController", "SettingsViewController"],
-      "View": ["ContentView", "ProfileView"]
-    }
+    "results": [
+      {
+        "typeName": "UIView",
+        "types": [
+          { "name": "CustomButton", "fullName": "CustomButton", "path": "Sources/UI/CustomButton.swift" },
+          { "name": "HeaderView", "fullName": "Components.HeaderView", "path": "Sources/Components/HeaderView.swift" }
+        ]
+      },
+      {
+        "typeName": "UIViewController",
+        "types": [
+          { "name": "HomeViewController", "fullName": "HomeViewController", "path": "Sources/Screens/HomeVC.swift" }
+        ]
+      }
+    ]
   }
 ]
 ```
@@ -77,11 +87,16 @@ scout files swift storyboard xib --output results.json
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T07:30:00Z",
-    "results": {
-      "swift": ["Sources/App.swift", "Sources/Model.swift"],
-      "storyboard": ["Main.storyboard"],
-      "xib": ["CustomCell.xib"]
-    }
+    "results": [
+      {
+        "filetype": "swift",
+        "files": ["Sources/App.swift", "Sources/Model.swift"]
+      },
+      {
+        "filetype": "storyboard",
+        "files": ["Main.storyboard"]
+      }
+    ]
   }
 ]
 ```
@@ -103,14 +118,20 @@ scout pattern "import UIKit" "import SwiftUI" --output results.json
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T07:30:00Z",
-    "results": {
-      "import UIKit": [
-        { "file": "Sources/App.swift", "line": 1 }
-      ],
-      "import SwiftUI": [
-        { "file": "Sources/ContentView.swift", "line": 1 }
-      ]
-    }
+    "results": [
+      {
+        "pattern": "import UIKit",
+        "matches": [
+          { "file": "Sources/App.swift", "line": 1 }
+        ]
+      },
+      {
+        "pattern": "import SwiftUI",
+        "matches": [
+          { "file": "Sources/ContentView.swift", "line": 1 }
+        ]
+      }
+    ]
   }
 ]
 ```
@@ -159,12 +180,16 @@ scout build-settings --config build.json --output results.json
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T07:30:00Z",
-    "results": {
-      "MyApp": {
-        "SWIFT_VERSION": "5.0",
-        "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+    "results": [
+      {
+        "setting": "SWIFT_VERSION",
+        "targets": { "MyApp": "5.0", "MyAppTests": "5.0" }
+      },
+      {
+        "setting": "IPHONEOS_DEPLOYMENT_TARGET",
+        "targets": { "MyApp": "15.0", "MyAppTests": "15.0" }
       }
-    }
+    ]
   }
 ]
 ```
