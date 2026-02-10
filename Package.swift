@@ -62,7 +62,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/davbeck/swift-glob.git",
-            .upToNextMajor(from: "0.2.0")
+            .upToNextMajor(from: "1.0.0")
         ),
     ],
     targets: [
