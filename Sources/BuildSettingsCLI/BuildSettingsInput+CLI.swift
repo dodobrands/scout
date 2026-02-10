@@ -35,7 +35,7 @@ extension BuildSettings.Input {
     ///   - config: Configuration loaded from JSON file (optional)
     /// - Throws: `BuildSettingsCLIInputError.missingProject` if project not provided
     init(cli: BuildSettingsCLIInputs, config: BuildSettingsCLIConfig?) throws {
-        guard let project = cli.project ?? config?.project else {
+        guard let projectPath = cli.project ?? config?.project?.path else {
             throw BuildSettingsCLIInputError.missingProject
         }
 
@@ -44,8 +44,12 @@ extension BuildSettings.Input {
 
         // Git configuration merges CLI > FileConfig > Default
         let gitConfig = GitConfiguration(cli: cli.git, fileConfig: config?.git)
-        let continueOnMissingProject =
-            cli.continueOnMissingProject ?? config?.continueOnMissingProject ?? false
+        let continueOnMissing =
+            cli.continueOnMissingProject ?? config?.project?.continueOnMissing ?? false
+        let project = BuildSettings.Project(
+            path: projectPath,
+            continueOnMissing: continueOnMissing
+        )
 
         // Build metrics from CLI or config
         let metrics: [BuildSettings.MetricInput]
@@ -90,8 +94,7 @@ extension BuildSettings.Input {
             setupCommands: setupCommands,
             metrics: metrics,
             project: project,
-            configuration: configuration,
-            continueOnMissingProject: continueOnMissingProject
+            configuration: configuration
         )
     }
 }

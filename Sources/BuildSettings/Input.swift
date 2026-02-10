@@ -1,6 +1,20 @@
 import Common
 
 extension BuildSettings {
+    /// Project configuration for build settings analysis.
+    public struct Project: Sendable {
+        /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)
+        public let path: String
+
+        /// Continue analysis when project is not found at a commit
+        public let continueOnMissing: Bool
+
+        public init(path: String, continueOnMissing: Bool = false) {
+            self.path = path
+            self.continueOnMissing = continueOnMissing
+        }
+    }
+
     /// A single build setting metric with its commits to analyze.
     public struct MetricInput: Sendable, CommitResolvable {
         /// Build setting name (e.g., "SWIFT_VERSION")
@@ -24,24 +38,21 @@ extension BuildSettings {
         public let git: GitConfiguration
         public let setupCommands: [SetupCommand]
         public let metrics: [MetricInput]
-        public let project: String
+        public let project: Project
         public let configuration: String
-        public let continueOnMissingProject: Bool
 
         public init(
             git: GitConfiguration,
             setupCommands: [SetupCommand],
             metrics: [MetricInput] = [],
-            project: String,
-            configuration: String,
-            continueOnMissingProject: Bool = false
+            project: Project,
+            configuration: String
         ) {
             self.git = git
             self.setupCommands = setupCommands
             self.metrics = metrics
             self.project = project
             self.configuration = configuration
-            self.continueOnMissingProject = continueOnMissingProject
         }
     }
 }

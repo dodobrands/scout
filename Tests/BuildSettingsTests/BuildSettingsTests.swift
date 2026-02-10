@@ -12,7 +12,7 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: "TestApp.xcodeproj",
+            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
             configuration: "Debug"
         )
 
@@ -30,9 +30,11 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: "NonExistent.xcodeproj",
-            configuration: "Debug",
-            continueOnMissingProject: true
+            project: BuildSettings.Project(
+                path: "NonExistent.xcodeproj",
+                continueOnMissing: true
+            ),
+            configuration: "Debug"
         )
 
         let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
@@ -46,9 +48,8 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: "NonExistent.xcodeproj",
-            configuration: "Debug",
-            continueOnMissingProject: false
+            project: BuildSettings.Project(path: "NonExistent.xcodeproj"),
+            configuration: "Debug"
         )
 
         await #expect(throws: BuildSettings.AnalysisError.self) {
@@ -76,7 +77,7 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [failingCommand],
-            project: "TestApp.xcodeproj",
+            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
             configuration: "Debug"
         )
 
@@ -95,7 +96,7 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [optionalFailingCommand],
-            project: "TestApp.xcodeproj",
+            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
             configuration: "Debug"
         )
 

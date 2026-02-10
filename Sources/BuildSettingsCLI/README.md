@@ -63,7 +63,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "MyApp.xcworkspace"
+  "project": {
+    "path": "MyApp.xcworkspace"
+  }
 }
 ```
 
@@ -71,7 +73,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "MyApp.xcworkspace",
+  "project": {
+    "path": "MyApp.xcworkspace"
+  },
   "configuration": "Debug",
   "metrics": [
     { "setting": "SWIFT_VERSION" },
@@ -84,7 +88,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "App/MyApp.xcworkspace",
+  "project": {
+    "path": "App/MyApp.xcworkspace"
+  },
   "configuration": "Debug",
   "metrics": [
     { "setting": "SWIFT_VERSION" },
@@ -102,7 +108,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "MyApp.xcodeproj",
+  "project": {
+    "path": "MyApp.xcodeproj"
+  },
   "configuration": "Debug",
   "metrics": [
     { "setting": "SWIFT_VERSION" }
@@ -119,7 +127,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `project` | `String` | **Yes*** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. *Can be provided via `--project` CLI flag instead. |
+| `project` | `Object` | **Yes*** | Project configuration. *Can be provided via `--project` CLI flag instead. |
+| `project.path` | `String` | **Yes** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. |
+| `project.continueOnMissing` | `Bool` | No | If `true`, analysis continues when project/workspace is not found at a commit (default: `false`). See [Generated Projects](#generated-projects). |
 | `configuration` | `String` | No | Build configuration (default: "Debug") |
 | `metrics` | `[Metric]` | No | Array of build setting metrics to analyze |
 | `metrics[].setting` | `String` | Yes | Build setting name (e.g., `SWIFT_VERSION`) |
@@ -128,7 +138,6 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 | `setupCommands[].command` | `String` | Yes | Command to execute (simple commands run directly, shell operators like `\|`, `&&` trigger `/bin/sh`) |
 | `setupCommands[].workingDirectory` | `String` | No | Directory relative to repo root |
 | `setupCommands[].optional` | `Bool` | No | If `true`, analysis continues even if command fails (default: `false`) |
-| `continueOnMissingProject` | `Bool` | No | If `true`, analysis continues when project/workspace is not found at a commit (default: `false`). See [Generated Projects](#generated-projects). |
 | `git` | `Object` | No | [Git configuration](../Common/GitConfiguration.md) |
 
 ### Per-Metric Commits (Config Only)
@@ -137,7 +146,9 @@ Different build settings can be analyzed on different commits. This is only avai
 
 ```json
 {
-  "project": "MyApp.xcworkspace",
+  "project": {
+    "path": "MyApp.xcworkspace"
+  },
   "metrics": [
     { "setting": "SWIFT_VERSION", "commits": ["abc123", "def456"] },
     { "setting": "IPHONEOS_DEPLOYMENT_TARGET", "commits": ["ghi789"] },
@@ -238,7 +249,7 @@ When using `--output`, results are saved as JSON array. Each result item represe
 
 When analyzing repositories with generated Xcode projects (e.g., Tuist, XcodeGen), very old commits may fail because the required tooling or dependencies are no longer available. In such cases, the project/workspace file may not exist after running setup commands.
 
-By default, the tool fails when the project is not found. Use `--continue-on-missing-project` (or `"continueOnMissingProject": true` in config) to skip those commits with empty results instead of failing the entire run:
+By default, the tool fails when the project is not found. Use `--continue-on-missing-project` (or `"continueOnMissing": true` in the `project` config object) to skip those commits with empty results instead of failing the entire run:
 
 ```bash
 scout build-settings --config config.json --continue-on-missing-project
@@ -246,8 +257,10 @@ scout build-settings --config config.json --continue-on-missing-project
 
 ```json
 {
-  "project": "App/MyApp.xcworkspace",
-  "continueOnMissingProject": true,
+  "project": {
+    "path": "App/MyApp.xcworkspace",
+    "continueOnMissing": true
+  },
   "setupCommands": [
     { "command": "mise install", "optional": true },
     { "command": "tuist install", "workingDirectory": "App", "optional": true },

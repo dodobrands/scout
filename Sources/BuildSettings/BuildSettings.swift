@@ -43,10 +43,10 @@ public struct BuildSettings: Sendable {
         try await executeSetupCommands(input.setupCommands, in: repoPath, commit: commit)
 
         let foundProjectsAndWorkspaces = try resolveProject(
-            path: input.project,
+            path: input.project.path,
             repoPath: repoPath,
             commit: commit,
-            continueOnMissing: input.continueOnMissingProject
+            continueOnMissing: input.project.continueOnMissing
         )
 
         let projectsWithTargets = try await getTargetsForAllProjects(
@@ -108,8 +108,7 @@ public struct BuildSettings: Sendable {
                     repoPath: input.git.repoPath,
                     setupCommands: input.setupCommands,
                     project: input.project,
-                    configuration: input.configuration,
-                    continueOnMissingProject: input.continueOnMissingProject
+                    configuration: input.configuration
                 )
 
                 let targets: [TargetWithBuildSettings]

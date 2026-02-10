@@ -29,15 +29,28 @@ struct BuildSettingsCLIConfig: Sendable {
         let optional: Bool?
     }
 
+    /// Project configuration from JSON file.
+    struct ProjectConfig: Sendable, Decodable {
+        /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)
+        let path: String
+
+        /// Continue analysis when project is not found at a commit
+        let continueOnMissing: Bool?
+
+        init(path: String, continueOnMissing: Bool? = nil) {
+            self.path = path
+            self.continueOnMissing = continueOnMissing
+        }
+    }
+
     /// Commands to setup project, executed sequentially.
     let setupCommands: [SetupCommand]?
 
     /// Build settings metrics to collect with optional per-metric commits
     let metrics: [SettingMetric]?
 
-    /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj).
-    /// Can be relative to repo root or absolute.
-    let project: String?
+    /// Project configuration (path and options)
+    let project: ProjectConfig?
 
     /// Build configuration name (e.g., "Debug", "Release")
     let configuration: String?
@@ -45,24 +58,19 @@ struct BuildSettingsCLIConfig: Sendable {
     /// Git operations configuration (file layer - all fields optional)
     let git: GitFileConfig?
 
-    /// Continue analysis when project/workspace is not found at a commit
-    let continueOnMissingProject: Bool?
-
     /// Initialize configuration directly (for testing)
     init(
         setupCommands: [SetupCommand]?,
         metrics: [SettingMetric]?,
-        project: String?,
+        project: ProjectConfig?,
         configuration: String?,
-        git: GitFileConfig? = nil,
-        continueOnMissingProject: Bool? = nil
+        git: GitFileConfig? = nil
     ) {
         self.setupCommands = setupCommands
         self.metrics = metrics
         self.project = project
         self.configuration = configuration
         self.git = git
-        self.continueOnMissingProject = continueOnMissingProject
     }
 
     /// Initialize configuration from JSON file at given path, or default path if nil.
@@ -105,7 +113,6 @@ struct BuildSettingsCLIConfig: Sendable {
             self.project = variables.project
             self.configuration = variables.configuration
             self.git = variables.git
-            self.continueOnMissingProject = variables.continueOnMissingProject
         } catch let decodingError as DecodingError {
             throw BuildSettingsCLIConfigError.invalidJSON(
                 path: configPathString,
@@ -122,10 +129,9 @@ struct BuildSettingsCLIConfig: Sendable {
     private struct Variables: Decodable {
         let setupCommands: [SetupCommand]?
         let metrics: [SettingMetric]?
-        let project: String?
+        let project: ProjectConfig?
         let configuration: String?
         let git: GitFileConfig?
-        let continueOnMissingProject: Bool?
     }
 }
 
