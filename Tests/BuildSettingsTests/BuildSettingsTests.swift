@@ -12,7 +12,7 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: "TestApp.xcodeproj",
+            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
             configuration: "Debug"
         )
 
@@ -25,18 +25,36 @@ struct BuildSettingsTests {
     }
 
     @Test
-    func `When project not found, should return empty`() async throws {
+    func `When project not found and continueOnMissingProject, should return empty`() async throws {
         let samplesURL = try samplesDirectory()
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [],
-            project: "NonExistent.xcodeproj",
+            project: BuildSettings.Project(
+                path: "NonExistent.xcodeproj",
+                continueOnMissing: true
+            ),
             configuration: "Debug"
         )
 
         let result = try await sut.extractBuildSettings(input: input, commit: "test-commit")
 
         #expect(result.isEmpty)
+    }
+
+    @Test
+    func `When project not found and not continueOnMissingProject, should throw`() async throws {
+        let samplesURL = try samplesDirectory()
+        let input = BuildSettings.AnalysisInput(
+            repoPath: samplesURL.path,
+            setupCommands: [],
+            project: BuildSettings.Project(path: "NonExistent.xcodeproj"),
+            configuration: "Debug"
+        )
+
+        await #expect(throws: BuildSettings.AnalysisError.self) {
+            _ = try await sut.extractBuildSettings(input: input, commit: "test-commit")
+        }
     }
 
     @Test(arguments: [
@@ -59,7 +77,7 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [failingCommand],
-            project: "TestApp.xcodeproj",
+            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
             configuration: "Debug"
         )
 
@@ -78,7 +96,7 @@ struct BuildSettingsTests {
         let input = BuildSettings.AnalysisInput(
             repoPath: samplesURL.path,
             setupCommands: [optionalFailingCommand],
-            project: "TestApp.xcodeproj",
+            project: BuildSettings.Project(path: "TestApp.xcodeproj"),
             configuration: "Debug"
         )
 

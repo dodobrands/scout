@@ -38,6 +38,7 @@ scout build-settings --project MyApp.xcworkspace SWIFT_VERSION --commits abc123 
 - `--git-clean` — Clean working directory before analysis (`git clean -ffdx && git reset --hard HEAD`)
 - `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
 - `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
+- `--continue-on-missing-project` — Continue analysis when project/workspace is not found at a commit instead of failing (default: fail)
 
 ## Configuration
 
@@ -62,7 +63,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "MyApp.xcworkspace"
+  "project": {
+    "path": "MyApp.xcworkspace"
+  }
 }
 ```
 
@@ -70,7 +73,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "MyApp.xcworkspace",
+  "project": {
+    "path": "MyApp.xcworkspace"
+  },
   "configuration": "Debug",
   "metrics": [
     { "setting": "SWIFT_VERSION" },
@@ -83,7 +88,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "App/MyApp.xcworkspace",
+  "project": {
+    "path": "App/MyApp.xcworkspace"
+  },
   "configuration": "Debug",
   "metrics": [
     { "setting": "SWIFT_VERSION" },
@@ -101,7 +108,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 ```json
 {
-  "project": "MyApp.xcodeproj",
+  "project": {
+    "path": "MyApp.xcodeproj"
+  },
   "configuration": "Debug",
   "metrics": [
     { "setting": "SWIFT_VERSION" }
@@ -118,7 +127,9 @@ scout build-settings --project Other.xcodeproj --config build-settings-config.js
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `project` | `String` | **Yes*** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. *Can be provided via `--project` CLI flag instead. |
+| `project` | `Object` | **Yes*** | Project configuration. *Can be provided via `--project` CLI flag instead. |
+| `project.path` | `String` | **Yes** | Path to Xcode workspace (.xcworkspace) or project (.xcodeproj). Relative to repo root or absolute. |
+| `project.continueOnMissing` | `Bool` | No | If `true`, analysis continues when project/workspace is not found at a commit (default: `false`). See [Generated Projects](#generated-projects). |
 | `configuration` | `String` | No | Build configuration (default: "Debug") |
 | `metrics` | `[Metric]` | No | Array of build setting metrics to analyze |
 | `metrics[].setting` | `String` | Yes | Build setting name (e.g., `SWIFT_VERSION`) |
@@ -135,7 +146,9 @@ Different build settings can be analyzed on different commits. This is only avai
 
 ```json
 {
-  "project": "MyApp.xcworkspace",
+  "project": {
+    "path": "MyApp.xcworkspace"
+  },
   "metrics": [
     { "setting": "SWIFT_VERSION", "commits": ["abc123", "def456"] },
     { "setting": "IPHONEOS_DEPLOYMENT_TARGET", "commits": ["ghi789"] },
@@ -156,7 +169,7 @@ Different build settings can be analyzed on different commits. This is only avai
 
 ## Output Format
 
-When using `--output`, results are saved as JSON array:
+When using `--output`, results are saved as JSON array. Each result item represents one requested build setting with target values:
 
 ```json
 [
@@ -165,17 +178,17 @@ When using `--output`, results are saved as JSON array:
     "date": "2025-01-15T07:30:00Z",
     "results": [
       {
-        "target": "MyApp",
-        "settings": {
-          "SWIFT_VERSION": "5.0",
-          "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+        "setting": "SWIFT_VERSION",
+        "targets": {
+          "MyApp": "5.0",
+          "MyAppTests": "5.0"
         }
       },
       {
-        "target": "MyAppTests",
-        "settings": {
-          "SWIFT_VERSION": "5.0",
-          "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+        "setting": "IPHONEOS_DEPLOYMENT_TARGET",
+        "targets": {
+          "MyApp": "15.0",
+          "MyAppTests": "15.0"
         }
       }
     ]
@@ -191,10 +204,8 @@ When using `--output`, results are saved as JSON array:
     "date": "2025-01-15T07:30:00Z",
     "results": [
       {
-        "target": "MyApp",
-        "settings": {
-          "SWIFT_VERSION": "5.0"
-        }
+        "setting": "SWIFT_VERSION",
+        "targets": { "MyApp": "5.0" }
       }
     ]
   },
@@ -203,14 +214,62 @@ When using `--output`, results are saved as JSON array:
     "date": "2025-02-15T11:45:00Z",
     "results": [
       {
-        "target": "MyApp",
-        "settings": {
-          "SWIFT_VERSION": "5.9"
-        }
+        "setting": "SWIFT_VERSION",
+        "targets": { "MyApp": "5.9" }
       }
     ]
   }
 ]
+```
+
+**When a target does not have a requested setting, the value is `null`:**
+```json
+{
+  "setting": "SWIFT_STRICT_CONCURRENCY",
+  "targets": {
+    "MyApp": "complete",
+    "MyAppTests": null
+  }
+}
+```
+
+**When project is not found at a commit (with `--continue-on-missing-project`), results contain the requested settings with empty targets:**
+```json
+{
+  "commit": "e18beffdf4",
+  "date": "2024-03-10T11:17:36Z",
+  "results": [
+    { "setting": "SWIFT_VERSION", "targets": {} },
+    { "setting": "SWIFT_STRICT_CONCURRENCY", "targets": {} }
+  ]
+}
+```
+
+## Generated Projects
+
+When analyzing repositories with generated Xcode projects (e.g., Tuist, XcodeGen), very old commits may fail because the required tooling or dependencies are no longer available. In such cases, the project/workspace file may not exist after running setup commands.
+
+By default, the tool fails when the project is not found. Use `--continue-on-missing-project` (or `"continueOnMissing": true` in the `project` config object) to skip those commits with empty results instead of failing the entire run:
+
+```bash
+scout build-settings --config config.json --continue-on-missing-project
+```
+
+```json
+{
+  "project": {
+    "path": "App/MyApp.xcworkspace",
+    "continueOnMissing": true
+  },
+  "setupCommands": [
+    { "command": "mise install", "optional": true },
+    { "command": "tuist install", "workingDirectory": "App", "optional": true },
+    { "command": "tuist generate --no-open", "workingDirectory": "App", "optional": true }
+  ],
+  "metrics": [
+    { "setting": "SWIFT_STRICT_CONCURRENCY" }
+  ]
+}
 ```
 
 ## Requirements

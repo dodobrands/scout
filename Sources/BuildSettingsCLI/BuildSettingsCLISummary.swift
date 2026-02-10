@@ -16,17 +16,18 @@ struct BuildSettingsCLISummary: JobSummaryFormattable {
         }
 
         lines.append("")
-        lines.append("| Commit | Target | Settings |")
-        lines.append("|--------|--------|----------|")
+        lines.append("| Commit | Setting | Targets |")
+        lines.append("|--------|---------|---------|")
         for output in outputs {
             let commit = output.commit.prefix(Git.shortHashLength)
-            for result in output.results.sorted(by: { $0.target < $1.target }) {
-                let settingsStr =
-                    result.settings
+            for result in output.results.sorted(by: { $0.setting < $1.setting }) {
+                let targetsStr =
+                    result.targets
                     .sorted(by: { $0.key < $1.key })
                     .map { "\($0.key): \($0.value ?? "null")" }
                     .joined(separator: ", ")
-                lines.append("| `\(commit)` | `\(result.target)` | \(settingsStr) |")
+                let displayTargets = targetsStr.isEmpty ? "—" : targetsStr
+                lines.append("| `\(commit)` | \(result.setting) | \(displayTargets) |")
             }
         }
 

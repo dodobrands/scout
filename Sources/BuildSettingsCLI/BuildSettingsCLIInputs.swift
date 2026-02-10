@@ -15,6 +15,9 @@ struct BuildSettingsCLIInputs: Sendable {
     /// Git configuration from CLI flags
     let git: GitCLIInputs
 
+    /// Continue analysis when project/workspace is not found at a commit
+    let continueOnMissingProject: Bool?
+
     init(
         project: String?,
         buildSettingsParameters: [String]?,
@@ -22,7 +25,8 @@ struct BuildSettingsCLIInputs: Sendable {
         commits: [String]?,
         gitClean: Bool? = nil,
         fixLfs: Bool? = nil,
-        initializeSubmodules: Bool? = nil
+        initializeSubmodules: Bool? = nil,
+        continueOnMissingProject: Bool? = nil
     ) {
         self.project = project
         self.buildSettingsParameters = buildSettingsParameters
@@ -33,5 +37,6 @@ struct BuildSettingsCLIInputs: Sendable {
             fixLFS: fixLfs,
             initializeSubmodules: initializeSubmodules
         )
+        self.continueOnMissingProject = continueOnMissingProject
     }
 }

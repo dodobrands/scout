@@ -29,15 +29,28 @@ struct BuildSettingsCLIConfig: Sendable {
         let optional: Bool?
     }
 
+    /// Project configuration from JSON file.
+    struct ProjectConfig: Sendable, Decodable {
+        /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj)
+        let path: String
+
+        /// Continue analysis when project is not found at a commit
+        let continueOnMissing: Bool?
+
+        init(path: String, continueOnMissing: Bool? = nil) {
+            self.path = path
+            self.continueOnMissing = continueOnMissing
+        }
+    }
+
     /// Commands to setup project, executed sequentially.
     let setupCommands: [SetupCommand]?
 
     /// Build settings metrics to collect with optional per-metric commits
     let metrics: [SettingMetric]?
 
-    /// Path to Xcode workspace (.xcworkspace) or project (.xcodeproj).
-    /// Can be relative to repo root or absolute.
-    let project: String?
+    /// Project configuration (path and options)
+    let project: ProjectConfig?
 
     /// Build configuration name (e.g., "Debug", "Release")
     let configuration: String?
@@ -49,7 +62,7 @@ struct BuildSettingsCLIConfig: Sendable {
     init(
         setupCommands: [SetupCommand]?,
         metrics: [SettingMetric]?,
-        project: String?,
+        project: ProjectConfig?,
         configuration: String?,
         git: GitFileConfig? = nil
     ) {
@@ -116,7 +129,7 @@ struct BuildSettingsCLIConfig: Sendable {
     private struct Variables: Decodable {
         let setupCommands: [SetupCommand]?
         let metrics: [SettingMetric]?
-        let project: String?
+        let project: ProjectConfig?
         let configuration: String?
         let git: GitFileConfig?
     }

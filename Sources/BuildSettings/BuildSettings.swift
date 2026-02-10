@@ -14,6 +14,7 @@ public struct BuildSettings: Sendable {
         case setupCommandFailed(command: String, commit: String, error: String)
         case buildSettingsExtractionFailed(commit: String, error: String)
         case checkoutFailed(hash: String, error: String)
+        case projectNotFound(path: String, commit: String)
 
         public var errorDescription: String? {
             switch self {
@@ -23,6 +24,8 @@ public struct BuildSettings: Sendable {
                 return "Build settings extraction failed at commit \(commit): \(error)"
             case .checkoutFailed(let hash, let error):
                 return "Failed to checkout \(hash): \(error)"
+            case .projectNotFound(let path, let commit):
+                return "Project or workspace not found at '\(path)' for commit \(commit)"
             }
         }
     }
@@ -40,9 +43,10 @@ public struct BuildSettings: Sendable {
         try await executeSetupCommands(input.setupCommands, in: repoPath, commit: commit)
 
         let foundProjectsAndWorkspaces = try resolveProject(
-            path: input.project,
+            path: input.project.path,
             repoPath: repoPath,
-            commit: commit
+            commit: commit,
+            continueOnMissing: input.project.continueOnMissing
         )
 
         let projectsWithTargets = try await getTargetsForAllProjects(
@@ -99,42 +103,56 @@ public struct BuildSettings: Sendable {
 
             do {
                 try await Git.checkout(hash: hash, git: input.git)
-            } catch {
-                throw AnalysisError.checkoutFailed(
-                    hash: hash,
-                    error: error.localizedDescription
+
+                let analysisInput = AnalysisInput(
+                    repoPath: input.git.repoPath,
+                    setupCommands: input.setupCommands,
+                    project: input.project,
+                    configuration: input.configuration
                 )
-            }
 
-            let analysisInput = AnalysisInput(
-                repoPath: input.git.repoPath,
-                setupCommands: input.setupCommands,
-                project: input.project,
-                configuration: input.configuration
-            )
+                let targets: [TargetWithBuildSettings]
+                do {
+                    targets = try await extractBuildSettings(
+                        input: analysisInput,
+                        commit: hash
+                    )
+                } catch let error as AnalysisError {
+                    throw error
+                } catch {
+                    throw AnalysisError.buildSettingsExtractionFailed(
+                        commit: hash,
+                        error: error.localizedDescription
+                    )
+                }
 
-            let targets: [TargetWithBuildSettings]
-            do {
-                targets = try await extractBuildSettings(input: analysisInput, commit: hash)
-            } catch let error as AnalysisError {
-                throw error
+                let resultItems = requestedSettings.map { setting in
+                    var targetValues: [String: String?] = [:]
+                    for target in targets {
+                        targetValues[target.target] = target.buildSettings[setting] ?? nil
+                    }
+                    return ResultItem(setting: setting, targets: targetValues)
+                }
+
+                let date = try await Git.commitDate(for: hash, in: repoPath)
+                onOutput(Output(commit: hash, date: date, results: resultItems))
+            } catch is CancellationError {
+                throw CancellationError()
             } catch {
-                throw AnalysisError.buildSettingsExtractionFailed(
-                    commit: hash,
-                    error: error.localizedDescription
+                Self.logger.warning(
+                    "Skipping commit due to error",
+                    metadata: [
+                        "commit": "\(hash)",
+                        "error": "\(error.localizedDescription)",
+                    ]
                 )
-            }
 
-            let requestedSettingsSet = Set(requestedSettings)
-            let resultItems = targets.map { target in
-                let filteredSettings = target.buildSettings
-                    .filter { requestedSettingsSet.contains($0.key) }
-                    .mapValues { Optional($0) }
-                return ResultItem(target: target.target, settings: filteredSettings)
+                let emptyResults = requestedSettings.map {
+                    ResultItem(setting: $0, targets: [:])
+                }
+                let date = try await Git.commitDate(for: hash, in: repoPath)
+                onOutput(Output(commit: hash, date: date, results: emptyResults))
             }
-
-            let date = try await Git.commitDate(for: hash, in: repoPath)
-            onOutput(Output(commit: hash, date: date, results: resultItems))
         }
     }
 
@@ -201,7 +219,8 @@ public struct BuildSettings: Sendable {
     private func resolveProject(
         path: String,
         repoPath: URL,
-        commit: String
+        commit: String,
+        continueOnMissing: Bool
     ) throws -> [ProjectOrWorkspace] {
         let fileManager = FileManager.default
 
@@ -214,14 +233,17 @@ public struct BuildSettings: Sendable {
         }
 
         guard fileManager.fileExists(atPath: resolvedPath) else {
-            Self.logger.warning(
-                "Project or workspace not found, skipping",
-                metadata: [
-                    "path": "\(resolvedPath)",
-                    "commit": "\(commit)",
-                ]
-            )
-            return []
+            if continueOnMissing {
+                Self.logger.warning(
+                    "Project or workspace not found, skipping",
+                    metadata: [
+                        "path": "\(resolvedPath)",
+                        "commit": "\(commit)",
+                    ]
+                )
+                return []
+            }
+            throw AnalysisError.projectNotFound(path: resolvedPath, commit: commit)
         }
 
         // Strip trailing slash that URL.appendingPathComponent adds for directories.

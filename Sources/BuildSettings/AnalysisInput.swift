@@ -4,7 +4,7 @@ extension BuildSettings {
     struct AnalysisInput: Sendable {
         let repoPath: String
         let setupCommands: [SetupCommand]
-        let project: String
+        let project: Project
         let configuration: String
     }
 }

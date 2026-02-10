@@ -7,16 +7,16 @@ import Testing
 @Suite("BuildSettingsCLIOutput JSON")
 struct BuildSettingsCLIOutputTests {
 
-    @Test func encodesNullForMissingParameters() {
+    @Test func encodesNullForMissingSetting() {
         let output = BuildSettings.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
             results: [
                 BuildSettings.ResultItem(
-                    target: "MyApp",
-                    settings: [
-                        "MISSING_PARAM": nil,
-                        "SWIFT_VERSION": "5.0",
+                    setting: "SWIFT_VERSION",
+                    targets: [
+                        "MyApp": "5.0",
+                        "MyAppTests": nil,
                     ]
                 )
             ]
@@ -29,11 +29,11 @@ struct BuildSettingsCLIOutputTests {
               "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
-                  "settings" : {
-                    "MISSING_PARAM" : null,
-                    "SWIFT_VERSION" : "5.0"
-                  },
-                  "target" : "MyApp"
+                  "setting" : "SWIFT_VERSION",
+                  "targets" : {
+                    "MyApp" : "5.0",
+                    "MyAppTests" : null
+                  }
                 }
               ]
             }
@@ -41,18 +41,19 @@ struct BuildSettingsCLIOutputTests {
         }
     }
 
-    @Test func encodesAllNullParameters() {
+    @Test func encodesEmptyTargets() {
         let output = BuildSettings.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
             results: [
                 BuildSettings.ResultItem(
-                    target: "MyApp",
-                    settings: [
-                        "PARAM1": nil,
-                        "PARAM2": nil,
-                    ]
-                )
+                    setting: "SWIFT_VERSION",
+                    targets: [:]
+                ),
+                BuildSettings.ResultItem(
+                    setting: "SWIFT_STRICT_CONCURRENCY",
+                    targets: [:]
+                ),
             ]
         )
 
@@ -63,11 +64,16 @@ struct BuildSettingsCLIOutputTests {
               "date" : "2025-01-15T07:30:00Z",
               "results" : [
                 {
-                  "settings" : {
-                    "PARAM1" : null,
-                    "PARAM2" : null
-                  },
-                  "target" : "MyApp"
+                  "setting" : "SWIFT_VERSION",
+                  "targets" : {
+
+                  }
+                },
+                {
+                  "setting" : "SWIFT_STRICT_CONCURRENCY",
+                  "targets" : {
+
+                  }
                 }
               ]
             }
@@ -81,14 +87,20 @@ struct BuildSettingsCLIOutputTests {
                 commit: "abc123",
                 date: "2025-01-15T07:30:00Z",
                 results: [
-                    BuildSettings.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.0"])
+                    BuildSettings.ResultItem(
+                        setting: "SWIFT_VERSION",
+                        targets: ["MyApp": "5.0"]
+                    )
                 ]
             ),
             BuildSettings.Output(
                 commit: "def456",
                 date: "2025-02-15T11:45:00Z",
                 results: [
-                    BuildSettings.ResultItem(target: "MyApp", settings: ["SWIFT_VERSION": "5.9"])
+                    BuildSettings.ResultItem(
+                        setting: "SWIFT_VERSION",
+                        targets: ["MyApp": "5.9"]
+                    )
                 ]
             ),
         ]
@@ -101,10 +113,10 @@ struct BuildSettingsCLIOutputTests {
                 "date" : "2025-01-15T07:30:00Z",
                 "results" : [
                   {
-                    "settings" : {
-                      "SWIFT_VERSION" : "5.0"
-                    },
-                    "target" : "MyApp"
+                    "setting" : "SWIFT_VERSION",
+                    "targets" : {
+                      "MyApp" : "5.0"
+                    }
                   }
                 ]
               },
@@ -113,10 +125,10 @@ struct BuildSettingsCLIOutputTests {
                 "date" : "2025-02-15T11:45:00Z",
                 "results" : [
                   {
-                    "settings" : {
-                      "SWIFT_VERSION" : "5.9"
-                    },
-                    "target" : "MyApp"
+                    "setting" : "SWIFT_VERSION",
+                    "targets" : {
+                      "MyApp" : "5.9"
+                    }
                   }
                 ]
               }
