@@ -4,10 +4,9 @@ import Testing
 
 @testable import BuildSettingsCLI
 
-@Suite
 struct BuildSettingsCLISummaryTests {
 
-    @Test func multipleCommits() {
+    @Test func `multiple commits`() {
         let summary = BuildSettingsCLISummary(
             outputs: [
                 BuildSettings.Output(
@@ -50,7 +49,7 @@ struct BuildSettingsCLISummaryTests {
         }
     }
 
-    @Test func nullTargetValue() {
+    @Test func `null target value`() {
         let summary = BuildSettingsCLISummary(
             outputs: [
                 BuildSettings.Output(
@@ -80,7 +79,7 @@ struct BuildSettingsCLISummaryTests {
         }
     }
 
-    @Test func emptyTargets() {
+    @Test func `empty targets`() {
         let summary = BuildSettingsCLISummary(
             outputs: [
                 BuildSettings.Output(
@@ -107,7 +106,7 @@ struct BuildSettingsCLISummaryTests {
         }
     }
 
-    @Test func emptyOutputs() {
+    @Test func `empty outputs`() {
         let summary = BuildSettingsCLISummary(outputs: [])
 
         assertInlineSnapshot(of: summary, as: .description) {

@@ -3,12 +3,10 @@ import Testing
 
 @testable import Common
 
-@Suite("CommandParser")
 struct CommandParserTests {
 
     // MARK: - parse() Tests
 
-    @Suite("parse")
     struct ParseTests {
 
         @Test
@@ -114,7 +112,6 @@ struct CommandParserTests {
 
     // MARK: - prepareExecution() Tests
 
-    @Suite("prepareExecution")
     struct PrepareExecutionTests {
 
         @Test

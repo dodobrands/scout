@@ -6,7 +6,6 @@ import Testing
 @testable import BuildSettingsCLI
 
 /// Tests for BuildSettings.Input priority: CLI > Config > Default
-@Suite("BuildSettingsCLIInput Priority")
 struct BuildSettingsCLIInputPriorityTests {
 
     // MARK: - include required

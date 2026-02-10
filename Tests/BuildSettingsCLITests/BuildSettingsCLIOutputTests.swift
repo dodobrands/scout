@@ -4,10 +4,9 @@ import InlineSnapshotTesting
 import Testing
 
 /// Tests for BuildSettings.Output JSON encoding
-@Suite("BuildSettingsCLIOutput JSON")
 struct BuildSettingsCLIOutputTests {
 
-    @Test func encodesNullForMissingSetting() {
+    @Test func `encodes null for missing setting`() {
         let output = BuildSettings.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
@@ -41,7 +40,7 @@ struct BuildSettingsCLIOutputTests {
         }
     }
 
-    @Test func encodesEmptyTargets() {
+    @Test func `encodes empty targets`() {
         let output = BuildSettings.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",
@@ -81,7 +80,7 @@ struct BuildSettingsCLIOutputTests {
         }
     }
 
-    @Test func encodesArrayForMultipleCommits() {
+    @Test func `encodes array for multiple commits`() {
         let outputs = [
             BuildSettings.Output(
                 commit: "abc123",

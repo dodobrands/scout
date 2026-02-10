@@ -4,10 +4,9 @@ import Testing
 
 @testable import PatternCLI
 
-@Suite
 struct PatternCLISummaryTests {
 
-    @Test func multipleCommits() {
+    @Test func `multiple commits`() {
         let summary = PatternCLISummary(
             outputs: [
                 Pattern.Output(
@@ -57,7 +56,7 @@ struct PatternCLISummaryTests {
         }
     }
 
-    @Test func emptyOutputs() {
+    @Test func `empty outputs`() {
         let summary = PatternCLISummary(outputs: [])
 
         assertInlineSnapshot(of: summary, as: .description) {

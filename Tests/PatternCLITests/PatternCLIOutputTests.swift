@@ -4,10 +4,9 @@ import Pattern
 import Testing
 
 /// Tests for Pattern.Output JSON encoding
-@Suite
 struct PatternCLIOutputTests {
 
-    @Test func encodesSingleCommit() {
+    @Test func `encodes single commit`() {
         let output = Pattern.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T07:30:00Z",
@@ -62,7 +61,7 @@ struct PatternCLIOutputTests {
         }
     }
 
-    @Test func encodesMultipleCommits() {
+    @Test func `encodes multiple commits`() {
         let outputs = [
             Pattern.Output(
                 commit: "abc1234def5678",
@@ -133,7 +132,7 @@ struct PatternCLIOutputTests {
         }
     }
 
-    @Test func encodesEmptyResults() {
+    @Test func `encodes empty results`() {
         let output = Pattern.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",

@@ -4,10 +4,9 @@ import Testing
 import Types
 
 /// Tests for Types.Output JSON encoding
-@Suite
 struct TypesCLIOutputTests {
 
-    @Test func encodesSingleCommit() {
+    @Test func `encodes single commit`() {
         let output = Types.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T07:30:00Z",
@@ -77,7 +76,7 @@ struct TypesCLIOutputTests {
         }
     }
 
-    @Test func encodesMultipleCommits() {
+    @Test func `encodes multiple commits`() {
         let outputs = [
             Types.Output(
                 commit: "abc1234def5678",
@@ -163,7 +162,7 @@ struct TypesCLIOutputTests {
         }
     }
 
-    @Test func encodesEmptyResults() {
+    @Test func `encodes empty results`() {
         let output = Types.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",

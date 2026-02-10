@@ -4,10 +4,9 @@ import InlineSnapshotTesting
 import Testing
 
 /// Tests for Files.Output JSON encoding
-@Suite
 struct FilesCLIOutputTests {
 
-    @Test func encodesSingleCommit() {
+    @Test func `encodes single commit`() {
         let output = Files.Output(
             commit: "abc1234def5678",
             date: "2025-01-15T07:30:00Z",
@@ -49,7 +48,7 @@ struct FilesCLIOutputTests {
         }
     }
 
-    @Test func encodesMultipleCommits() {
+    @Test func `encodes multiple commits`() {
         let outputs = [
             Files.Output(
                 commit: "abc1234def5678",
@@ -117,7 +116,7 @@ struct FilesCLIOutputTests {
         }
     }
 
-    @Test func encodesEmptyResults() {
+    @Test func `encodes empty results`() {
         let output = Files.Output(
             commit: "abc123",
             date: "2025-01-15T07:30:00Z",

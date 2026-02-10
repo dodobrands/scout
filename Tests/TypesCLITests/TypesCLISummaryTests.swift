@@ -4,10 +4,9 @@ import Types
 
 @testable import TypesCLI
 
-@Suite
 struct TypesCLISummaryTests {
 
-    @Test func multipleCommits() {
+    @Test func `multiple commits`() {
         let summary = TypesCLISummary(
             outputs: [
                 Types.Output(
@@ -73,7 +72,7 @@ struct TypesCLISummaryTests {
         }
     }
 
-    @Test func emptyOutputs() {
+    @Test func `empty outputs`() {
         let summary = TypesCLISummary(outputs: [])
 
         assertInlineSnapshot(of: summary, as: .description) {
