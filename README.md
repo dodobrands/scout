@@ -237,6 +237,30 @@ Commits are processed in the order they are provided.
 
 Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.
 
+### Best Practices for Config and Output Paths
+
+When analyzing historical commits, Scout checks out each commit in the working tree. If `--git-clean` is enabled, it runs `git clean -ffdx` which **removes all untracked and ignored files** — including config files and output results placed inside the repository directory.
+
+To avoid losing files during analysis:
+
+1. **Place config and output paths outside the repository.** For example, on GitHub Actions use `$RUNNER_TEMP`:
+   ```bash
+   cp scout-config.json "$RUNNER_TEMP/scout-config.json"
+
+   scout types --config "$RUNNER_TEMP/scout-config.json" \
+               --output "$RUNNER_TEMP/results.json" \
+               --commits abc123 def456
+   ```
+
+2. **Or pass all parameters via CLI flags** instead of relying on config files in the working tree:
+   ```bash
+   scout types UIView UIViewController \
+               --output /tmp/results.json \
+               --commits abc123 def456
+   ```
+
+This applies to `--config` and `--output` paths for all commands (`types`, `files`, `pattern`, `loc`, `build-settings`).
+
 ## Requirements
 
 - macOS 15+
