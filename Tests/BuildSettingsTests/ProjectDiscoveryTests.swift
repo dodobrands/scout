@@ -17,7 +17,8 @@ struct ProjectDiscoveryTests {
         )
 
         #expect(projects.count == 1)
-        #expect(projects.first?.path.hasSuffix("TestApp.xcodeproj") == true)
+        let project = try #require(projects.first)
+        #expect(project.path.hasSuffix("TestApp.xcodeproj"))
     }
 
     @Test

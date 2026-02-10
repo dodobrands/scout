@@ -27,7 +27,7 @@ struct GroupedByCommitTests {
     }
 
     @Test
-    func `When metrics share a commit, should group them together`() {
+    func `When metrics share a commit, should group them together`() throws {
         let metrics = [
             TestMetric(name: "A", commits: ["commit-1"]),
             TestMetric(name: "B", commits: ["commit-1"]),
@@ -36,7 +36,8 @@ struct GroupedByCommitTests {
         let grouped = metrics.groupedByCommit()
 
         #expect(grouped.count == 1)
-        #expect(grouped["commit-1"]?.map(\.name) == ["A", "B"])
+        let commit1 = try #require(grouped["commit-1"])
+        #expect(commit1.map(\.name) == ["A", "B"])
     }
 
     @Test
@@ -47,7 +48,7 @@ struct GroupedByCommitTests {
     }
 
     @Test
-    func `When metric has no commits, should skip it`() {
+    func `When metric has no commits, should skip it`() throws {
         let metrics = [
             TestMetric(name: "A", commits: []),
             TestMetric(name: "B", commits: ["commit-1"]),
@@ -56,7 +57,8 @@ struct GroupedByCommitTests {
         let grouped = metrics.groupedByCommit()
 
         #expect(grouped.count == 1)
-        #expect(grouped["commit-1"]?.map(\.name) == ["B"])
+        let commit1 = try #require(grouped["commit-1"])
+        #expect(commit1.map(\.name) == ["B"])
     }
 
     @Test
