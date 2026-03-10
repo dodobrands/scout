@@ -32,7 +32,11 @@ extension Pattern.Input {
                     if let commits = metric.commits, commits.isEmpty {
                         return nil
                     }
-                    return Pattern.MetricInput(pattern: metric.pattern, commits: cliCommits)
+                    return Pattern.MetricInput(
+                        pattern: metric.pattern,
+                        isRegex: metric.isRegex ?? false,
+                        commits: cliCommits
+                    )
                 }
             } else {
                 // Use per-metric commits from config
@@ -42,7 +46,11 @@ extension Pattern.Input {
                         return nil
                     }
                     let commits = metric.commits ?? ["HEAD"]
-                    return Pattern.MetricInput(pattern: metric.pattern, commits: commits)
+                    return Pattern.MetricInput(
+                        pattern: metric.pattern,
+                        isRegex: metric.isRegex ?? false,
+                        commits: commits
+                    )
                 }
             }
         } else {

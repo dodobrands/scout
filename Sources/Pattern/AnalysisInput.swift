@@ -5,5 +5,13 @@ extension Pattern {
         let repoPath: String
         let extensions: [String]
         let pattern: String
+        let isRegex: Bool
+
+        init(repoPath: String, extensions: [String], pattern: String, isRegex: Bool = false) {
+            self.repoPath = repoPath
+            self.extensions = extensions
+            self.pattern = pattern
+            self.isRegex = isRegex
+        }
     }
 }

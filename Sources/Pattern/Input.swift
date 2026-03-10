@@ -6,16 +6,20 @@ extension Pattern {
         /// Pattern to search for (e.g., "// TODO:")
         public let pattern: String
 
+        /// Whether to use regex matching instead of literal string matching
+        public let isRegex: Bool
+
         /// Commits to analyze for this pattern
         public let commits: [String]
 
-        public init(pattern: String, commits: [String] = ["HEAD"]) {
+        public init(pattern: String, isRegex: Bool = false, commits: [String] = ["HEAD"]) {
             self.pattern = pattern
+            self.isRegex = isRegex
             self.commits = commits
         }
 
         public func withResolvedCommits(_ commits: [String]) -> MetricInput {
-            MetricInput(pattern: pattern, commits: commits)
+            MetricInput(pattern: pattern, isRegex: isRegex, commits: commits)
         }
     }
 

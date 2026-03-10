@@ -29,3 +29,23 @@ class LegacyManager {
     // FIXME: Memory leak here
     var cache: [String: Any] = [:]
 }
+
+// MARK: - Task patterns for regex testing
+
+func example1() {
+    Task { @MainActor in
+        print("simple")
+    }
+}
+
+func example2() {
+    Task(priority: .background) { @MainActor in
+        print("with priority")
+    }
+}
+
+func example3() {
+    Task { [weak self] @MainActor in
+        print("with capture list")
+    }
+}

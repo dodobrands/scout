@@ -95,6 +95,70 @@ struct PatternTests {
         #expect(lines == [7, 26])
     }
 
+    // MARK: - Regex Tests
+
+    @Test
+    func `When isRegex is true, should match using regular expression`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "Task\\b.*\\{.*@MainActor",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        #expect(result.matches.count == 3)
+    }
+
+    @Test
+    func `When isRegex is false, should use literal matching`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "Task\\b.*\\{.*@MainActor",
+            isRegex: false
+        )
+
+        let result = try sut.search(input: input)
+
+        #expect(result.matches.isEmpty)
+    }
+
+    @Test
+    func `When isRegex is true with simple pattern, should find matches`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "//\\s+TODO:",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        #expect(result.matches.count == 2)
+    }
+
+    @Test
+    func `When isRegex is true with invalid regex, should throw error`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "[invalid",
+            isRegex: true
+        )
+
+        #expect(throws: (any Error).self) {
+            try sut.search(input: input)
+        }
+    }
+
+    // MARK: - Multiple Patterns Tests
+
     @Test
     func `When searching for multiple patterns, should return results for each`() throws {
         let samplesURL = try samplesDirectory()
