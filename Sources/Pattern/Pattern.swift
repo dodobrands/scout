@@ -14,11 +14,12 @@ public struct Pattern: Sendable {
     /// - Returns: Result with list of matches
     func search(input: AnalysisInput) throws -> Result {
         let repoPath = URL(filePath: input.repoPath)
-        let regex: NSRegularExpression? = if input.isRegex {
-            try NSRegularExpression(pattern: input.pattern)
-        } else {
-            nil
-        }
+        let regex: NSRegularExpression? =
+            if input.isRegex {
+                try NSRegularExpression(pattern: input.pattern)
+            } else {
+                nil
+            }
 
         var allMatches: [Match] = []
         for ext in input.extensions {
@@ -112,14 +113,15 @@ public struct Pattern: Sendable {
         )
 
         for (index, line) in lines.enumerated() {
-            let isMatch = if let regex {
-                regex.firstMatch(
-                    in: line,
-                    range: NSRange(line.startIndex..., in: line)
-                ) != nil
-            } else {
-                line.contains(pattern)
-            }
+            let isMatch =
+                if let regex {
+                    regex.firstMatch(
+                        in: line,
+                        range: NSRange(line.startIndex..., in: line)
+                    ) != nil
+                } else {
+                    line.contains(pattern)
+                }
 
             if isMatch {
                 matches.append(Match(file: relativePath, line: index + 1))

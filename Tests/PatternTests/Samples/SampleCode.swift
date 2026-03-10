@@ -45,7 +45,7 @@ func example2() {
 }
 
 func example3() {
-    Task { [weak self] @MainActor in
-        print("with capture list")
+    Task.detached { @MainActor in
+        print("detached")
     }
 }
