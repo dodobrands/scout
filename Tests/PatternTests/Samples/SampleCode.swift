@@ -44,8 +44,10 @@ func example2() {
     }
 }
 
-func example3() {
-    Task.detached { @MainActor in
-        print("detached")
+class TaskService {
+    func example3() {
+        Task { @MainActor [weak self] in
+            print("with capture list \(String(describing: self))")
+        }
     }
 }
