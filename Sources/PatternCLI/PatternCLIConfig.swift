@@ -7,8 +7,17 @@ struct PatternMetric: Sendable, Decodable {
     /// Pattern to search for (e.g., "// TODO:")
     let pattern: String
 
+    /// Whether to use regex matching instead of literal string matching. Defaults to false.
+    let isRegex: Bool?
+
     /// Commits to analyze for this pattern. If nil, uses HEAD. If empty, skips this metric.
     let commits: [String]?
+
+    init(pattern: String, isRegex: Bool? = nil, commits: [String]?) {
+        self.pattern = pattern
+        self.isRegex = isRegex
+        self.commits = commits
+    }
 }
 
 /// Configuration for Search tool loaded from JSON file.

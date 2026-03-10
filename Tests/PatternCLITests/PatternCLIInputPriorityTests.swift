@@ -237,6 +237,57 @@ struct PatternCLIInputPriorityTests {
         #expect(input.metrics.map { $0.pattern } == ["TODO:", "FIXME:"])
     }
 
+    // MARK: - isRegex Priority Tests
+
+    @Test
+    func `config metrics with isRegex true propagate to SDK input`() throws {
+        let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
+        let config = PatternCLIConfig(
+            metrics: [
+                PatternMetric(pattern: "Task\\b.*@MainActor", isRegex: true, commits: nil)
+            ],
+            extensions: nil,
+            git: nil
+        )
+
+        let input = Pattern.Input(cli: cli, config: config)
+
+        let metric = try #require(input.metrics.first)
+        #expect(metric.isRegex == true)
+    }
+
+    @Test
+    func `config metrics with isRegex nil default to false`() throws {
+        let cli = PatternCLIInputs(patterns: nil, repoPath: nil, commits: nil, extensions: nil)
+        let config = PatternCLIConfig(
+            metrics: [
+                PatternMetric(pattern: "TODO:", isRegex: nil, commits: nil)
+            ],
+            extensions: nil,
+            git: nil
+        )
+
+        let input = Pattern.Input(cli: cli, config: config)
+
+        let metric = try #require(input.metrics.first)
+        #expect(metric.isRegex == false)
+    }
+
+    @Test
+    func `CLI patterns default isRegex to false`() throws {
+        let cli = PatternCLIInputs(
+            patterns: ["TODO:"],
+            repoPath: nil,
+            commits: nil,
+            extensions: nil
+        )
+
+        let input = Pattern.Input(cli: cli, config: nil)
+
+        let metric = try #require(input.metrics.first)
+        #expect(metric.isRegex == false)
+    }
+
     // MARK: - Git Flags Tests
 
     @Test

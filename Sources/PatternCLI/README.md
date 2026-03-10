@@ -62,6 +62,18 @@ scout pattern "import UIKit" --config pattern-config.json
 }
 ```
 
+**With regex patterns:**
+
+```json
+{
+  "metrics": [
+    { "pattern": "Task\\b.*\\{.*@MainActor", "isRegex": true },
+    { "pattern": "DispatchQueue\\.(main|global)", "isRegex": true },
+    { "pattern": "import UIKit" }
+  ]
+}
+```
+
 **Per-metric commits:**
 
 ```json
@@ -106,18 +118,31 @@ scout pattern "import UIKit" --config pattern-config.json
 | Field | Type | Description |
 |-------|------|-------------|
 | `metrics` | `[PatternMetric]` | Array of pattern metrics to analyze |
-| `metrics[].pattern` | `String` | String pattern to search for |
+| `metrics[].pattern` | `String` | String pattern to search for (literal or regex) |
+| `metrics[].isRegex` | `Bool?` | Use regex matching instead of literal (default: `false`) |
 | `metrics[].commits` | `[String]?` | Commits to analyze (default: HEAD, empty array skips metric) |
 | `extensions` | `[String]?` | File extensions to search in (default: `["swift"]`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
 
 ## Pattern Matching
 
-Performs exact string matching. Useful for:
+Supports two matching modes:
+
+**Literal matching** (default) — exact substring match:
 
 - Counting import statements: `"import Testing"`, `"@testable import Quick"`
 - Finding TODOs: `"// TODO:"`, `"// FIXME:"`
 - Tracking API usage: `"periphery:ignore"`, `"@available"`
+
+**Regex matching** (`"isRegex": true`) — NSRegularExpression patterns:
+
+- Task with @MainActor variations: `"Task\\b.*\\{.*@MainActor"`
+- DispatchQueue usage: `"DispatchQueue\\.(main|global)"`
+- Force unwraps: `"\\w+!"`
+- Force try: `"\\btry!\\s"`
+- Deprecated annotations: `"@available\\(.*deprecated"`
+- Print/debug statements: `"\\b(print|debugPrint|NSLog)\\("`
+- Notification.Name definitions: `"Notification\\.Name\\("`
 
 ## Output Format
 

@@ -14,12 +14,20 @@ public struct Pattern: Sendable {
     /// - Returns: Result with list of matches
     func search(input: AnalysisInput) throws -> Result {
         let repoPath = URL(filePath: input.repoPath)
+        let regex: NSRegularExpression? =
+            if input.isRegex {
+                try NSRegularExpression(pattern: input.pattern)
+            } else {
+                nil
+            }
+
         var allMatches: [Match] = []
         for ext in input.extensions {
             let files = findFiles(of: ext, in: repoPath)
             for file in files {
                 let fileMatches = try searchInFile(
                     pattern: input.pattern,
+                    regex: regex,
                     file: file,
                     repoPath: repoPath
                 )
@@ -75,7 +83,8 @@ public struct Pattern: Sendable {
                 let analysisInput = AnalysisInput(
                     repoPath: input.git.repoPath,
                     extensions: input.extensions,
-                    pattern: metric.pattern
+                    pattern: metric.pattern,
+                    isRegex: metric.isRegex
                 )
                 let result = try search(input: analysisInput)
                 resultItems.append(
@@ -88,7 +97,12 @@ public struct Pattern: Sendable {
         }
     }
 
-    private func searchInFile(pattern: String, file: URL, repoPath: URL) throws -> [Match] {
+    private func searchInFile(
+        pattern: String,
+        regex: NSRegularExpression?,
+        file: URL,
+        repoPath: URL
+    ) throws -> [Match] {
         let content = try String(contentsOf: file, encoding: .utf8)
         let lines = content.components(separatedBy: .newlines)
         var matches: [Match] = []
@@ -99,7 +113,17 @@ public struct Pattern: Sendable {
         )
 
         for (index, line) in lines.enumerated() {
-            if line.contains(pattern) {
+            let isMatch =
+                if let regex {
+                    regex.firstMatch(
+                        in: line,
+                        range: NSRange(line.startIndex..., in: line)
+                    ) != nil
+                } else {
+                    line.contains(pattern)
+                }
+
+            if isMatch {
                 matches.append(Match(file: relativePath, line: index + 1))
             }
         }
