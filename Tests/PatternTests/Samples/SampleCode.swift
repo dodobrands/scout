@@ -51,3 +51,57 @@ class TaskService {
         }
     }
 }
+
+// MARK: - Force unwrap patterns
+
+func forceUnwraps() {
+    let value: String? = "test"
+    let forced = value!
+    let nested = value!.count
+    print(forced, nested)
+}
+
+// MARK: - Deprecated API usage
+
+@available(*, deprecated, message: "Use NewAPI")
+func oldFunction() {}
+
+@available(iOS, deprecated: 15.0)
+func platformDeprecated() {}
+
+// MARK: - Print statements (debug leftover detection)
+
+func debugCode() {
+    print("debug value")
+    debugPrint("detailed debug")
+    NSLog("legacy log")
+}
+
+// MARK: - Notification patterns
+
+extension Notification.Name {
+    static let userDidLogin = Notification.Name("userDidLogin")
+    static let dataDidUpdate = Notification.Name("dataDidUpdate")
+}
+
+// MARK: - Dispatch queue usage
+
+func legacyAsync() {
+    DispatchQueue.main.async {
+        print("main queue")
+    }
+    DispatchQueue.global().async {
+        print("background")
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        print("delayed")
+    }
+}
+
+// MARK: - Try patterns
+
+func errorHandling() throws {
+    let data = try! JSONDecoder().decode(String.self, from: Data())
+    let optional = try? JSONEncoder().encode(data)
+    _ = optional
+}

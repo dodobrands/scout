@@ -157,6 +157,100 @@ struct PatternTests {
         }
     }
 
+    @Test
+    func `When regex matches force unwraps, should find all occurrences`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "\\w+!",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        // value!, value!.count, try!
+        #expect(result.matches.count >= 3)
+    }
+
+    @Test
+    func `When regex matches DispatchQueue usage, should find all queues`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "DispatchQueue\\.(main|global)",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        #expect(result.matches.count == 3)
+    }
+
+    @Test
+    func `When regex matches deprecated annotations, should find all variants`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "@available\\(.*deprecated",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        // @available(*, deprecated) on LegacyManager, @available(*, deprecated, message:), @available(iOS, deprecated: 15.0)
+        #expect(result.matches.count == 3)
+    }
+
+    @Test
+    func `When regex matches print and debug statements, should find all logging`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "\\b(print|debugPrint|NSLog)\\(",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        // print("debug value"), debugPrint("detailed debug"), NSLog("legacy log")
+        // + print calls inside Task closures and DispatchQueue
+        #expect(result.matches.count >= 3)
+    }
+
+    @Test
+    func `When regex matches Notification.Name definitions, should find all`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "Notification\\.Name\\(",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        #expect(result.matches.count == 2)
+    }
+
+    @Test
+    func `When regex matches try with bang, should find force tries`() throws {
+        let samplesURL = try samplesDirectory()
+        let input = Pattern.AnalysisInput(
+            repoPath: samplesURL.path,
+            extensions: ["swift"],
+            pattern: "\\btry!\\s",
+            isRegex: true
+        )
+
+        let result = try sut.search(input: input)
+
+        #expect(result.matches.count == 1)
+    }
+
     // MARK: - Multiple Patterns Tests
 
     @Test
