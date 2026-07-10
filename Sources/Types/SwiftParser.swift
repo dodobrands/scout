@@ -56,7 +56,8 @@ struct SwiftParser {
                             name: name,
                             fullName: fullName,
                             filePath: filePath,
-                            inheritedTypes: inheritances
+                            inheritedTypes: inheritances,
+                            kind: typeKind(for: kind ?? "")
                         )
                     )
                 }
@@ -81,7 +82,7 @@ struct SwiftParser {
                             fullName: fullName,
                             filePath: filePath,
                             inheritedTypes: [targetType],
-                            isTypealias: true
+                            kind: .typealiasType
                         )
                     )
                 }
@@ -124,6 +125,17 @@ struct SwiftParser {
             || kind == "source.lang.swift.decl.protocol"
     }
 
+    /// Maps a SourceKitten declaration kind to a `TypeKind`.
+    /// Reference-like declarations (class, actor) map to `.classType`.
+    private func typeKind(for kind: String) -> TypeKind {
+        switch kind {
+        case "source.lang.swift.decl.struct": return .structType
+        case "source.lang.swift.decl.enum": return .enumType
+        case "source.lang.swift.decl.protocol": return .protocolType
+        default: return .classType
+        }
+    }
+
     /// Checks if a code object inherits from the specified base type.
     /// - Parameters:
     ///   - objectFromCode: The object to check
@@ -134,6 +146,23 @@ struct SwiftParser {
         objectFromCode: ObjectFromCode,
         from inheritance: String,
         allObjects: [ObjectFromCode]
+    ) -> Bool {
+        isInherited(
+            objectFromCode: objectFromCode,
+            from: inheritance,
+            allObjects: allObjects,
+            originIsValueType: objectFromCode.kind.isValueType
+        )
+    }
+
+    /// - Parameter originIsValueType: Whether the type that started the lookup is a value type
+    ///   (struct/enum). Value types conform to protocols but cannot subclass a class, so the
+    ///   chain must never pass into a class node when the origin is a value type.
+    private func isInherited(
+        objectFromCode: ObjectFromCode,
+        from inheritance: String,
+        allObjects: [ObjectFromCode],
+        originIsValueType: Bool
     ) -> Bool {
         // Check direct inheritance (including generic types like "JsonAsyncRequest<SomeType>")
         if objectFromCode.inheritedTypes.contains(where: { inheritedType in
@@ -147,14 +176,31 @@ struct SwiftParser {
             // Extract base type name from generic type (e.g., "JsonAsyncRequest<DTO>" -> "JsonAsyncRequest")
             let baseTypeName = extractBaseTypeName(from: className)
 
-            // Check if any parent object matches
-            guard let parentObject = allObjects.first(where: { $0.name == baseTypeName }) else {
+            // Resolve the parent by unqualified name. A nested (member) typealias such as
+            // `Component.View` is only reachable through its qualified name, so it must not
+            // resolve a bare inherited-type reference — otherwise a `struct S: View` conformance
+            // to a protocol would be misrouted into that typealias's target hierarchy.
+            guard
+                let parentObject = allObjects.first(where: { candidate in
+                    candidate.name == baseTypeName
+                        && !(candidate.isTypealias && candidate.isNested)
+                })
+            else {
                 return false
             }
+
+            // A value type (struct/enum) cannot subclass a class. If the origin is a value type
+            // and the chain reaches a class node, this is a protocol conformance being misread
+            // as class inheritance — reject it.
+            if originIsValueType && parentObject.kind == .classType {
+                return false
+            }
+
             return isInherited(
                 objectFromCode: parentObject,
                 from: inheritance,
-                allObjects: allObjects
+                allObjects: allObjects,
+                originIsValueType: originIsValueType
             )
         }
     }
