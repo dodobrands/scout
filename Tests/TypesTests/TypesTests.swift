@@ -26,7 +26,32 @@ struct TypesTests {
 
         #expect(result.typeName == "View")
         // HelloView uses `View`, QualifiedView uses `SwiftUI.View` - both should be found
-        #expect(result.types.names == ["HelloView", "QualifiedView"])
+        #expect(result.types.names == ["HelloView", "QualifiedView", "ReferenceSwiftUIView"])
+    }
+
+    @Test
+    func `Protocol conformance is not misrouted to a class by a nested typealias`() async throws {
+        let samplesURL = try samplesDirectory()
+
+        let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "UIView")
+        let result = try await sut.countTypes(input: input)
+
+        // `ReferenceSwiftUIView: View` conforms to the SwiftUI `View` protocol. A nested
+        // `BadgeComponent.View` typealias aliases a UIView subclass, but it is not reachable
+        // as bare `View`, so the conformer must not be counted as a UIView.
+        #expect(!result.types.names.contains("ReferenceSwiftUIView"))
+    }
+
+    @Test
+    func `Value type does not inherit a class reached via a typealias`() async throws {
+        let samplesURL = try samplesDirectory()
+
+        let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "UIView")
+        let result = try await sut.countTypes(input: input)
+
+        // `ValueTypePanel` is a struct; `Panel` aliases a UIView subclass. A value type
+        // cannot subclass a class, so it must not be counted as a UIView.
+        #expect(!result.types.names.contains("ValueTypePanel"))
     }
 
     @Test
@@ -144,7 +169,7 @@ struct TypesTests {
         #expect(uiViewResult.typeName == "UIView")
         #expect(uiViewResult.types.names == ["AwesomeView", "DodoView"])
         #expect(viewResult.typeName == "View")
-        #expect(viewResult.types.names == ["HelloView", "QualifiedView"])
+        #expect(viewResult.types.names == ["HelloView", "QualifiedView", "ReferenceSwiftUIView"])
     }
 
     @Test
