@@ -1,7 +1,6 @@
 import Common
 import Foundation
 import Logging
-import System
 
 /// SDK for counting files by extension.
 public struct Files: Sendable {

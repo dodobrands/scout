@@ -1,7 +1,6 @@
 import Common
 import Foundation
 import Logging
-import System
 
 /// SDK for searching string patterns in source files.
 public struct Pattern: Sendable {

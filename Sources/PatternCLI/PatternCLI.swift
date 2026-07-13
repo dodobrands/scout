@@ -3,7 +3,6 @@ import Common
 import Foundation
 import Logging
 import Pattern
-import System
 import SystemPackage
 
 public struct PatternCLI: AsyncParsableCommand {

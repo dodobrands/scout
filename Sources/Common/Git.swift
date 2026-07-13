@@ -1,6 +1,13 @@
 import Foundation
 import Logging
-import System
+
+// FilePath comes from the System framework on Apple platforms and from the
+// swift-system package (SystemPackage) elsewhere, mirroring Subprocess.
+#if canImport(System)
+    import System
+#else
+    import SystemPackage
+#endif
 
 package enum Git {
     private static let logger = Logger(label: "scout.Git")

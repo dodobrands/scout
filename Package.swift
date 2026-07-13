@@ -65,6 +65,13 @@ var targets: [Target] = [
                 package: "swift-log-oslog",
                 condition: .when(platforms: [.macOS])
             ),
+            // FilePath is provided by the System framework on Apple platforms;
+            // on Linux it comes from the swift-system package.
+            .product(
+                name: "SystemPackage",
+                package: "swift-system",
+                condition: .when(platforms: [.linux])
+            ),
             .product(
                 name: "OrderedCollections",
                 package: "swift-collections"
@@ -437,6 +444,10 @@ let package = Package(
         .package(
             url: "https://github.com/apple/swift-collections",
             .upToNextMajor(from: "1.1.0")
+        ),
+        .package(
+            url: "https://github.com/apple/swift-system",
+            .upToNextMajor(from: "1.0.0")
         ),
         .package(
             url: "https://github.com/davbeck/swift-glob.git",
