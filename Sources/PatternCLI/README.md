@@ -2,6 +2,8 @@
 
 Search for string patterns in source files across git history.
 
+**Platforms:** macOS, Linux
+
 ## Usage
 
 ```bash

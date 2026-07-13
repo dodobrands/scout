@@ -1,6 +1,5 @@
 import Common
 import Foundation
-import System
 
 /// Error when cloc is not installed.
 public enum ClocError: Error, LocalizedError, Sendable {

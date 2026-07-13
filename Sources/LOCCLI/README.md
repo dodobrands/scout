@@ -2,6 +2,8 @@
 
 Count lines of code using `cloc`.
 
+**Platforms:** macOS, Linux — requires `cloc` on `PATH`
+
 ## Usage
 
 ```bash

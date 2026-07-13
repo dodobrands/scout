@@ -1,6 +1,10 @@
 import Foundation
 import Logging
-import LoggingOSLog
+
+// LoggingOSLog wraps os.log and is only available on Apple platforms.
+#if canImport(LoggingOSLog)
+    import LoggingOSLog
+#endif
 
 package enum LoggingSetup {
     package static func setup(verbose: Bool) {
@@ -14,9 +18,11 @@ package enum LoggingSetup {
                 githubHandler.logLevel = logLevel
                 handlers.append(githubHandler)
             } else {
-                var osLogHandler = LoggingOSLog(label: label)
-                osLogHandler.logLevel = logLevel
-                handlers.append(osLogHandler)
+                #if canImport(LoggingOSLog)
+                    var osLogHandler = LoggingOSLog(label: label)
+                    osLogHandler.logLevel = logLevel
+                    handlers.append(osLogHandler)
+                #endif
 
                 var streamHandler = StreamLogHandler.standardOutput(label: label)
                 streamHandler.logLevel = logLevel

@@ -2,6 +2,8 @@
 
 Extract build settings from Xcode projects (.xcodeproj).
 
+**Platforms:** macOS only — shells out to `xcodebuild`
+
 ## Usage
 
 ```bash

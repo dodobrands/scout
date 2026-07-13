@@ -3,7 +3,6 @@ import Common
 import Files
 import Foundation
 import Logging
-import System
 import SystemPackage
 
 public struct FilesCLI: AsyncParsableCommand {

@@ -2,6 +2,8 @@
 
 Count files by extension across git history.
 
+**Platforms:** macOS, Linux
+
 ## Usage
 
 ```bash

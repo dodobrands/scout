@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-macos:
     runs-on: macos-26
     timeout-minutes: 10
 
@@ -54,3 +54,45 @@ jobs:
 
       - name: Scan for unused code with Periphery
         run: periphery scan --skip-build --strict
+
+  test-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # ubuntu-latest ships a Swift toolchain, so its runtime libraries are
+      # already present. Only cloc is missing, and LOC tests need it.
+      - name: Install cloc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cloc
+
+      # Install Swift via mise. Only Swift is installed here; periphery has no
+      # Linux build and is covered by the macOS job.
+      - name: Install mise and Swift
+        uses: jdx/mise-action@v4
+        with:
+          install_args: swift
+
+      # mise exposes swift via a shim, so SourceKitten's `which swift` lookup
+      # can't reach libsourcekitdInProc.so. Point it at the toolchain directly.
+      - name: Locate sourcekitd
+        run: |
+          lib=$(find "$(mise where swift)" -name 'libsourcekitdInProc.so' -print -quit)
+          if [ -z "$lib" ]; then
+            echo "libsourcekitdInProc.so not found in Swift toolchain" >&2
+            exit 1
+          fi
+          echo "Found sourcekitd at: $lib"
+          echo "LINUX_SOURCEKIT_LIB_PATH=$(dirname "$lib")" >> "$GITHUB_ENV"
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Test
+        run: swift test --skip-build

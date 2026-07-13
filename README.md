@@ -55,6 +55,8 @@ scout <subcommand> [options]
 
 Count Swift types by inheritance. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
+**Platforms:** macOS, Linux — resolving base classes outside the source uses the Xcode SDK and is macOS only; on Linux the analysis is source-only.
+
 **Command:**
 ```bash
 scout types UIView UIViewController View --output results.json
@@ -91,6 +93,8 @@ scout types UIView UIViewController View --output results.json
 
 Count files by extension. Useful for tracking storyboard, xib, swift files count.
 
+**Platforms:** macOS, Linux
+
 **Command:**
 ```bash
 scout files swift storyboard xib --output results.json
@@ -121,6 +125,8 @@ scout files swift storyboard xib --output results.json
 ### pattern
 
 Search for string patterns in source files. Useful for tracking import statements, API usage, etc.
+
+**Platforms:** macOS, Linux
 
 **Command:**
 ```bash
@@ -157,6 +163,8 @@ scout pattern "import UIKit" "import SwiftUI" --output results.json
 
 Count lines of code using `cloc`. Supports filtering by languages, include/exclude paths.
 
+**Platforms:** macOS, Linux — requires `cloc` on `PATH`
+
 **Command:**
 ```bash
 scout loc --config loc.json --output results.json
@@ -183,6 +191,8 @@ scout loc --config loc.json --output results.json
 ### build-settings
 
 Extract build settings from Xcode projects. Supports Tuist-generated projects with custom setup commands.
+
+**Platforms:** macOS only — shells out to `xcodebuild`
 
 **Command:**
 ```bash
@@ -278,5 +288,7 @@ This applies to `--config` and `--output` paths for all commands (`types`, `file
 
 ## Requirements
 
-- macOS 15+
+- macOS 15+ or Linux
 - Swift 6.2+
+
+All tools run on both macOS and Linux, except `build-settings`, which is macOS only because it shells out to `xcodebuild`. The `loc` tool needs `cloc` on `PATH`.

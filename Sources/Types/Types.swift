@@ -1,7 +1,6 @@
 import Common
 import Foundation
 import Logging
-import System
 
 /// SDK for counting Swift types by inheritance.
 public struct Types: Sendable {
