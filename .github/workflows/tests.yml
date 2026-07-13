@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-macos:
     runs-on: macos-26
     timeout-minutes: 10
 
@@ -69,15 +69,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cloc
 
-      # Install only Swift from mise; periphery has no Linux build and is
-      # covered by the macOS job.
-      - name: Install mise
+      # Install Swift via mise. Only Swift is installed here; periphery has no
+      # Linux build and is covered by the macOS job.
+      - name: Install mise and Swift
         uses: jdx/mise-action@v4
         with:
-          install: false
-
-      - name: Install Swift toolchain
-        run: mise install swift
+          install_args: swift
 
       # mise exposes swift via a shim, so SourceKitten's `which swift` lookup
       # can't reach libsourcekitdInProc.so. Point it at the toolchain directly.
