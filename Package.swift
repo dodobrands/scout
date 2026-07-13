@@ -79,7 +79,8 @@ var targets: [Target] = [
         ],
         exclude: ["README.md", "GitConfiguration.md"],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -96,7 +97,8 @@ var targets: [Target] = [
             "Common",
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -109,7 +111,8 @@ var targets: [Target] = [
             "Common",
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -122,7 +125,8 @@ var targets: [Target] = [
             "Common",
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -135,7 +139,8 @@ var targets: [Target] = [
             "Common",
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -154,7 +159,8 @@ var targets: [Target] = [
         ],
         exclude: ["README.md"],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -173,7 +179,8 @@ var targets: [Target] = [
         ],
         exclude: ["README.md"],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -192,7 +199,8 @@ var targets: [Target] = [
         ],
         exclude: ["README.md"],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .target(
@@ -211,12 +219,17 @@ var targets: [Target] = [
         ],
         exclude: ["README.md"],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .executableTarget(
         name: "Scout",
-        dependencies: scoutDependencies
+        dependencies: scoutDependencies,
+        swiftSettings: [
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
+        ]
     ),
     .testTarget(
         name: "CommonTests",
@@ -224,7 +237,8 @@ var targets: [Target] = [
             "Common"
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -240,7 +254,8 @@ var targets: [Target] = [
             .copy("Samples")
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -255,7 +270,8 @@ var targets: [Target] = [
             ),
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -267,7 +283,8 @@ var targets: [Target] = [
             .copy("Samples")
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -282,7 +299,8 @@ var targets: [Target] = [
             ),
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -294,7 +312,8 @@ var targets: [Target] = [
             .copy("Samples")
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -309,7 +328,8 @@ var targets: [Target] = [
             ),
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -321,7 +341,8 @@ var targets: [Target] = [
             .copy("Samples")
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
     .testTarget(
@@ -336,7 +357,8 @@ var targets: [Target] = [
             ),
         ],
         swiftSettings: [
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
+            .treatAllWarnings(as: .error),
         ]
     ),
 ]
@@ -358,7 +380,8 @@ var targets: [Target] = [
                 "Common",
             ],
             swiftSettings: [
-                .swiftLanguageMode(.v6)
+                .swiftLanguageMode(.v6),
+                .treatAllWarnings(as: .error),
             ]
         ),
         .target(
@@ -377,7 +400,8 @@ var targets: [Target] = [
             ],
             exclude: ["README.md"],
             swiftSettings: [
-                .swiftLanguageMode(.v6)
+                .swiftLanguageMode(.v6),
+                .treatAllWarnings(as: .error),
             ]
         ),
         .testTarget(
@@ -389,7 +413,8 @@ var targets: [Target] = [
                 .copy("Samples")
             ],
             swiftSettings: [
-                .swiftLanguageMode(.v6)
+                .swiftLanguageMode(.v6),
+                .treatAllWarnings(as: .error),
             ]
         ),
         .testTarget(
@@ -404,7 +429,8 @@ var targets: [Target] = [
                 ),
             ],
             swiftSettings: [
-                .swiftLanguageMode(.v6)
+                .swiftLanguageMode(.v6),
+                .treatAllWarnings(as: .error),
             ]
         ),
     ])
