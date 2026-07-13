@@ -1,2 +1,3 @@
 [tools]
-periphery = "3.4.0"
+periphery = "latest"
+swift = "latest"
