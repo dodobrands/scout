@@ -5,7 +5,7 @@
 [![](https://github.com/dodobrands/scout/actions/workflows/tests.yml/badge.svg)](https://github.com/dodobrands/scout/actions/workflows/tests.yml)
 
 <p align="center">
-  <img width="128" height="128" alt="Scout Logo" src="https://github.com/user-attachments/assets/b9ef981b-0f65-4a16-abfb-6391af834d7a" />
+  <img width="128" height="128" alt="Scout Logo" src=".github/scout-logo.png" />
 </p>
 
 Code analysis toolkit for iOS/macOS repositories. Analyze any commit in your git history to track metrics over time — from the first commit to the latest. Build dashboards showing how your codebase evolves: type counts, file distributions, lines of code, and more.
