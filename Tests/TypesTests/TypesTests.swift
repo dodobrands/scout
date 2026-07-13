@@ -5,7 +5,8 @@ import Testing
 @testable import Types
 
 struct TypesTests {
-    let sut = Types()
+    // Source-only resolution: no external hierarchy, keeping these unit tests hermetic and fast.
+    let sut = Types(hierarchyProvider: StubHierarchyProvider())
 
     @Test
     func `When searching for UIView types, should find all UIView subclasses`() async throws {

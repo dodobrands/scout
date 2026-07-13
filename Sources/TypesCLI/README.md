@@ -15,6 +15,22 @@ scout types --config types-config.json
 scout types UIView --commits abc123 def456
 ```
 
+## Inheritance Resolution
+
+Inheritance chains are followed through the analyzed source. Types whose base class lives
+outside the source — e.g. `class ProductCell: UICollectionViewCell` — are still resolved by
+extracting the real class hierarchy from the Xcode SDK via `swift-symbolgraph-extract`, for the
+modules the source imports. So a `UICollectionViewCell`, `UITableViewCell`, or `UIControl`
+subclass is counted under `UIView`, with no hardcoded UIKit mapping.
+
+Only class inheritance (`inheritsFrom`) is used from the SDK, so protocol conformances are not
+mistaken for subclassing.
+
+If Xcode or the SDK is unavailable, resolution degrades gracefully to source-only analysis.
+
+> **Note:** Each imported module is extracted once and cached across commits. The first
+> analysis of a large module such as UIKit adds a few seconds.
+
 ## Arguments
 
 ### Positional
