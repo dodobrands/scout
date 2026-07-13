@@ -13,65 +13,55 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-macos:
-    runs-on: macos-26
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Read Xcode version
-        id: xcode-version
-        run: echo "version=$(<.xcode-version)" >> $GITHUB_OUTPUT
-
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ steps.xcode-version.outputs.version }}
-
-      - name: Lint
-        run: sh scripts/lint.sh
-
-      - name: Resolve dependencies
-        run: swift package resolve
-
-      # Required for LOC tests
-      - name: Install cloc
-        run: brew install cloc
-
-      - name: Build
-        env:
-          NSUnbufferedIO: YES
-        run: swift build --build-tests
-
-      - name: Test
-        env:
-          NSUnbufferedIO: YES
-        run: swift test --skip-build
-
-      - name: Install mise
-        uses: jdx/mise-action@v4
-
-      - name: Scan for unused code with Periphery
-        run: periphery scan --skip-build --strict
-
-  test-linux:
-    runs-on: ubuntu-latest
+  test:
+    name: test-${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            runner: macos-26
+            os: macos
+          - name: linux-x64
+            runner: ubuntu-latest
+            os: linux
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm
+            os: linux
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v7
 
-      # ubuntu-latest ships a Swift toolchain, so its runtime libraries are
-      # already present. Only cloc is missing, and LOC tests need it.
-      - name: Install cloc
+      # --- macOS: Swift comes from Xcode ---
+      - name: Read Xcode version
+        if: matrix.os == 'macos'
+        id: xcode-version
+        run: echo "version=$(<.xcode-version)" >> $GITHUB_OUTPUT
+
+      - name: Select Xcode
+        if: matrix.os == 'macos'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ steps.xcode-version.outputs.version }}
+
+      # cloc is required for LOC tests on every platform.
+      - name: Install cloc (macOS)
+        if: matrix.os == 'macos'
+        run: brew install cloc
+
+      - name: Install cloc (Linux)
+        if: matrix.os == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cloc
 
-      # Install Swift via mise. Only Swift is installed here; periphery has no
-      # Linux build and is covered by the macOS job.
+      # --- Linux: Swift comes from mise ---
+      # Only Swift is installed here; periphery has no Linux build and is
+      # covered by the macOS leg.
       - name: Install mise and Swift
+        if: matrix.os == 'linux'
         uses: jdx/mise-action@v4
         with:
           install_args: swift
@@ -79,6 +69,7 @@ jobs:
       # mise exposes swift via a shim, so SourceKitten's `which swift` lookup
       # can't reach libsourcekitdInProc.so. Point it at the toolchain directly.
       - name: Locate sourcekitd
+        if: matrix.os == 'linux'
         run: |
           lib=$(find "$(mise where swift)" -name 'libsourcekitdInProc.so' -print -quit)
           if [ -z "$lib" ]; then
@@ -88,11 +79,28 @@ jobs:
           echo "Found sourcekitd at: $lib"
           echo "LINUX_SOURCEKIT_LIB_PATH=$(dirname "$lib")" >> "$GITHUB_ENV"
 
+      - name: Lint
+        if: matrix.os == 'macos'
+        run: sh scripts/lint.sh
+
       - name: Resolve dependencies
         run: swift package resolve
 
       - name: Build
+        env:
+          NSUnbufferedIO: YES
         run: swift build --build-tests
 
       - name: Test
+        env:
+          NSUnbufferedIO: YES
         run: swift test --skip-build
+
+      # Periphery runs from mise and is macOS-only.
+      - name: Install mise
+        if: matrix.os == 'macos'
+        uses: jdx/mise-action@v4
+
+      - name: Scan for unused code with Periphery
+        if: matrix.os == 'macos'
+        run: periphery scan --skip-build --strict
