@@ -2,7 +2,7 @@
 
 Count Swift types by inheritance across git history.
 
-**Platforms:** macOS, Linux
+**Platforms:** macOS, Linux. Resolving base classes that live outside the source uses the Xcode SDK and is macOS only; on Linux the analysis is source-only (see [Inheritance Resolution](#inheritance-resolution)).
 
 ## Usage
 

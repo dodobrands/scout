@@ -55,7 +55,7 @@ scout <subcommand> [options]
 
 Count Swift types by inheritance. Tracks UIView, UIViewController, SwiftUI View, XCTestCase and other types.
 
-**Platforms:** macOS, Linux
+**Platforms:** macOS, Linux — resolving base classes outside the source uses the Xcode SDK and is macOS only; on Linux the analysis is source-only.
 
 **Command:**
 ```bash
