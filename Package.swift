@@ -453,7 +453,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/swiftlang/swift-subprocess",
-            from: "0.2.1"
+            from: "0.5.0"
         ),
         .package(
             url: "https://github.com/apple/swift-log.git",

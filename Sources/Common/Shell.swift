@@ -138,7 +138,7 @@ package class Shell {
         }
         logger.debug("Executing command", metadata: metadata)
 
-        let result: CollectedResult<StringOutput<Unicode.UTF8>, StringOutput<Unicode.UTF8>>
+        let result: ExecutionResult<Void, StringOutput<Unicode.UTF8>, StringOutput<Unicode.UTF8>>
         do {
             var configuration = Subprocess.Configuration(
                 executable: .name(executable),
