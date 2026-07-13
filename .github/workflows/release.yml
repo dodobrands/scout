@@ -9,7 +9,7 @@ env:
   PRODUCT_NAME: scout
 
 jobs:
-  release:
+  build-macos:
     runs-on: macos-26
     timeout-minutes: 15
 
@@ -41,8 +41,62 @@ jobs:
           tar -czf "${ARCHIVE_NAME}" -C "${{ steps.build.outputs.bin-path }}" "$PRODUCT_NAME"
           echo "archive-name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.archive-name }}
+          path: ${{ steps.package.outputs.archive-name }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install mise and Swift
+        uses: jdx/mise-action@v4
+        with:
+          install_args: swift
+
+      - name: Generate version
+        run: bash scripts/generate-version.sh "${{ github.ref_name }}"
+
+      - name: Build release binary
+        id: build
+        run: |
+          swift build -c release --product "$PRODUCT_NAME" --static-swift-stdlib
+          echo "bin-path=$(swift build -c release --product "$PRODUCT_NAME" --show-bin-path)" >> "$GITHUB_OUTPUT"
+
+      - name: Package binary
+        id: package
+        run: |
+          ARCHIVE_NAME="${PRODUCT_NAME}_${GITHUB_REF_NAME}_linux_x86_64.tar.gz"
+          tar -czf "${ARCHIVE_NAME}" -C "${{ steps.build.outputs.bin-path }}" "$PRODUCT_NAME"
+          echo "archive-name=${ARCHIVE_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.archive-name }}
+          path: ${{ steps.package.outputs.archive-name }}
+
+  release:
+    needs: [build-macos, build-linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
-          files: ${{ steps.package.outputs.archive-name }}
+          files: artifacts/*.tar.gz
