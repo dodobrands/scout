@@ -2,6 +2,8 @@
 
 Count Swift types by inheritance across git history.
 
+**Platforms:** macOS, Linux
+
 ## Usage
 
 ```bash
