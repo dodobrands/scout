@@ -27,27 +27,19 @@ package struct GitHubActionsLogHandler: LogHandler {
         set {}
     }
 
-    package func log(
-        level: Logger.Level,
-        message: Logger.Message,
-        metadata: Logger.Metadata?,
-        source: String,
-        file: String,
-        function: String,
-        line: UInt
-    ) {
-        guard level >= logLevel else { return }
+    package func log(event: LogEvent) {
+        guard event.level >= logLevel else { return }
 
-        let command = workflowCommand(for: level)
+        let command = workflowCommand(for: event.level)
         let parameters = formatParameters(
-            file: file,
-            line: line,
-            function: function,
-            metadata: metadata
+            file: event.file,
+            line: event.line,
+            function: event.function,
+            metadata: event.metadata
         )
 
         // Enrich message step by step
-        var enrichedMessage = enrichWithMetadata(message, metadata: metadata)
+        var enrichedMessage = enrichWithMetadata(event.message, metadata: event.metadata)
         enrichedMessage = enrichWithGitHubActionsAnnotation(
             enrichedMessage,
             command: command,
