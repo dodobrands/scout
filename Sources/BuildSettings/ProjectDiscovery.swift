@@ -22,7 +22,7 @@ struct ProjectDiscovery: Sendable {
         let excludePatterns = try exclude.map { try Glob.Pattern($0) }
         let repoPathString = repoPath.path(percentEncoded: false)
 
-        let results = try await Glob.search(
+        let results = Glob.search(
             directory: repoPath,
             include: includePatterns,
             exclude: excludePatterns
