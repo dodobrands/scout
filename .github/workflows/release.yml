@@ -48,7 +48,16 @@ jobs:
           path: ${{ steps.package.outputs.archive-name }}
 
   build-linux:
-    runs-on: ubuntu-latest
+    name: build-linux-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
 
     steps:
@@ -71,7 +80,7 @@ jobs:
       - name: Package binary
         id: package
         run: |
-          ARCHIVE_NAME="${PRODUCT_NAME}_${GITHUB_REF_NAME}_linux_x86_64.tar.gz"
+          ARCHIVE_NAME="${PRODUCT_NAME}_${GITHUB_REF_NAME}_linux_${{ matrix.arch }}.tar.gz"
           tar -czf "${ARCHIVE_NAME}" -C "${{ steps.build.outputs.bin-path }}" "$PRODUCT_NAME"
           echo "archive-name=${ARCHIVE_NAME}" >> "$GITHUB_OUTPUT"
 
