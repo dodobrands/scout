@@ -7,7 +7,15 @@ import System
 public struct Types: Sendable {
     private static let logger = Logger(label: "scout.Types")
 
-    public init() {}
+    private let hierarchyProvider: any ExternalHierarchyProvider
+
+    public init() {
+        self.init(hierarchyProvider: SymbolGraphHierarchyProvider())
+    }
+
+    init(hierarchyProvider: any ExternalHierarchyProvider) {
+        self.hierarchyProvider = hierarchyProvider
+    }
 
     /// Counts types inherited from the specified base type in current repository state.
     /// - Parameter input: Analysis input with repository path and type name
@@ -22,12 +30,19 @@ public struct Types: Sendable {
             try parser.parseFile(from: $0)
         }
 
+        // Resolve inheritance past the source boundary (e.g. UICollectionViewCell -> UIView)
+        // by merging in external class-inheritance edges for the modules the source imports.
+        // Source objects come first so name lookups prefer local definitions.
+        let modules = ImportScanner.modules(in: swiftFiles)
+        let externalObjects = try await hierarchyProvider.externalObjects(forModules: modules)
+        let allObjects = objects + externalObjects
+
         let types = objects.filter {
             !$0.isTypealias
                 && parser.isInherited(
                     objectFromCode: $0,
                     from: input.typeName,
-                    allObjects: objects
+                    allObjects: allObjects
                 )
         }.sorted(by: { $0.name < $1.name })
 
