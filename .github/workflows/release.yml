@@ -42,7 +42,7 @@ jobs:
           echo "archive-name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.package.outputs.archive-name }}
           path: ${{ steps.package.outputs.archive-name }}
@@ -85,7 +85,7 @@ jobs:
           echo "archive-name=${ARCHIVE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.package.outputs.archive-name }}
           path: ${{ steps.package.outputs.archive-name }}
