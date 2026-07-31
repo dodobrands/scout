@@ -68,7 +68,10 @@ actor SymbolGraphHierarchyProvider: ExternalHierarchyProvider {
                 try SymbolGraphParser.objects(fromSymbolGraphJSON: Data(contentsOf: file))
             }
         } catch {
-            Self.logger.info(
+            // Debug: a module without build products (unbuilt project) fails to
+            // extract and is expected. At info this dumps the frontend's full
+            // "Current visible modules" list per module — hundreds of lines each.
+            Self.logger.debug(
                 "Skipping module '\(module)': \(error.localizedDescription)"
             )
             return []
