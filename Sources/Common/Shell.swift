@@ -186,7 +186,10 @@ package class Shell {
                 error: errorOutput
             )
             let errorMessage = error.errorDescription ?? "Command failed"
-            logger.error(
+            // Debug, not error: the throw below is the report. Callers that expect
+            // failures (e.g. per-module symbolgraph extraction) would otherwise
+            // flood the log with each command's full stderr.
+            logger.debug(
                 "Command failed: \(errorMessage)",
                 metadata: [
                     "executable": "\(executable)",
