@@ -172,7 +172,7 @@ package class Shell {
 
         // Check if process exited successfully
         guard case .exited(let code) = result.terminationStatus, code == 0 else {
-            let errorOutput = result.standardError ?? ""
+            let errorOutput = result.standardError
             let exitCode: String
             if case .exited(let exitCodeValue) = result.terminationStatus {
                 exitCode = "\(exitCodeValue)"
@@ -201,9 +201,9 @@ package class Shell {
             throw error
         }
 
-        let output =
-            result.standardOutput?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            ?? ""
+        let output = result.standardOutput.trimmingCharacters(
+            in: CharacterSet.whitespacesAndNewlines
+        )
         logger.debug(
             "Command completed successfully",
             metadata: [
