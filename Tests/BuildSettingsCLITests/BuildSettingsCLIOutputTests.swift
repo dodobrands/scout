@@ -26,6 +26,9 @@ struct BuildSettingsCLIOutputTests {
             {
               "commit" : "abc123",
               "date" : "2025-01-15T07:30:00Z",
+              "projects" : [
+
+              ],
               "results" : [
                 {
                   "setting" : "SWIFT_VERSION",
@@ -61,6 +64,9 @@ struct BuildSettingsCLIOutputTests {
             {
               "commit" : "abc123",
               "date" : "2025-01-15T07:30:00Z",
+              "projects" : [
+
+              ],
               "results" : [
                 {
                   "setting" : "SWIFT_VERSION",
@@ -110,6 +116,9 @@ struct BuildSettingsCLIOutputTests {
               {
                 "commit" : "abc123",
                 "date" : "2025-01-15T07:30:00Z",
+                "projects" : [
+
+                ],
                 "results" : [
                   {
                     "setting" : "SWIFT_VERSION",
@@ -122,6 +131,9 @@ struct BuildSettingsCLIOutputTests {
               {
                 "commit" : "def456",
                 "date" : "2025-02-15T11:45:00Z",
+                "projects" : [
+
+                ],
                 "results" : [
                   {
                     "setting" : "SWIFT_VERSION",
@@ -132,6 +144,48 @@ struct BuildSettingsCLIOutputTests {
                 ]
               }
             ]
+            """
+        }
+    }
+
+    @Test func `encodes the projects that declare the targets`() {
+        let output = BuildSettings.Output(
+            commit: "abc123",
+            date: "2025-01-15T07:30:00Z",
+            projects: [
+                BuildSettings.ProjectTargets(
+                    path: "Modules/Cart/Cart.xcodeproj",
+                    targets: ["Cart", "CartTests"]
+                )
+            ],
+            results: [
+                BuildSettings.ResultItem(setting: "SWIFT_VERSION", targets: ["Cart": "6"])
+            ]
+        )
+
+        assertInlineSnapshot(of: output, as: .json) {
+            """
+            {
+              "commit" : "abc123",
+              "date" : "2025-01-15T07:30:00Z",
+              "projects" : [
+                {
+                  "path" : "Modules\\/Cart\\/Cart.xcodeproj",
+                  "targets" : [
+                    "Cart",
+                    "CartTests"
+                  ]
+                }
+              ],
+              "results" : [
+                {
+                  "setting" : "SWIFT_VERSION",
+                  "targets" : {
+                    "Cart" : "6"
+                  }
+                }
+              ]
+            }
             """
         }
     }

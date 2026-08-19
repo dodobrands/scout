@@ -45,6 +45,12 @@ public struct MySDK {
 }
 ```
 
+An SDK may add a field of its own to `Output` when the analysis knows something the
+metric results cannot express. `build-settings` does this with `projects`: build settings
+come back per target, and only the project says which module a target belongs to. Keep
+`commit`, `date` and `results` as they are, and give the extra field a default so the
+addition stays source-compatible.
+
 **SDK owns iteration logic** — SDK groups metrics by commit, performs checkouts, and yields outputs incrementally. CLI only builds Input and consumes the stream:
 
 ```swift

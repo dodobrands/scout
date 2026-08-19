@@ -158,7 +158,14 @@ public struct BuildSettings: Sendable {
                 }
 
                 let date = try await Git.commitDate(for: hash, in: repoPath)
-                onOutput(Output(commit: hash, date: date, results: resultItems))
+                onOutput(
+                    Output(
+                        commit: hash,
+                        date: date,
+                        projects: Self.projectTargets(from: targets),
+                        results: resultItems
+                    )
+                )
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
@@ -280,6 +287,13 @@ public struct BuildSettings: Sendable {
 
     // MARK: - Build Settings Extraction
 
+    private static func projectTargets(from targets: [TargetWithBuildSettings]) -> [ProjectTargets]
+    {
+        Dictionary(grouping: targets, by: \.project)
+            .map { ProjectTargets(path: $0.key, targets: $0.value.map(\.target).sorted()) }
+            .sorted { $0.path < $1.path }
+    }
+
     private func getBuildSettingsForAllTargets(
         projectsWithTargets: [ProjectWithTargets],
         configuration: String
@@ -299,6 +313,7 @@ public struct BuildSettings: Sendable {
             )
             return TargetWithBuildSettings(
                 target: targetInfo.target,
+                project: targetInfo.projectPath,
                 buildSettings: buildSettings
             )
         }
