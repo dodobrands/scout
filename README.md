@@ -205,6 +205,9 @@ scout build-settings --config build.json --output results.json
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T07:30:00Z",
+    "projects": [
+      { "path": "MyApp/MyApp.xcodeproj", "targets": ["MyApp", "MyAppTests"] }
+    ],
     "results": [
       {
         "setting": "SWIFT_VERSION",
