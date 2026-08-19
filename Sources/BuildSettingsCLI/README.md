@@ -195,13 +195,21 @@ Different build settings can be analyzed on different commits. This is only avai
 
 ## Output Format
 
-When using `--output`, results are saved as JSON array. Each result item represents one requested build setting with target values:
+When using `--output`, results are saved as JSON array. Each entry carries the projects
+found at that commit with the targets they declare, then one item per requested build
+setting with the target values:
 
 ```json
 [
   {
     "commit": "abc1234def5678",
     "date": "2025-01-15T07:30:00Z",
+    "projects": [
+      {
+        "path": "MyApp/MyApp.xcodeproj",
+        "targets": ["MyApp", "MyAppTests"]
+      }
+    ],
     "results": [
       {
         "setting": "SWIFT_VERSION",
@@ -221,6 +229,10 @@ When using `--output`, results are saved as JSON array. Each result item represe
   }
 ]
 ```
+
+`projects` tells which project declares which target. Target names alone do not:
+`MyAppTests` belongs to `MyApp`, but a name that merely starts with another one — say
+`MenuSearch` next to `Menu` — is a separate project. Group by `path` to get modules.
 
 **Multiple commits:**
 ```json
