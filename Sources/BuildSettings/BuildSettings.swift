@@ -287,7 +287,8 @@ public struct BuildSettings: Sendable {
 
     // MARK: - Build Settings Extraction
 
-    private static func projectTargets(from targets: [TargetWithBuildSettings]) -> [ProjectTargets] {
+    private static func projectTargets(from targets: [TargetWithBuildSettings]) -> [ProjectTargets]
+    {
         Dictionary(grouping: targets, by: \.project)
             .map { ProjectTargets(path: $0.key, targets: $0.value.map(\.target).sorted()) }
             .sorted { $0.path < $1.path }
