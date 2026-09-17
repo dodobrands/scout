@@ -21,6 +21,7 @@ Code analysis toolkit for iOS/macOS repositories. Analyze any commit in your git
   - [loc](#loc)
   - [build-settings](#build-settings)
 - [Configuration](#configuration)
+- [Agent integration](#agent-integration)
 - [Analyzing Git History](#analyzing-git-history)
   - [Best Practices for Config and Output Paths](#best-practices-for-config-and-output-paths)
 - [Requirements](#requirements)
@@ -235,6 +236,33 @@ scout types --config types.json
 # Arguments override config
 scout types UIView UIViewController --config types.json
 ```
+
+## Agent integration
+
+Scout ships as a **plugin marketplace**, so LLM coding agents can install the skill in one command and stop re-deriving how the subcommands compose.
+
+### Claude Code
+
+```bash
+/plugin marketplace add dodobrands/scout
+/plugin install scout
+```
+
+### Cursor
+
+Teams / Enterprise: add as a team marketplace in settings.
+
+Individual: clone and symlink the rule into your project:
+
+```bash
+git clone https://github.com/dodobrands/scout.git ~/.scout-plugin
+mkdir -p .cursor/rules
+ln -s ~/.scout-plugin/agent/rules/scout.mdc .cursor/rules/scout.mdc
+```
+
+The skills live in [`agent/`](agent/) — an umbrella skill plus one per subcommand. The marketplace catalog is at [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+
+The skills deliberately do not repeat `scout --help`: they hold the config file shapes, output JSON shapes and the footguns of checking out historical commits. New facts about flags belong in the help, not in the skills.
 
 ## Analyzing Git History
 

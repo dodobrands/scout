@@ -1,0 +1,56 @@
+---
+description: Measure a repository with the `scout` CLI — type, file, pattern, LOC and Xcode build-setting counts at HEAD or replayed across git history.
+alwaysApply: false
+---
+
+# Scout
+
+`scout` counts things in a repository and can replay the count over any list of commits. Use it instead of a hand-rolled `git checkout` + `grep` loop.
+
+## Read the help first
+
+`scout --help`, then `scout <subcommand> --help`, before the first real command. The help ships with the binary; this rule ships separately and lags behind it. Where they disagree, the help wins.
+
+## Subcommands
+
+```
+scout types           <type-names…>      inheritance-aware type counts
+scout files           <extensions…>      file counts by extension
+scout pattern         <patterns…>        literal or regex occurrences
+scout loc             <languages…>       lines of code via cloc
+scout build-settings  <settings…>        Xcode build settings per target (macOS only)
+```
+
+Every subcommand takes `--commits`, `--config`, `--output`, `--repo-path` and the git repair flags.
+
+## What the help doesn't say
+
+- `--output` is a JSON array, one entry per commit — `{commit, date, results}`. Without it the data only reaches the log. The file is rewritten after every commit, so an interrupted run keeps what it finished.
+- CLI arguments override the config file.
+- Different commits per metric are config-only (`metrics[].commits`); `[]` skips a metric, omitted means `HEAD`.
+- `--git-clean` runs `git clean -ffdx` — keep `--config` and `--output` outside the analyzed repository.
+- After a historical run the repository sits in detached HEAD on the last commit. Use a throwaway clone or a worktree.
+- Extra requirements: `cloc` for `loc`, `xcodebuild` for `build-settings`, Xcode SDK for full inheritance resolution in `types`.
+- `scout loc` needs `--include`; empty means zero. Its include matches every directory whose path ends with the given string, at any depth, so exclude `.build`, `Pods` and `DerivedData` — otherwise dependency sources are counted too.
+
+## Recipes
+
+```bash
+# Monthly series of type counts
+commits=$(git -C "$REPO" log --reverse --format='%H %cI' \
+  | awk '{ m = substr($2, 1, 7); if (m != seen) { print $1; seen = m } }')
+scout types UIViewController View --repo-path "$REPO" --commits $commits --output /tmp/types.json
+
+# Flatten any run into CSV
+jq -r '.[] | .date as $d | .results[] | [$d, (.typeName // .filetype // .pattern // .metric // .setting)] | @csv' /tmp/types.json
+```
+
+## Install
+
+If `scout` is missing: `mise use github:dodobrands/scout`. Don't fall back to `swift run scout …` — that's the contributor flow.
+
+## Don't
+
+- Don't invent flags from memory — subcommands differ (`--extensions` is `pattern` only, `--include` matches directory suffixes in `loc` and `.xcodeproj` globs in `build-settings`).
+- Don't run history analysis in someone's working checkout without saying it ends detached.
+- Don't reimplement a metric with `grep`/`find` when a subcommand covers it.
