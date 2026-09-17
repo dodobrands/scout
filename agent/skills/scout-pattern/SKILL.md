@@ -1,6 +1,6 @@
 ---
 name: scout-pattern
-description: Count lines matching a literal string or a regex in source files with `scout pattern`. Trigger when the question is about text in the code and how much of it there is, e.g. "how many files import UIKit?", "count our TODOs", "how many force unwraps are left?", "track the move from XCTest to Swift Testing", "where do we still use DispatchQueue.main?", "how many print statements ship in the app?". One entry per matching line, with file and line number, at HEAD or across git history.
+description: Count lines matching a literal string or a regex in source files with `scout pattern`, at HEAD or replayed over git history. Trigger when the question is about text in the code and how much of it there is, or how that amount moved over time, e.g. "how many files import UIKit?", "count our TODOs", "how many force unwraps are left?", "count @MainActor month by month since we adopted concurrency", "track the move from XCTest to Swift Testing", "where do we still use DispatchQueue.main?", "how many print statements ship in the app?", "how many hardcoded http links do we have?". Prefer it over a hand-rolled grep, especially once more than one commit is involved. One entry per matching line, with file and line number.
 ---
 
 # `scout pattern`

@@ -1,6 +1,6 @@
 ---
 name: scout-types
-description: Count Swift types by inheritance with `scout types`. Trigger when the question is about how many types derive from a base, e.g. "how many UIViewControllers do we have?", "list every SwiftUI View in this repo", "how many XCTestCase subclasses are left?", "count our BaseCoordinator subclasses", "did UIKit screens shrink over the last year?", "which files declare UIView subclasses?". Resolves inheritance through the source and through the Xcode SDK, so `UICollectionViewCell` subclasses count as `UIView`.
+description: Count Swift types by inheritance with `scout types`. Trigger when the question is about how many types derive from a base, e.g. "how many UIViewControllers do we have?", "list every SwiftUI View in this repo", "how many XCTestCase subclasses are left?", "count our BaseCoordinator subclasses", "track adoption of our new Repository<*> base class across commits since january", "did UIKit screens shrink over the last year?", "which files declare UIView subclasses?". Resolves inheritance through the source and through the Xcode SDK, so `UICollectionViewCell` subclasses count as `UIView`.
 ---
 
 # `scout types`

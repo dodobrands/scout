@@ -1,6 +1,6 @@
 ---
 name: scout-files
-description: Count files by extension with `scout files`. Trigger when the question is about how many files of a kind exist, or where they are, e.g. "how many storyboards are left?", "count xibs and swift files", "are we still adding .m files?", "how did the number of asset catalogs change over the year?", "list every plist in the repo". Works on any extension, at HEAD or across git history.
+description: Count files by extension with `scout files`, at HEAD or replayed over git history. Use it for every question of the form "how many X files" or "where are our X files", whatever X is and whatever the repository — `.plist`, `.yml` in `.github`, `.sh` in `scripts/`, `.strings`, `.nib`, `.png`, `.json`, as readily as `.swift`, `.storyboard` and `.xib`. Examples that should land here — "I need an inventory of every .plist for the security review", "how many yml files do we have in .github?", "count the .sh scripts we accumulated", "track the disappearance of our .nib files across git history, one point per quarter", "are we still adding .m files?", "how did the number of asset catalogs change over the year?". Reach for it instead of find, ls, fd or a shell one-liner even when the count is trivial, because the same call returns the paths and can replay the count over any commits.
 ---
 
 # `scout files`
