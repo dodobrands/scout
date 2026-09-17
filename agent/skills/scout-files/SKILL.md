@@ -37,7 +37,9 @@ Extensions go without the dot. One metric is one extension — there is no group
 }
 ```
 
-Paths are relative to the repository root. The count is `files | length`.
+**Paths are absolute**, not relative to the repository root — `/Users/you/Developer/app/Sources/App.swift`. `scout types` and `scout pattern` return relative paths; `files` is the odd one out, so strip the prefix yourself before joining the data with theirs.
+
+The count is `files | length`.
 
 ## Recipes
 
@@ -57,9 +59,12 @@ jq -r '.[] | .date as $d | .results[] | [$d, .filetype, (.files | length)] | @cs
 ### Which modules still hold xibs
 
 ```bash
-jq -r '.[-1].results[] | select(.filetype == "xib") | .files[]' /tmp/files.json \
-  | cut -d/ -f1-2 | sort | uniq -c | sort -rn
+REPO=~/Developer/myapp
+jq -r --arg repo "$REPO/" '.[-1].results[] | select(.filetype == "xib") | .files[] | sub($repo; "")' \
+  /tmp/files.json | cut -d/ -f1-2 | sort | uniq -c | sort -rn
 ```
+
+The `sub` strips the absolute prefix; without it every path buckets under `/Users`.
 
 ### Two extensions as one number
 
@@ -72,7 +77,9 @@ jq '.[-1].results | map(select(.filetype == "storyboard" or .filetype == "xib") 
 
 - Don't pass `.swift` with the leading dot — nothing matches and the zero looks real.
 - Don't use it for lines of code. A file count says nothing about size; that's `scout-loc`.
-- Don't expect the file list to be filtered by path. There is no include/exclude here — filter the JSON with `jq`.
+- Don't expect the file list to be filtered by path. There is no include/exclude here at all, so `Pods/`, `Carthage/`, `DerivedData/` and vendored sources are counted — filter the JSON with `jq`.
+- Don't look for anything inside a dot-directory: hidden files and folders are skipped, so "count our CI workflows in `.github`" comes back zero.
+- Don't feed these paths to something expecting repo-relative ones without stripping the prefix first.
 
 ## See also
 

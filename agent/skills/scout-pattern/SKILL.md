@@ -1,11 +1,11 @@
 ---
 name: scout-pattern
-description: Find literal or regex occurrences in source files with `scout pattern`. Trigger when the question is about text in the code and how much of it there is, e.g. "how many files import UIKit?", "count our TODOs", "how many force unwraps are left?", "track the move from XCTest to Swift Testing", "where do we still use DispatchQueue.main?", "how many print statements ship in the app?". One occurrence per match, with file and line, at HEAD or across git history.
+description: Count lines matching a literal string or a regex in source files with `scout pattern`. Trigger when the question is about text in the code and how much of it there is, e.g. "how many files import UIKit?", "count our TODOs", "how many force unwraps are left?", "track the move from XCTest to Swift Testing", "where do we still use DispatchQueue.main?", "how many print statements ship in the app?". One entry per matching line, with file and line number, at HEAD or across git history.
 ---
 
 # `scout pattern`
 
-Search sources for a literal substring or a regex, at HEAD or across commits. Every match comes back with its file and line.
+Search sources for a literal substring or a regex, at HEAD or across commits. Every matching line comes back with its file and line number.
 
 Run `scout pattern --help` for flags — it is the source of truth. This file covers what the help does not say.
 
@@ -23,7 +23,7 @@ Run `scout pattern --help` for flags — it is the source of truth. This file co
 }
 ```
 
-`extensions` is a top-level field, not per metric — one run searches one set of extensions. It defaults to `["swift"]`, so Objective-C, JSON and YAML are invisible unless asked for. On the command line the same thing is `--extensions swift,m` (comma-separated, unlike the config array).
+`extensions` is a top-level field, not per metric — one run searches one set of extensions, and the default leaves Objective-C, JSON and YAML invisible unless asked for. On the command line the same thing is `--extensions swift,m` — comma-separated, unlike the config array.
 
 `isRegex` switches a metric from substring matching to `NSRegularExpression`. It is config-only — there is no CLI flag, so a regex metric needs a config file. In JSON every backslash doubles: `"\\btry!\\s"`, `"@available\\(.*deprecated"`.
 
@@ -45,7 +45,9 @@ Run `scout pattern --help` for flags — it is the source of truth. This file co
 }
 ```
 
-`matches | length` counts occurrences, not files — two matches in one file are two entries. For a file count, `[.matches[].file] | unique | length`.
+**`matches | length` counts matching *lines*, not occurrences.** The search walks the file line by line and records a line once, however many times the pattern appears on it — `import UIKit; import Combine` on one line is one entry. For a file count, `[.matches[].file] | unique | length`.
+
+Because matching is per line, a regex can never span a newline: `func .*\n.*async` finds nothing.
 
 ## Recipes
 
@@ -56,6 +58,8 @@ scout pattern "import UIKit" "import SwiftUI" --output /tmp/pattern.json
 jq -r '.[] | .results[] | "\(.pattern)\t\(.matches | length)\t\([.matches[].file] | unique | length)"' \
   /tmp/pattern.json
 ```
+
+Columns: pattern, matching lines, files touched.
 
 ### Regex metrics need a config
 
@@ -81,9 +85,12 @@ jq -r '.[-1].results[] | select(.pattern == "// TODO:") | .matches[].file' /tmp/
 
 ## Don't
 
-- Don't expect comments or strings to be excluded — matching is textual, so `// import UIKit` counts. Word it as "occurrences", not "usages".
+- Don't report the number as "occurrences" or "usages" — it is matching lines, and the text is matched raw, so `// import UIKit` inside a comment counts just as much.
+- Don't write a regex that has to cross a line break; the file is matched a line at a time.
 - Don't try to pass a regex positionally. Positional patterns are always literal; `isRegex` exists only in the config.
-- Don't forget `extensions` when counting in Objective-C, Kotlin or config files — the default `swift` silently returns zero.
+- Don't forget `extensions` when counting in Objective-C, Kotlin or config files — the default silently returns zero.
+- Don't widen `extensions` to binary or non-UTF-8 files. One `.strings` file in UTF-16, one `.png`, one `.pdf` and the whole run dies with `NSCocoaErrorDomain Code=259`; `--output` keeps only the commits that finished before the abort.
+- Don't expect anything inside a dot-directory: `.github`, `.claude-plugin` and friends are skipped. Vendored trees like `Pods/` are not hidden, so those *are* counted — filter the JSON.
 - Don't reach for a pattern when the question is about inheritance. `class X: UIView` misses `class X: UIControl`; that's `scout-types`.
 
 ## See also

@@ -11,23 +11,14 @@ alwaysApply: false
 
 `scout --help`, then `scout <subcommand> --help`, before the first real command. The help ships with the binary; this rule ships separately and lags behind it. Where they disagree, the help wins.
 
-## Subcommands
-
-```
-scout types           <type-names…>      inheritance-aware type counts
-scout files           <extensions…>      file counts by extension
-scout pattern         <patterns…>        literal or regex occurrences
-scout loc             <languages…>       lines of code via cloc
-scout build-settings  <settings…>        Xcode build settings per target (macOS only)
-```
-
-Every subcommand takes `--commits`, `--config`, `--output`, `--repo-path` and the git repair flags.
-
 ## What the help doesn't say
 
 - `--output` is a JSON array, one entry per commit — `{commit, date, results}`. Without it the data only reaches the log. The file is rewritten after every commit, so an interrupted run keeps what it finished.
 - CLI arguments override the config file.
-- Different commits per metric are config-only (`metrics[].commits`); `[]` skips a metric, omitted means `HEAD`.
+- Different commits per metric are config-only (`metrics[].commits`); `[]` skips a metric even when `--commits` is passed, omitted means `HEAD`.
+- Without `--config`, each subcommand still auto-loads `.scout-<name>.json` from the current directory.
+- Positionals must come before `--commits` / `--include` / `--exclude`; those swallow them, and the run silently does nothing.
+- Paths in the output are relative for `types` and `pattern`, absolute for `files` and `build-settings`.
 - `--git-clean` runs `git clean -ffdx` — keep `--config` and `--output` outside the analyzed repository.
 - After a historical run the repository sits in detached HEAD on the last commit. Use a throwaway clone or a worktree.
 - Extra requirements: `cloc` for `loc`, `xcodebuild` for `build-settings`, Xcode SDK for full inheritance resolution in `types`.
@@ -41,8 +32,9 @@ commits=$(git -C "$REPO" log --reverse --format='%H %cI' \
   | awk '{ m = substr($2, 1, 7); if (m != seen) { print $1; seen = m } }')
 scout types UIViewController View --repo-path "$REPO" --commits $commits --output /tmp/types.json
 
-# Flatten any run into CSV
-jq -r '.[] | .date as $d | .results[] | [$d, (.typeName // .filetype // .pattern // .metric // .setting)] | @csv' /tmp/types.json
+# Flatten into CSV (field names differ per subcommand: typeName/types, filetype/files,
+# pattern/matches, metric/linesOfCode, setting/targets)
+jq -r '.[] | .date as $d | .results[] | [$d, .typeName, (.types | length)] | @csv' /tmp/types.json
 ```
 
 ## Install
@@ -51,6 +43,7 @@ If `scout` is missing: `mise use github:dodobrands/scout`. Don't fall back to `s
 
 ## Don't
 
-- Don't invent flags from memory — subcommands differ (`--extensions` is `pattern` only, `--include` matches directory suffixes in `loc` and `.xcodeproj` globs in `build-settings`).
+- Don't invent flags from memory — subcommands differ (`--extensions` is `pattern` only, `--include` matches directory-path suffixes in `loc` and `.xcodeproj` globs in `build-settings`).
+- Don't trust a zero: an eaten positional, a missing `--include`, a skipped metric and an errored commit all report zero and exit 0.
 - Don't run history analysis in someone's working checkout without saying it ends detached.
 - Don't reimplement a metric with `grep`/`find` when a subcommand covers it.

@@ -1,6 +1,6 @@
 ---
 name: scout
-description: Route code-metric work on a repository to the right `scout` subcommand — type counts, file counts, string/regex occurrences, lines of code, Xcode build settings — at HEAD or replayed across git history. Trigger on broad metric intent, e.g. "how many UIViewControllers are left?", "count storyboards over the last two years", "track SwiftUI adoption in this repo", "how did our lines of code grow?", "which SWIFT_VERSION do our targets use?", "build a dashboard of codebase metrics". Five sub-skills (`scout-types`, `scout-files`, `scout-pattern`, `scout-loc`, `scout-build-settings`) cover the metric axes; this umbrella picks one and holds the rules they share.
+description: Plan and run a multi-metric measurement of a repository with the `scout` CLI, and pick which subcommand a request needs. Trigger on cross-cutting intent rather than a single number, e.g. "build a dashboard of codebase metrics", "measure how this repo changed over two years", "I need numbers for the UIKit-to-SwiftUI migration from several angles", "set up a monthly metrics job in CI", "what can we even measure about this codebase?", "which scout command do I want for this?", "collect these metrics at the same commits so the series line up". Also the place for anything shared across metrics — replaying over git history, the output envelope, config vs CLI precedence, and the ways a historical run damages a working checkout. Single-axis questions belong to `scout-types`, `scout-files`, `scout-pattern`, `scout-loc` or `scout-build-settings`.
 ---
 
 # Scout skill (umbrella)
@@ -50,9 +50,15 @@ Combined questions ("how did the app grow while UIKit shrank?") pull recipes fro
 
 `date` is the commit date in UTC ISO 8601. The shape of `results` items differs per subcommand — see the sub-skill. `build-settings` adds a `projects` field alongside `results`.
 
+Paths inside `results` are not uniform: `types` and `pattern` give repository-relative paths, while `files` and `build-settings` give absolute ones. Normalize before joining data from two subcommands.
+
 Without `--output` the numbers only reach the log. **Always pass `--output` when you intend to read the data back.**
 
 The file is rewritten after every commit, not once at the end — a killed run keeps every commit it finished.
+
+### A config file is picked up even when you don't pass one
+
+Each subcommand looks for its own dotfile in the **current working directory** when `--config` is absent: `.scout-types.json`, `.scout-files.json`, `.scout-pattern.json`, `.scout-loc.json`, `.scout-build-settings.json`. It resolves against the CWD, not `--repo-path`, so running from inside a repository that ships one silently changes what gets measured. If a result looks unlike what you asked for, check for that file first.
 
 ### CLI beats config beats default
 
@@ -72,9 +78,13 @@ Positional arguments and flags override the config file. `scout types UIView --c
 }
 ```
 
-Omitted `commits` means `HEAD`; an empty array skips the metric. `--commits` on the command line overrides all of them.
+Omitted `commits` means `HEAD`; an empty array skips the metric. `--commits` on the command line overrides all of them — except `[]`, which still skips: the skip is checked before the override.
 
 Every subcommand also accepts a `git` object in its config — `repoPath`, `clean`, `fixLFS`, `initializeSubmodules` — mirroring `--repo-path`, `--git-clean`, `--fix-lfs`, `--initialize-submodules`.
+
+### Put positional arguments before the multi-value flags
+
+`--commits`, `--include` and `--exclude` keep consuming words until the next flag, so anything positional written after them is swallowed. `scout build-settings --include "**/*.xcodeproj" SWIFT_VERSION` treats `SWIFT_VERSION` as a glob and runs zero metrics — it logs `Will analyze 0 commit(s) for 0 metric(s)`, exits 0 and writes no output file. Write the positionals first: `scout build-settings SWIFT_VERSION --include "**/*.xcodeproj"`.
 
 ### Commits are analyzed in the order they first appear
 
@@ -145,4 +155,5 @@ Each subcommand is a separate process and a separate checkout loop, so a five-me
 - Don't run history analysis in the user's working checkout without saying that it ends on a detached HEAD.
 - Don't put `--config` or `--output` inside the analyzed repository when `--git-clean` is on.
 - Don't reconstruct a metric with `grep`/`find` over `git checkout` when a subcommand covers it.
+- Don't assume a zero is real. A silent zero is this tool's favourite failure: `loc` without `--include`, a positional eaten by `--include`, a metric skipped by `commits: []`, a commit that errored and came back with empty results. Sanity-check the first number of any new metric before building a series on it.
 - Don't suggest `swift run scout …` to users — that's for contributors to this repo.

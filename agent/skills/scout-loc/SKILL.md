@@ -15,6 +15,8 @@ Run `scout loc --help` for flags — it is the source of truth. This file covers
 
 Use a config whenever you want more than one include/exclude combination — the CLI flags describe a single metric.
 
+**CLI and config don't merge here.** Positional languages take the whole CLI branch and the config's metrics are ignored; a config file takes its own branch and `--include` / `--exclude` are dropped. Both failure modes are silent: `scout loc Swift --config loc.json` measures `Swift | .` → `0`, and `scout loc --config loc.json --include Sources` quietly ignores the flag. Pick one side. `--name-template` is the only flag that reaches config metrics.
+
 ```json
 {
   "metrics": [
@@ -30,12 +32,12 @@ Use a config whenever you want more than one include/exclude combination — the
 
 This is the one thing to get right.
 
-`include` is not a path and not a glob. Every **directory** under `--repo-path` whose path *ends with* one of the strings is measured, at any depth, and the results are summed.
+`include` is not a path and not a glob. Every **directory** under `--repo-path` whose *full path string* ends with one of the strings is measured, at any depth, and the results are summed. It is a string suffix, not a path component: `--include App` also matches `MyApp` and `LegacyApp`, and `--include ttings` matches `Sources/BuildSettings`.
 
 Three consequences, all verified on this repository:
 
 - **Empty `include` measures nothing.** `scout loc Swift` with no `--include` reports `0`, silently. Always pass `--include`.
-- **Build artifacts and vendored code count.** `--include Sources` on a repo with a `.build` directory swept in every dependency's `Sources` folder: 1 032 391 lines instead of 3 742. Always exclude `.build`, and whatever else holds a copy of the tree — `Pods`, `DerivedData`, `Carthage`, `node_modules`, extra worktrees.
+- **Build artifacts and vendored code count.** `--include Sources` on a checkout with a populated `.build` sweeps in every dependency's `Sources` folder — measured on this repository, that inflated the answer by more than two orders of magnitude. Always exclude `.build`, and whatever else holds a copy of the tree: `Pods`, `DerivedData`, `Carthage`, `node_modules`, extra worktrees.
 - **Nested matches double-count.** `Tests/LOCTests/Samples/Sources` matched `Sources` too and its lines were added on top.
 
 `exclude` drops a matched folder when one of its strings appears anywhere in the folder path, case-insensitively — so `.build` and `Pods` work as written, no globs needed.
@@ -44,7 +46,7 @@ Sanity-check the first number of a new metric against `cloc --include-lang=Swift
 
 ## Metric names
 
-Results are keyed by a rendered name, not by language — which is why two metrics with the same languages need different names. The template defaults to `%langs% | %include%` and expands `%langs%`, `%include%`, `%exclude%` as comma-separated lists. Empty `languages` renders `Unknown`, empty `include` renders `.`, empty `exclude` renders an empty string.
+Results are keyed by a rendered name, not by language — which is why two metrics with the same languages need different names. The default template is `%langs% | %include%`, and the placeholders expand to comma-separated lists. Worth knowing because it is how a broken metric announces itself: empty `languages` renders `Unknown`, empty `include` renders `.`, empty `exclude` renders an empty string — a result named `Swift | .` is the silent-zero case below, not a real measurement.
 
 Priority is the usual one: `--name-template` beats `metrics[].nameTemplate` beats the default.
 
