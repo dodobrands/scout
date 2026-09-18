@@ -1,0 +1,9 @@
+{
+  "name": "scout",
+  "version": "1.0.0",
+  "description": "Teaches the agent when and how to reach for the scout CLI. Ships as an umbrella skill plus one dedicated sub-skill per subcommand (scout-types, scout-files, scout-pattern, scout-loc, scout-build-settings) — config file shapes, output JSON shapes, cross-commit analysis, and the footguns that come with checking out historical commits",
+  "author": {
+    "name": "Aleksey Berezka"
+  },
+  "rules": "./rules/"
+}
