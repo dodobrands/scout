@@ -1,0 +1,9 @@
+{
+  "name": "scout",
+  "version": "1.0.0",
+  "description": "Teaches the agent when and how to reach for the scout CLI (types/files/pattern/loc/build-settings subcommands)",
+  "author": {
+    "name": "Aleksey Berezka"
+  },
+  "skills": "./skills/"
+}

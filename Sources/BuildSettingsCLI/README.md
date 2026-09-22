@@ -8,7 +8,7 @@ Extract build settings from Xcode projects (.xcodeproj).
 
 ```bash
 # Discover projects via glob and extract settings
-scout build-settings --include "**/*.xcodeproj" SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET
+scout build-settings SWIFT_VERSION IPHONEOS_DEPLOYMENT_TARGET --include "**/*.xcodeproj"
 
 # Use config file
 scout build-settings --config build-settings-config.json
@@ -17,7 +17,7 @@ scout build-settings --config build-settings-config.json
 scout build-settings --include "App/**/*.xcodeproj" --config build-settings-config.json
 
 # Analyze specific commits
-scout build-settings --include "**/*.xcodeproj" SWIFT_VERSION --commits abc123 def456
+scout build-settings SWIFT_VERSION --include "**/*.xcodeproj" --commits abc123 def456
 ```
 
 ## Arguments
@@ -29,6 +29,8 @@ scout build-settings --include "**/*.xcodeproj" SWIFT_VERSION --commits abc123 d
 ### Required
 
 - `--include <patterns>` — Glob patterns to discover `.xcodeproj` files (e.g., `**/*.xcodeproj`). Required via CLI or config file. Accepts multiple patterns.
+
+> **Note:** `--include`, `--exclude` and `--commits` consume every following word until the next flag. Write the build setting names before them, otherwise they are read as patterns and the run analyzes nothing.
 
 ### Optional
 
@@ -51,7 +53,7 @@ Configuration file is optional if `--include` is provided via CLI.
 
 ```bash
 # CLI only (no config needed)
-scout build-settings --include "**/*.xcodeproj" SWIFT_VERSION
+scout build-settings SWIFT_VERSION --include "**/*.xcodeproj"
 
 # Config only
 scout build-settings --config build-settings-config.json

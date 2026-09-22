@@ -1,0 +1,20 @@
+{
+  "name": "scout",
+  "owner": {
+    "name": "Aleksey Berezka"
+  },
+  "metadata": {
+    "description": "Agent skill for the scout CLI — measure a mobile repository across its git history",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "scout",
+      "source": "./agent",
+      "description": "Teaches the agent when and how to reach for the scout CLI. Ships as an umbrella skill plus one dedicated sub-skill per subcommand (scout-types, scout-files, scout-pattern, scout-loc, scout-build-settings) — config file shapes, output JSON shapes, cross-commit analysis, and the footguns that come with checking out historical commits",
+      "version": "1.0.0",
+      "category": "development",
+      "keywords": ["scout", "swift", "ios", "code-metrics", "git-history", "loc", "build-settings", "dashboard"]
+    }
+  ]
+}
