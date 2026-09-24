@@ -423,6 +423,51 @@ struct TypesTests {
 
         #expect(result.types.names == ["NeonTheme"])
     }
+
+    @Test
+    func `When superclass is module-qualified, should resolve it through indirect lookup`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory().appending(path: "QualifiedSuperclass")
+        let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "UIViewController")
+        let result = try await sut.countTypes(input: input)
+
+        let appController = try #require(
+            result.types.first {
+                $0.path.hasPrefix("App/") && $0.name == "RateOrderNotificationViewController"
+            }
+        )
+        #expect(appController.fullName == "RateOrderNotificationViewController")
+    }
+
+    @Test
+    func `When superclass is module-qualified generic, should resolve it through indirect lookup`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory().appending(path: "QualifiedSuperclass")
+        let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "UIViewController")
+        let result = try await sut.countTypes(input: input)
+
+        #expect(result.types.names.contains("OrderPagesNotificationViewController"))
+    }
+
+    @Test
+    func `When searching module-qualified hierarchy, should report each subclass once`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory().appending(path: "QualifiedSuperclass")
+        let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "UIViewController")
+        let result = try await sut.countTypes(input: input)
+
+        #expect(
+            result.types.map(\.path).sorted() == [
+                "App/Extensions/PushNotificationContentExtension/RateOrderNotificationViewController.swift",
+                "App/Extensions/PushNotificationContentExtension/RateOrderNotificationViewController.swift",
+                "Modules/RateOrderNotificationHandler/Sources/RateOrderNotificationViewController.swift",
+                "Modules/RateOrderNotificationHandler/Sources/RateOrderNotificationViewController.swift",
+            ]
+        )
+    }
 }
 
 private func samplesDirectory() throws -> URL {

@@ -6,6 +6,10 @@ import Logging
 public struct Types: Sendable {
     private static let logger = Logger(label: "scout.Types")
 
+    /// Where resolved package dependencies keep their sources, relative to the repository root:
+    /// SwiftPM and Tuist-managed dependencies respectively.
+    static let packageCheckoutsDirectories = [".build/checkouts", "Tuist/.build/checkouts"]
+
     private let hierarchyProvider: any ExternalHierarchyProvider
 
     public init() {
@@ -29,12 +33,17 @@ public struct Types: Sendable {
             try parser.parseFile(from: $0)
         }
 
+        // Superclasses declared in package dependencies (e.g. an SPM package's
+        // `open class StateViewController: UIViewController`) are resolved from the checked-out
+        // package sources. They take part in the lookup but are never reported.
+        let packageObjects = parsePackageCheckouts(in: repoPath, parser: parser)
+
         // Resolve inheritance past the source boundary (e.g. UICollectionViewCell -> UIView)
         // by merging in external class-inheritance edges for the modules the source imports.
         // Source objects come first so name lookups prefer local definitions.
         let modules = ImportScanner.modules(in: swiftFiles)
         let externalObjects = try await hierarchyProvider.externalObjects(forModules: modules)
-        let allObjects = objects + externalObjects
+        let allObjects = objects + packageObjects + externalObjects
 
         // Typealiases and protocols take part in the inheritance lookup through `allObjects`,
         // but they can't be instantiated, so they are never reported.
@@ -62,6 +71,27 @@ public struct Types: Sendable {
             typeName: input.typeName,
             types: typeInfos
         )
+    }
+
+    /// Parses the Swift sources of resolved package dependencies.
+    /// The analyzed source skips hidden directories, so these files are never part of it.
+    /// A package file that fails to parse is skipped rather than failing the analysis.
+    private func parsePackageCheckouts(in repoPath: URL, parser: SwiftParser) -> [ObjectFromCode] {
+        let files = Self.packageCheckoutsDirectories
+            .map { repoPath.appending(path: $0) }
+            .filter { FileManager.default.fileExists(atPath: $0.path(percentEncoded: false)) }
+            .flatMap { findSwiftFiles(in: $0) }
+        guard !files.isEmpty else { return [] }
+
+        Self.logger.debug("Parsing \(files.count) Swift files from package checkouts")
+        return files.flatMap { file in
+            do {
+                return try parser.parseFile(from: file)
+            } catch {
+                Self.logger.debug("Skipping package file \(file.path): \(error)")
+                return []
+            }
+        }
     }
 
     /// Converts an absolute file path to a path relative to the repository root.

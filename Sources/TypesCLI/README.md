@@ -35,6 +35,16 @@ mistaken for subclassing.
 
 If Xcode or the SDK is unavailable, resolution degrades gracefully to source-only analysis.
 
+Base classes declared in package dependencies — e.g.
+`class ProfileViewController: DynamicType.StateViewController<Profile>` — are resolved from the
+package sources checked out under `.build/checkouts` or `Tuist/.build/checkouts`. Resolve
+dependencies before the analysis (`swift package resolve`, `tuist install`); without the
+checkouts these subclasses are not found. Package types are only used to follow inheritance and
+are never included in the result.
+
+A module-qualified base class (`Module.Type`, `Module.Type<T>`) resolves to the declaration of
+`Type`, preferring one whose file lives under a `Module` directory.
+
 > **Note:** Each imported module is extracted once and cached across commits. The first
 > analysis of a large module such as UIKit adds a few seconds.
 
