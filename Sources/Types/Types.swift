@@ -45,8 +45,11 @@ public struct Types: Sendable {
         let externalObjects = try await hierarchyProvider.externalObjects(forModules: modules)
         let allObjects = objects + packageObjects + externalObjects
 
+        // Typealiases and protocols take part in the inheritance lookup through `allObjects`,
+        // but they can't be instantiated, so they are never reported.
         let types = objects.filter {
             !$0.isTypealias
+                && $0.kind != .protocolType
                 && parser.isInherited(
                     objectFromCode: $0,
                     from: input.typeName,

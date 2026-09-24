@@ -87,16 +87,37 @@ struct TypesTests {
     }
 
     @Test
-    func `When searching for protocol, should find all conforming types`() async throws {
+    func `When searching for protocol, should find conforming types but not derived protocols`()
+        async throws
+    {
         let samplesURL = try samplesDirectory()
         let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "Coordinator")
         let result = try await sut.countTypes(input: input)
 
-        #expect(
-            result.types.names == [
-                "AppCoordinator", "AuthCoordinator", "FlowCoordinator", "MenuCoordinator",
-            ]
-        )
+        // `FlowCoordinator` refines `Coordinator` and is skipped, while types conforming
+        // to it are still found through the chain.
+        #expect(result.types.names == ["AppCoordinator", "AuthCoordinator", "MenuCoordinator"])
+    }
+
+    @Test
+    func `When searching for class, should not include class-constrained protocols`() async throws {
+        let samplesURL = try samplesDirectory()
+        let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "ScreenController")
+        let result = try await sut.countTypes(input: input)
+
+        // `PaymentScreen: ScreenController` and `CardScreen: PaymentScreen` are protocols.
+        #expect(result.types.names == ["CardScreenController", "ThreeDSScreenController"])
+    }
+
+    @Test
+    func `When searching for class-constrained protocol, should find conforming classes`()
+        async throws
+    {
+        let samplesURL = try samplesDirectory()
+        let input = Types.AnalysisInput(repoPath: samplesURL.path, typeName: "PaymentScreen")
+        let result = try await sut.countTypes(input: input)
+
+        #expect(result.types.names == ["CardScreenController"])
     }
 
     @Test
