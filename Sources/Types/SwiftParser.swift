@@ -151,19 +151,27 @@ struct SwiftParser {
             objectFromCode: objectFromCode,
             from: inheritance,
             allObjects: allObjects,
-            originIsValueType: objectFromCode.kind.isValueType
+            originIsValueType: objectFromCode.kind.isValueType,
+            path: []
         )
     }
 
     /// - Parameter originIsValueType: Whether the type that started the lookup is a value type
     ///   (struct/enum). Value types conform to protocols but cannot subclass a class, so the
     ///   chain must never pass into a class node when the origin is a value type.
+    /// - Parameter path: Objects already on the lookup path. A subclass may share its name
+    ///   with a superclass from another module (`class A: Module.A`), so the chain is guarded
+    ///   against resolving back into a node it has already passed.
     private func isInherited(
         objectFromCode: ObjectFromCode,
         from inheritance: String,
         allObjects: [ObjectFromCode],
-        originIsValueType: Bool
+        originIsValueType: Bool,
+        path: Set<String>
     ) -> Bool {
+        var path = path
+        guard path.insert(objectFromCode.identity).inserted else { return false }
+
         // Check direct inheritance (including generic types like "JsonAsyncRequest<SomeType>")
         if objectFromCode.inheritedTypes.contains(where: { inheritedType in
             matchesBaseType(inheritedType, baseType: inheritance)
@@ -176,15 +184,12 @@ struct SwiftParser {
             // Extract base type name from generic type (e.g., "JsonAsyncRequest<DTO>" -> "JsonAsyncRequest")
             let baseTypeName = extractBaseTypeName(from: className)
 
-            // Resolve the parent by unqualified name. A nested (member) typealias such as
-            // `Component.View` is only reachable through its qualified name, so it must not
-            // resolve a bare inherited-type reference — otherwise a `struct S: View` conformance
-            // to a protocol would be misrouted into that typealias's target hierarchy.
             guard
-                let parentObject = allObjects.first(where: { candidate in
-                    candidate.name == baseTypeName
-                        && !(candidate.isTypealias && candidate.isNested)
-                })
+                let parentObject = resolveParent(
+                    named: baseTypeName,
+                    allObjects: allObjects,
+                    excluding: path
+                )
             else {
                 return false
             }
@@ -200,9 +205,48 @@ struct SwiftParser {
                 objectFromCode: parentObject,
                 from: inheritance,
                 allObjects: allObjects,
-                originIsValueType: originIsValueType
+                originIsValueType: originIsValueType,
+                path: path
             )
         }
+    }
+
+    /// Finds the declaration an inherited-type reference points to.
+    ///
+    /// - `Outer.Inner` resolves a nested type by its full name first.
+    /// - Otherwise the reference resolves by its last component, so a module-qualified
+    ///   `Module.Widget` finds `Widget`. Among several `Widget`s, one whose file lives under a
+    ///   `Module` directory is preferred.
+    /// - A nested (member) typealias such as `Component.View` is only reachable through its
+    ///   qualified name, so it must not resolve a bare reference — otherwise a `struct S: View`
+    ///   conformance to a protocol would be misrouted into that typealias's target hierarchy.
+    private func resolveParent(
+        named typeName: String,
+        allObjects: [ObjectFromCode],
+        excluding path: Set<String>
+    ) -> ObjectFromCode? {
+        let unvisited = allObjects.lazy.filter { !path.contains($0.identity) }
+
+        if typeName.contains("."),
+            let nested = unvisited.first(where: { $0.fullName == typeName })
+        {
+            return nested
+        }
+
+        let components = typeName.split(separator: ".")
+        guard let name = components.last.map(String.init) else { return nil }
+        let candidates = unvisited.filter { candidate in
+            candidate.name == name && !(candidate.isTypealias && candidate.isNested)
+        }
+
+        if components.count > 1, let module = components.first {
+            let moduleDirectory = "/\(module)/"
+            if let fromModule = candidates.first(where: { $0.filePath.contains(moduleDirectory) }) {
+                return fromModule
+            }
+        }
+
+        return candidates.first
     }
 
     /// Checks if an inherited type matches the base type pattern.

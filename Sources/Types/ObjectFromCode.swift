@@ -31,6 +31,10 @@ struct ObjectFromCode: Sendable {
     /// and therefore only reachable through its qualified name.
     var isNested: Bool { fullName != name }
 
+    /// Identifies the declaration within the analyzed pool: same-named types from different
+    /// files or containers stay distinct.
+    var identity: String { "\(filePath)#\(fullName)" }
+
     init(
         name: String,
         fullName: String,
