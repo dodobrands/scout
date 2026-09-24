@@ -19,6 +19,11 @@ scout types UIView --commits abc123 def456
 
 ## Inheritance Resolution
 
+Only types that can be instantiated are reported: classes, actors, structs and enums.
+Protocols and typealiases are never included in the result, but inheritance is still
+followed through them — a class conforming to `protocol FlowCoordinator: Coordinator` is
+counted under `Coordinator`, while `FlowCoordinator` itself is not.
+
 Inheritance chains are followed through the analyzed source. Types whose base class lives
 outside the source — e.g. `class ProductCell: UICollectionViewCell` — are still resolved by
 extracting the real class hierarchy from the Xcode SDK via `swift-symbolgraph-extract`, for the
