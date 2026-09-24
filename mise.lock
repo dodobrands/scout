@@ -10,5 +10,8 @@ url = "https://github.com/peripheryapp/periphery/releases/download/3.7.4/periphe
 url_api = "https://api.github.com/repos/peripheryapp/periphery/releases/assets/405808464"
 
 [[tools.swift]]
-version = "6.3.1"
+version = "6.4.0"
 backend = "core:swift"
+
+[tools.swift."platforms.macos-arm64"]
+checksum = "blake3:b7d02453cf1224c0b2e4ee2bf6c22b7ea9f7c0fb7beb8eeb3446a858d387d3b2"
