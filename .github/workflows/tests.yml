@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - name: macos
-            runner: macos-26
+            runner: xcode-27
             os: macos
           - name: linux-x64
             runner: ubuntu-latest
