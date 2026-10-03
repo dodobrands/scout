@@ -62,7 +62,7 @@ jobs:
       # covered by the macOS leg.
       - name: Install mise and Swift
         if: matrix.os == 'linux'
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@v5
         with:
           install_args: swift
 
@@ -99,7 +99,7 @@ jobs:
       # Periphery runs from mise and is macOS-only.
       - name: Install mise
         if: matrix.os == 'macos'
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@v5
 
       - name: Scan for unused code with Periphery
         if: matrix.os == 'macos'
