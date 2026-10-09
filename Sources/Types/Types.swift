@@ -30,15 +30,15 @@ public struct Types: Sendable {
         let parser = SwiftParser()
 
         let swiftFiles = Signposts.interval("Find Swift files") { findSwiftFiles(in: repoPath) }
-        let objects = try Signposts.interval("Parse sources", "\(swiftFiles.count) files") {
-            try swiftFiles.flatMap { try parser.parseFile(from: $0) }
+        let objects = await Signposts.interval("Parse sources", "\(swiftFiles.count) files") {
+            await parser.parseFiles(swiftFiles)
         }
 
         // Superclasses declared in package dependencies (e.g. an SPM package's
         // `open class StateViewController: UIViewController`) are resolved from the checked-out
         // package sources. They take part in the lookup but are never reported.
-        let packageObjects = Signposts.interval("Parse package checkouts") {
-            parsePackageCheckouts(in: repoPath, parser: parser)
+        let packageObjects = await Signposts.interval("Parse package checkouts") {
+            await parsePackageCheckouts(in: repoPath, parser: parser)
         }
 
         // Resolve inheritance past the source boundary (e.g. UICollectionViewCell -> UIView)
@@ -82,8 +82,9 @@ public struct Types: Sendable {
 
     /// Parses the Swift sources of resolved package dependencies.
     /// The analyzed source skips hidden directories, so these files are never part of it.
-    /// A package file that fails to parse is skipped rather than failing the analysis.
-    private func parsePackageCheckouts(in repoPath: URL, parser: SwiftParser) -> [ObjectFromCode] {
+    private func parsePackageCheckouts(in repoPath: URL, parser: SwiftParser) async
+        -> [ObjectFromCode]
+    {
         let files = Self.packageCheckoutsDirectories
             .map { repoPath.appending(path: $0) }
             .filter { FileManager.default.fileExists(atPath: $0.path(percentEncoded: false)) }
@@ -91,14 +92,7 @@ public struct Types: Sendable {
         guard !files.isEmpty else { return [] }
 
         Self.logger.debug("Parsing \(files.count) Swift files from package checkouts")
-        return files.flatMap { file in
-            do {
-                return try parser.parseFile(from: file)
-            } catch {
-                Self.logger.debug("Skipping package file \(file.path): \(error)")
-                return []
-            }
-        }
+        return await parser.parseFiles(files)
     }
 
     /// Converts an absolute file path to a path relative to the repository root.
