@@ -57,13 +57,13 @@ A module-qualified base class (`Module.Type`, `Module.Type<T>`) resolves to the 
 ### Optional
 
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commits to check out and analyze (default: working tree, no checkout)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--repo-path, -r <path>` — Path to repository with Swift sources (default: current directory)
-- `--git-clean` — Clean working directory before analysis (`git clean -ffdx && git reset --hard HEAD`)
-- `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
-- `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
+- `--git-clean` — Run `git clean -ffdx && git reset --hard HEAD` before each checkout
+- `--fix-lfs` — Fix broken LFS pointers by committing modified files on each checkout
+- `--initialize-submodules` — Initialize submodules on each checkout (reset and update to correct commits)
 
 ## Configuration (Optional)
 
@@ -113,7 +113,7 @@ scout types UIView --config types-config.json
 |-------|------|-------------|
 | `metrics` | `[Metric]` | Array of type metrics to analyze |
 | `metrics[].type` | `String` | Type name to count by inheritance |
-| `metrics[].commits` | `[String]?` | Commits for this type (default: `["HEAD"]`) |
+| `metrics[].commits` | `[String]?` | Commits for this type (default: `["HEAD"]`, see [working tree](../Common/GitConfiguration.md#working-tree-without-checkout)) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
 
 ### Per-Metric Commits (Config Only)

@@ -5,7 +5,7 @@ description: Extract Xcode build settings per target with `scout build-settings`
 
 # `scout build-settings`
 
-Read build settings from every discovered `.xcodeproj`, per target, at HEAD or across commits. Shells out to `xcodebuild`, so it is **macOS only**.
+Read build settings from every discovered `.xcodeproj`, per target, in the current working tree or across commits. Shells out to `xcodebuild`, so it is **macOS only**.
 
 Run `scout build-settings --help` for flags — it is the source of truth. This file covers what the help does not say.
 
@@ -79,12 +79,14 @@ Three things are specific to this subcommand:
 
 ## Recipes
 
-### Setting per target at HEAD
+### Setting per target in the current working tree (start here)
 
 ```bash
 scout build-settings SWIFT_VERSION --include "**/*.xcodeproj" --exclude ".build/**" --output /tmp/bs.json
 jq -r '.[-1].results[] | .setting as $s | .targets | to_entries[] | "\($s)\t\(.key)\t\(.value // "—")"' /tmp/bs.json
 ```
+
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### Distribution of values across targets
 
@@ -129,4 +131,4 @@ jq -r '.[] | .date as $d | .results[] | select(.setting == "SWIFT_VERSION")
 
 ## See also
 
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

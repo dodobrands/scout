@@ -26,14 +26,14 @@ scout pattern "// TODO:" --commits abc123 def456
 ### Optional
 
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commits to check out and analyze (default: working tree, no checkout)
 - `--output, -o <path>` — Path to save JSON results
 - `--extensions, -e <extensions>` — Comma-separated file extensions to search (default: swift)
 - `--verbose, -v` — Enable verbose logging
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
-- `--git-clean` — Clean working directory before analysis (`git clean -ffdx && git reset --hard HEAD`)
-- `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
-- `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
+- `--git-clean` — Run `git clean -ffdx && git reset --hard HEAD` before each checkout
+- `--fix-lfs` — Fix broken LFS pointers by committing modified files on each checkout
+- `--initialize-submodules` — Initialize submodules on each checkout (reset and update to correct commits)
 
 ## Configuration (Optional)
 
@@ -122,7 +122,7 @@ scout pattern "import UIKit" --config pattern-config.json
 | `metrics` | `[PatternMetric]` | Array of pattern metrics to analyze |
 | `metrics[].pattern` | `String` | String pattern to search for (literal or regex) |
 | `metrics[].isRegex` | `Bool?` | Use regex matching instead of literal (default: `false`) |
-| `metrics[].commits` | `[String]?` | Commits to analyze (default: HEAD, empty array skips metric) |
+| `metrics[].commits` | `[String]?` | Commits to analyze (default: `["HEAD"]`, see [working tree](../Common/GitConfiguration.md#working-tree-without-checkout); empty array skips metric) |
 | `extensions` | `[String]?` | File extensions to search in (default: `["swift"]`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
 

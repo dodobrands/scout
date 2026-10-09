@@ -36,13 +36,13 @@ scout build-settings SWIFT_VERSION --include "**/*.xcodeproj" --commits abc123 d
 
 - `--exclude <patterns>` — Glob patterns to exclude from discovery (e.g., `Pods/**`). Accepts multiple patterns.
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commits to check out and analyze (default: working tree, no checkout)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
-- `--git-clean` — Clean working directory before analysis (`git clean -ffdx && git reset --hard HEAD`)
-- `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
-- `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
+- `--git-clean` — Run `git clean -ffdx && git reset --hard HEAD` before each checkout
+- `--fix-lfs` — Fix broken LFS pointers by committing modified files on each checkout
+- `--initialize-submodules` — Initialize submodules on each checkout (reset and update to correct commits)
 - `--continue-on-missing-project` — Continue analysis when no projects are found at a commit instead of failing (default: fail)
 
 ## Configuration
@@ -141,8 +141,8 @@ scout build-settings --include "App/**/*.xcodeproj" --config build-settings-conf
 | `configuration` | `String` | No | Build configuration (default: "Debug") |
 | `metrics` | `[Metric]` | No | Array of build setting metrics to analyze |
 | `metrics[].setting` | `String` | Yes | Build setting name (e.g., `SWIFT_VERSION`) |
-| `metrics[].commits` | `[String]?` | No | Commits for this setting (default: `["HEAD"]`) |
-| `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit |
+| `metrics[].commits` | `[String]?` | No | Commits for this setting (default: `["HEAD"]`, see [working tree](../Common/GitConfiguration.md#working-tree-without-checkout)) |
+| `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit; without commits they run in the working tree as is |
 | `setupCommands[].command` | `String` | Yes | Command to execute (simple commands run directly, shell operators like `\|`, `&&` trigger `/bin/sh`) |
 | `setupCommands[].workingDirectory` | `String` | No | Directory relative to repo root |
 | `setupCommands[].optional` | `Bool` | No | If `true`, analysis continues even if command fails (default: `false`) |

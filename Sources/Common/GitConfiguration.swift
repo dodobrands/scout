@@ -6,13 +6,13 @@ public struct GitConfiguration: Sendable {
     /// Path to repository with sources
     public let repoPath: String
 
-    /// Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    /// Run `git clean -ffdx && git reset --hard HEAD` before each checkout
     public let clean: Bool
 
-    /// Fix broken LFS pointers by committing modified files after checkout
+    /// Fix broken LFS pointers by committing modified files on each checkout
     public let fixLFS: Bool
 
-    /// Initialize and update git submodules
+    /// Initialize and update git submodules on each checkout
     public let initializeSubmodules: Bool
 
     /// Direct initializer - all fields required

@@ -62,6 +62,8 @@ public struct Pattern: Sendable {
     ) async throws {
         let repoPath = URL(filePath: input.git.repoPath)
 
+        let checksOutCommits = Git.checksOutCommits(for: input.metrics, git: input.git)
+
         // Resolve HEAD commits to actual hashes
         let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
             repoPath: input.git.repoPath
@@ -75,7 +77,9 @@ public struct Pattern: Sendable {
 
             Self.logger.debug("Processing commit: \(hash)")
 
-            try await Git.checkout(hash: hash, git: input.git)
+            if checksOutCommits {
+                try await Git.checkout(hash: hash, git: input.git)
+            }
 
             var resultItems: [ResultItem] = []
             for metric in metrics {

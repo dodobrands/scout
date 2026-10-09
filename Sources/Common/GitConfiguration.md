@@ -2,14 +2,25 @@
 
 Git operations configuration shared across all tools. All parameters are optional.
 
+## Working tree without checkout
+
+When no metric names a commit other than `HEAD` — no `--commits` and no `commits` in the config, or only `HEAD` in them — scout analyzes the working tree as is:
+
+- no checkout, the branch stays attached;
+- no clean, LFS fix or submodule update, even if enabled: scout logs a warning instead;
+- uncommitted and untracked files are analyzed;
+- the output reports the `HEAD` hash and date.
+
+Any explicit commit switches the whole run to checkouts, `HEAD` included: once another commit is checked out, the working tree no longer reflects `HEAD`. The options below apply only to such runs.
+
 ## CLI Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--repo-path, -r <path>` | current directory | Path to repository |
-| `--git-clean` | `false` | Clean working directory before analysis (`git clean -ffdx && git reset --hard HEAD`) |
-| `--fix-lfs` | `false` | Fix broken LFS pointers by committing modified files after checkout |
-| `--initialize-submodules` | `false` | Initialize submodules (reset and update to correct commits) |
+| `--git-clean` | `false` | Run `git clean -ffdx && git reset --hard HEAD` before each checkout |
+| `--fix-lfs` | `false` | Fix broken LFS pointers by committing modified files on each checkout |
+| `--initialize-submodules` | `false` | Initialize submodules on each checkout (reset and update to correct commits) |
 
 ## JSON Configuration
 
@@ -28,9 +39,9 @@ Add optional `git` section to your config file. All fields are optional:
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `repoPath` | `String` | current directory | Path to repository |
-| `clean` | `Bool` | `false` | Run `git clean -ffdx && git reset --hard HEAD` before analysis |
-| `fixLFS` | `Bool` | `false` | Fix broken LFS pointers by committing modified files after checkout |
-| `initializeSubmodules` | `Bool` | `false` | Initialize and update git submodules |
+| `clean` | `Bool` | `false` | Run `git clean -ffdx && git reset --hard HEAD` before each checkout |
+| `fixLFS` | `Bool` | `false` | Fix broken LFS pointers by committing modified files on each checkout |
+| `initializeSubmodules` | `Bool` | `false` | Initialize and update git submodules on each checkout |
 
 > **Note:** CLI flags take priority over config values.
 
@@ -38,7 +49,7 @@ Add optional `git` section to your config file. All fields are optional:
 
 ### Clean (`--git-clean` / `clean`)
 
-Runs `git clean -ffdx && git reset --hard HEAD` before each commit analysis:
+Runs `git clean -ffdx && git reset --hard HEAD` before each checkout:
 - Removes untracked files and directories
 - Removes ignored files
 - Resets all changes to HEAD

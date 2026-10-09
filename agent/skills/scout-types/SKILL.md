@@ -5,7 +5,7 @@ description: Count Swift types by inheritance with `scout types`. Trigger when t
 
 # `scout types`
 
-Count types that inherit from (or conform to) the given base types, at HEAD or across commits.
+Count types that inherit from (or conform to) the given base types, in the current working tree or across commits.
 
 Run `scout types --help` for flags — it is the source of truth. This file covers what the help does not say.
 
@@ -59,12 +59,14 @@ Any type name works, not just Apple's: `BaseViewModel`, `FeatureModule`, `QuickS
 
 ## Recipes
 
-### Count per type at HEAD
+### Count per type in the current working tree (start here)
 
 ```bash
 scout types UIView UIViewController View --output /tmp/types.json
 jq -r '.[] | .results[] | "\(.typeName)\t\(.types | length)"' /tmp/types.json
 ```
+
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### UIKit-to-SwiftUI migration as a time series
 
@@ -89,4 +91,4 @@ jq -r '.[-1].results[] | select(.typeName == "UIViewController") | .types[].path
 ## See also
 
 - `scout-pattern` — occurrences of arbitrary text when inheritance isn't the question.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

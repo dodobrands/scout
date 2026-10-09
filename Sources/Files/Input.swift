@@ -6,7 +6,8 @@ extension Files {
         /// File extension to count (e.g., "swift", "storyboard")
         public let `extension`: String
 
-        /// Commits to analyze for this extension
+        /// Commits to analyze for this extension.
+        /// If every metric uses only `HEAD`, the working tree is analyzed as is, without checkout.
         public let commits: [String]
 
         public init(extension: String, commits: [String] = ["HEAD"]) {

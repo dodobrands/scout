@@ -5,7 +5,7 @@ description: Count files by extension with `scout files` and replay that count o
 
 # `scout files`
 
-Count files by extension, at HEAD or across commits. The result is the list of paths, so it answers "where" as well as "how many".
+Count files by extension, in the current working tree or across commits. The result is the list of paths, so it answers "where" as well as "how many".
 
 Run `scout files --help` for flags — it is the source of truth. This file covers what the help does not say.
 
@@ -43,12 +43,14 @@ The count is `files | length`.
 
 ## Recipes
 
-### Counts at HEAD
+### Counts in the current working tree (start here)
 
 ```bash
 scout files swift storyboard xib --output /tmp/files.json
 jq -r '.[] | .results[] | "\(.filetype)\t\(.files | length)"' /tmp/files.json
 ```
+
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### Storyboard removal over time, as CSV
 
@@ -84,4 +86,4 @@ jq '.[-1].results | map(select(.filetype == "storyboard" or .filetype == "xib") 
 ## See also
 
 - `scout-loc` — size rather than count, with include/exclude paths.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

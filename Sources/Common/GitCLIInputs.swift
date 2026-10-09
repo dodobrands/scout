@@ -6,13 +6,13 @@ package struct GitCLIInputs: Sendable {
     /// Path to repository with sources
     package let repoPath: String?
 
-    /// Run `git clean -ffdx && git reset --hard HEAD` before analysis
+    /// Run `git clean -ffdx && git reset --hard HEAD` before each checkout
     package let clean: Bool?
 
-    /// Fix broken LFS pointers by committing modified files after checkout
+    /// Fix broken LFS pointers by committing modified files on each checkout
     package let fixLFS: Bool?
 
-    /// Initialize and update git submodules
+    /// Initialize and update git submodules on each checkout
     package let initializeSubmodules: Bool?
 
     package init(

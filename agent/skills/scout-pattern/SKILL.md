@@ -1,11 +1,11 @@
 ---
 name: scout-pattern
-description: Count lines matching a literal string or a regex in source files with `scout pattern`, at HEAD or replayed over git history. Trigger when the question is about text in the code and how much of it there is, or how that amount moved over time, e.g. "how many files import UIKit?", "count our TODOs", "how many force unwraps are left?", "count @MainActor month by month since we adopted concurrency", "track the move from XCTest to Swift Testing", "where do we still use DispatchQueue.main?", "how many print statements ship in the app?", "how many hardcoded http links do we have?". Prefer it over a hand-rolled grep, especially once more than one commit is involved. One entry per matching line, with file and line number.
+description: Count lines matching a literal string or a regex in source files with `scout pattern`, in the current working tree or replayed over git history. Trigger when the question is about text in the code and how much of it there is, or how that amount moved over time, e.g. "how many files import UIKit?", "count our TODOs", "how many force unwraps are left?", "count @MainActor month by month since we adopted concurrency", "track the move from XCTest to Swift Testing", "where do we still use DispatchQueue.main?", "how many print statements ship in the app?", "how many hardcoded http links do we have?". Prefer it over a hand-rolled grep, especially once more than one commit is involved. One entry per matching line, with file and line number.
 ---
 
 # `scout pattern`
 
-Search sources for a literal substring or a regex, at HEAD or across commits. Every matching line comes back with its file and line number.
+Search sources for a literal substring or a regex, in the current working tree or across commits. Every matching line comes back with its file and line number.
 
 Run `scout pattern --help` for flags — it is the source of truth. This file covers what the help does not say.
 
@@ -51,13 +51,15 @@ Because matching is per line, a regex can never span a newline: `func .*\n.*asyn
 
 ## Recipes
 
-### Occurrences and files at HEAD
+### Occurrences and files in the current working tree (start here)
 
 ```bash
 scout pattern "import UIKit" "import SwiftUI" --output /tmp/pattern.json
 jq -r '.[] | .results[] | "\(.pattern)\t\(.matches | length)\t\([.matches[].file] | unique | length)"' \
   /tmp/pattern.json
 ```
+
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 Columns: pattern, matching lines, files touched.
 
@@ -96,4 +98,4 @@ jq -r '.[-1].results[] | select(.pattern == "// TODO:") | .matches[].file' /tmp/
 ## See also
 
 - `scout-types` — inheritance-aware counting, including base classes from the SDK.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

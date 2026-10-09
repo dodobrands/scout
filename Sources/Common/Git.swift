@@ -50,6 +50,25 @@ package enum Git {
 
     // MARK: - Checkout & Repository Preparation
 
+    /// Whether the run checks out commits, or analyzes the working tree as is
+    /// (see `analyzesWorkingTree`). Warns when a working-tree run ignores git options:
+    /// clean, LFS fix and submodule update would destroy uncommitted changes.
+    package static func checksOutCommits(
+        for metrics: [some CommitResolvable],
+        git: GitConfiguration
+    ) -> Bool {
+        guard metrics.analyzesWorkingTree else { return true }
+        if git.clean || git.fixLFS || git.initializeSubmodules {
+            logger.warning(
+                """
+                No commits to check out: analyzing the working tree as is, \
+                ignoring clean, fixLFS and initializeSubmodules
+                """
+            )
+        }
+        return false
+    }
+
     /// Prepares the repository and checks out the specified commit.
     /// Runs clean/reset before checkout to ensure a clean working tree.
     package static func checkout(hash: String, git: GitConfiguration) async throws {

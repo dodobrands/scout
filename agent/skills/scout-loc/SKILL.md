@@ -5,7 +5,7 @@ description: Count lines of code with `scout loc`, a `cloc` wrapper that can rep
 
 # `scout loc`
 
-Count lines of code per language and path, at HEAD or across commits. Runs `cloc` under the hood.
+Count lines of code per language and path, in the current working tree or across commits. Runs `cloc` under the hood.
 
 Run `scout loc --help` for flags — it is the source of truth. This file covers what the help does not say.
 
@@ -68,12 +68,14 @@ Pick stable names before running history — the name is the join key of the who
 
 ## Recipes
 
-### One-off count
+### Count in the current working tree (start here)
 
 ```bash
 scout loc Swift --include Sources --exclude .build Tests --output /tmp/loc.json
 jq -r '.[] | .results[] | "\(.metric)\t\(.linesOfCode)"' /tmp/loc.json
 ```
+
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### Growth over history, as CSV
 
@@ -105,4 +107,4 @@ Give each module its own metric in the config, with `nameTemplate` set to the mo
 
 - [cloc](https://github.com/AlDanial/cloc) — language names and what counts as code.
 - `scout-files` — how many files rather than how many lines.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.
