@@ -225,18 +225,21 @@ struct SwiftParser {
         allObjects: [ObjectFromCode],
         excluding path: Set<String>
     ) -> ObjectFromCode? {
-        let unvisited = allObjects.lazy.filter { !path.contains($0.identity) }
+        // Names are compared first: `identity` builds a string, and the pool holds every
+        // source, package and SDK type, so checking it for every object made lookups crawl.
+        let isUnvisited = { (candidate: ObjectFromCode) in !path.contains(candidate.identity) }
 
         if typeName.contains("."),
-            let nested = unvisited.first(where: { $0.fullName == typeName })
+            let nested = allObjects.first(where: { $0.fullName == typeName && isUnvisited($0) })
         {
             return nested
         }
 
         let components = typeName.split(separator: ".")
         guard let name = components.last.map(String.init) else { return nil }
-        let candidates = unvisited.filter { candidate in
+        let candidates = allObjects.lazy.filter { candidate in
             candidate.name == name && !(candidate.isTypealias && candidate.isNested)
+                && isUnvisited(candidate)
         }
 
         if components.count > 1, let module = components.first {
