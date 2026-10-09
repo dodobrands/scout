@@ -94,6 +94,8 @@ public struct LOC: Sendable {
 
         try await Self.checkClocInstalled()
 
+        let analyzesWorkingTree = input.metrics.analyzesWorkingTree
+
         // Resolve HEAD commits to actual hashes
         let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
             repoPath: input.git.repoPath
@@ -105,7 +107,9 @@ public struct LOC: Sendable {
         for (hash, metrics) in commitToMetrics {
             try Task.checkCancellation()
 
-            try await Git.checkout(hash: hash, git: input.git)
+            if !analyzesWorkingTree {
+                try await Git.checkout(hash: hash, git: input.git)
+            }
 
             var resultItems: [ResultItem] = []
             for metric in metrics {

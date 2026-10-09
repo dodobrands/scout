@@ -7,6 +7,15 @@ package protocol CommitResolvable {
 }
 
 extension Array where Element: CommitResolvable {
+    /// True when no metric names a commit other than `HEAD`.
+    /// Such a run analyzes the working tree as it is: no checkout and no git preparation,
+    /// so uncommitted changes are measured and the repository is left untouched.
+    /// Any explicit commit switches the whole run to checkouts, because once another commit
+    /// is checked out the working tree no longer reflects `HEAD`.
+    package var analyzesWorkingTree: Bool {
+        allSatisfy { $0.commits.allSatisfy { $0 == "HEAD" } }
+    }
+
     /// Resolves "HEAD" strings to actual commit hashes.
     /// Only calls Git if at least one element contains "HEAD".
     package func resolvingHeadCommits(repoPath: String) async throws -> [Element] {
