@@ -20,16 +20,11 @@ public struct Types: Sendable {
         self.hierarchyProvider = hierarchyProvider
     }
 
-    /// Counts types inherited from the specified base type in current repository state.
-    /// - Parameter input: Analysis input with repository path and type name
-    /// - Returns: Result containing list of matching types
-    func countTypes(input: AnalysisInput) async throws -> Result {
-        try await Signposts.interval("Count types", input.typeName) {
-            try await countTypesUnsignposted(input: input)
-        }
-    }
-
-    private func countTypesUnsignposted(input: AnalysisInput) async throws -> Result {
+    /// Counts types inherited from each of the base types in current repository state.
+    /// Sources, imports and the external hierarchy are read once and shared by all base types.
+    /// - Parameter input: Analysis input with repository path and base type names
+    /// - Returns: One result per base type, in the order of `input.typeNames`
+    func countTypes(input: AnalysisInput) async throws -> [Result] {
         let repoPath = URL(filePath: input.repoPath)
         let repoPathString = repoPath.path(percentEncoded: false)
         let parser = SwiftParser()
@@ -55,34 +50,33 @@ public struct Types: Sendable {
         }
         let allObjects = objects + packageObjects + externalObjects
 
-        // Typealiases and protocols take part in the inheritance lookup through `allObjects`,
-        // but they can't be instantiated, so they are never reported.
-        let types = Signposts.interval("Inheritance search", "\(allObjects.count) objects") {
-            objects.filter {
-                !$0.isTypealias
-                    && $0.kind != .protocolType
-                    && parser.isInherited(
-                        objectFromCode: $0,
-                        from: input.typeName,
-                        allObjects: allObjects
-                    )
-            }.sorted(by: { $0.name < $1.name })
+        return input.typeNames.map { typeName in
+            // Typealiases and protocols take part in the inheritance lookup through `allObjects`,
+            // but they can't be instantiated, so they are never reported.
+            let types = Signposts.interval("Inheritance search", typeName) {
+                objects.filter {
+                    !$0.isTypealias
+                        && $0.kind != .protocolType
+                        && parser.isInherited(
+                            objectFromCode: $0,
+                            from: typeName,
+                            allObjects: allObjects
+                        )
+                }.sorted(by: { $0.name < $1.name })
+            }
+
+            Self.logger.debug("Types conforming to \(typeName): \(types.map { $0.name })")
+
+            let typeInfos = types.map { obj in
+                TypeInfo(
+                    name: obj.name,
+                    fullName: obj.fullName,
+                    path: relativePath(from: obj.filePath, relativeTo: repoPathString)
+                )
+            }
+
+            return Result(typeName: typeName, types: typeInfos)
         }
-
-        Self.logger.debug("Types conforming to \(input.typeName): \(types.map { $0.name })")
-
-        let typeInfos = types.map { obj in
-            TypeInfo(
-                name: obj.name,
-                fullName: obj.fullName,
-                path: relativePath(from: obj.filePath, relativeTo: repoPathString)
-            )
-        }
-
-        return Result(
-            typeName: input.typeName,
-            types: typeInfos
-        )
     }
 
     /// Parses the Swift sources of resolved package dependencies.
@@ -161,16 +155,9 @@ public struct Types: Sendable {
                 try await Git.checkout(hash: hash, git: input.git)
             }
 
-            var resultItems: [ResultItem] = []
-            for metric in metrics {
-                let analysisInput = AnalysisInput(
-                    repoPath: input.git.repoPath,
-                    typeName: metric.type
-                )
-                let result = try await countTypes(input: analysisInput)
-                resultItems.append(
-                    ResultItem(typeName: result.typeName, types: result.types)
-                )
+            let analysisInput = AnalysisInput(repoPath: input.git.repoPath, typeNames: typeNames)
+            let resultItems = try await countTypes(input: analysisInput).map {
+                ResultItem(typeName: $0.typeName, types: $0.types)
             }
 
             let date = try await Git.commitDate(for: hash, in: repoPath)

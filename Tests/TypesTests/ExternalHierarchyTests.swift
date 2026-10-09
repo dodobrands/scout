@@ -18,7 +18,7 @@ struct ExternalHierarchyTests {
         let sut = Types(hierarchyProvider: provider)
 
         let input = Types.AnalysisInput(repoPath: cellsURL.path, typeName: "UIView")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         #expect(
             result.types.names == [
@@ -33,7 +33,7 @@ struct ExternalHierarchyTests {
         let sut = Types(hierarchyProvider: StubHierarchyProvider())
 
         let input = Types.AnalysisInput(repoPath: cellsURL.path, typeName: "UIView")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         #expect(result.types.isEmpty)
     }
@@ -48,7 +48,7 @@ struct ExternalHierarchyTests {
         let sut = Types(hierarchyProvider: provider)
 
         let input = Types.AnalysisInput(repoPath: cellsURL.path, typeName: "UIControl")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         #expect(result.types.names == ["LikeButton", "PriceControl"])
     }
