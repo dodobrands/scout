@@ -7,7 +7,7 @@ package protocol CommitResolvable {
 }
 
 extension Array where Element: CommitResolvable {
-    /// True when no metric names a commit other than `HEAD`.
+    /// True when the metrics name at least one commit and every commit is `HEAD`.
     /// Such a run analyzes the working tree as it is: no checkout and no git preparation,
     /// so uncommitted changes are measured and the branch stays attached.
     /// Any explicit commit switches the whole run to checkouts, because once another commit
