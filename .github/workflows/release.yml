@@ -73,9 +73,11 @@ jobs:
 
       - name: Build release binary
         id: build
+        # Swift 6.4's default swiftbuild system does not link Foundation's static libraries:
+        # https://github.com/swiftlang/swift-package-manager/issues/10592
         run: |
-          swift build -c release --product "$PRODUCT_NAME" --static-swift-stdlib
-          echo "bin-path=$(swift build -c release --product "$PRODUCT_NAME" --show-bin-path)" >> "$GITHUB_OUTPUT"
+          swift build -c release --product "$PRODUCT_NAME" --static-swift-stdlib --build-system native
+          echo "bin-path=$(swift build -c release --product "$PRODUCT_NAME" --build-system native --show-bin-path)" >> "$GITHUB_OUTPUT"
 
       - name: Package binary
         id: package
