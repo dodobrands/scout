@@ -27,7 +27,7 @@ alwaysApply: false
 ## Recipes
 
 ```bash
-# Current working tree, uncommitted changes included: no checkout, no git command. Start here.
+# Current working tree, uncommitted changes included: no checkout, no clean. Start here.
 scout types UIViewController View --repo-path "$REPO" --output /tmp/types.json
 
 # Monthly series of type counts

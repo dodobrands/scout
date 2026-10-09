@@ -6,7 +6,8 @@ extension Types {
         /// Type name to count (e.g., "UIView")
         public let type: String
 
-        /// Commits to analyze for this type
+        /// Commits to analyze for this type.
+        /// If every metric uses only `HEAD`, the working tree is analyzed as is, without checkout.
         public let commits: [String]
 
         public init(type: String, commits: [String] = ["HEAD"]) {

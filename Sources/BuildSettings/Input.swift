@@ -28,7 +28,8 @@ extension BuildSettings {
         /// Build setting name (e.g., "SWIFT_VERSION")
         public let setting: String
 
-        /// Commits to analyze for this setting
+        /// Commits to analyze for this setting.
+        /// If every metric uses only `HEAD`, the working tree is analyzed as is, without checkout.
         public let commits: [String]
 
         public init(setting: String, commits: [String] = ["HEAD"]) {

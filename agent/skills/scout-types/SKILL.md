@@ -66,7 +66,7 @@ scout types UIView UIViewController View --output /tmp/types.json
 jq -r '.[] | .results[] | "\(.typeName)\t\(.types | length)"' /tmp/types.json
 ```
 
-No `--commits`, so scout reads the files as they are — uncommitted changes included — and runs no git command. Start here; replay history only when the question is about change over time.
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### UIKit-to-SwiftUI migration as a time series
 

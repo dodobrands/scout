@@ -57,7 +57,7 @@ package enum Git {
         for metrics: [some CommitResolvable],
         git: GitConfiguration
     ) -> Bool {
-        guard !metrics.isEmpty, metrics.analyzesWorkingTree else { return true }
+        guard metrics.analyzesWorkingTree else { return true }
         if git.clean || git.fixLFS || git.initializeSubmodules {
             logger.warning(
                 """

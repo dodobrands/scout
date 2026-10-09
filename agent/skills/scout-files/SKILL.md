@@ -50,7 +50,7 @@ scout files swift storyboard xib --output /tmp/files.json
 jq -r '.[] | .results[] | "\(.filetype)\t\(.files | length)"' /tmp/files.json
 ```
 
-No `--commits`, so scout reads the files as they are — uncommitted changes included — and runs no git command. Start here; replay history only when the question is about change over time.
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### Storyboard removal over time, as CSV
 

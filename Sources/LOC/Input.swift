@@ -12,7 +12,8 @@ extension LOC {
         /// Paths to exclude
         public let exclude: [String]
 
-        /// Commits to analyze for this metric
+        /// Commits to analyze for this metric.
+        /// If every metric uses only `HEAD`, the working tree is analyzed as is, without checkout.
         public let commits: [String]
 
         /// Template for metric identifier with placeholders (%langs%, %include%, %exclude%)

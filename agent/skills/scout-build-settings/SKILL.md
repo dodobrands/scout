@@ -86,7 +86,7 @@ scout build-settings SWIFT_VERSION --include "**/*.xcodeproj" --exclude ".build/
 jq -r '.[-1].results[] | .setting as $s | .targets | to_entries[] | "\($s)\t\(.key)\t\(.value // "—")"' /tmp/bs.json
 ```
 
-No `--commits`, so scout reads the files as they are — uncommitted changes included — and runs no git command. Start here; replay history only when the question is about change over time.
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### Distribution of values across targets
 

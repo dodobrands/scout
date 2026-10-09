@@ -9,7 +9,8 @@ extension Pattern {
         /// Whether to use regex matching instead of literal string matching
         public let isRegex: Bool
 
-        /// Commits to analyze for this pattern
+        /// Commits to analyze for this pattern.
+        /// If every metric uses only `HEAD`, the working tree is analyzed as is, without checkout.
         public let commits: [String]
 
         public init(pattern: String, isRegex: Bool = false, commits: [String] = ["HEAD"]) {

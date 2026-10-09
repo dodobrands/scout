@@ -75,7 +75,7 @@ scout loc Swift --include Sources --exclude .build Tests --output /tmp/loc.json
 jq -r '.[] | .results[] | "\(.metric)\t\(.linesOfCode)"' /tmp/loc.json
 ```
 
-No `--commits`, so scout reads the files as they are — uncommitted changes included — and runs no git command. Start here; replay history only when the question is about change over time.
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean. Start here; replay history only when the question is about change over time.
 
 ### Growth over history, as CSV
 

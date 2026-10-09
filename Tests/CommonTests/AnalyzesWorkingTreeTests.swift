@@ -6,7 +6,7 @@ struct AnalyzesWorkingTreeTests {
     func `When every metric uses HEAD, should analyze the working tree`() {
         let metrics = [
             TestMetric(name: "A", commits: ["HEAD"]),
-            TestMetric(name: "B", commits: ["HEAD", "HEAD"]),
+            TestMetric(name: "B", commits: ["HEAD"]),
         ]
 
         #expect(metrics.analyzesWorkingTree)
@@ -21,19 +21,11 @@ struct AnalyzesWorkingTreeTests {
 
         #expect(!metrics.analyzesWorkingTree)
     }
-}
-
-struct ChecksOutCommitsTests {
 
     @Test
-    func `When there are no metrics, should not treat the run as a working-tree run`() {
-        let git = GitConfiguration(
-            repoPath: ".",
-            clean: true,
-            fixLFS: false,
-            initializeSubmodules: false
-        )
+    func `When every metric skips its commits, should not analyze the working tree`() {
+        let metrics = [TestMetric(name: "A", commits: [])]
 
-        #expect(Git.checksOutCommits(for: [TestMetric](), git: git))
+        #expect(!metrics.analyzesWorkingTree)
     }
 }

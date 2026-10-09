@@ -124,7 +124,7 @@ Extra requirements by subcommand: `loc` needs `cloc` on `$PATH`; `build-settings
 scout types UIViewController View --repo-path ~/Developer/myapp --output /tmp/types.json
 ```
 
-Without commits, scout reads the files as they are — uncommitted changes included — and runs no git command: no checkout, no clean, the branch stays put. `git.clean` and friends in a config are ignored with a warning. Prefer this to a historical run whenever the question is about the code as it is now, and run it in someone's live checkout without asking — except `build-settings` with `setupCommands`, which run in that tree and can change files.
+Without commits, scout reads the files as they are — uncommitted changes included — and changes nothing in git: no checkout, no clean, the branch stays put. `git.clean` and friends in a config are ignored with a warning. This holds only while every commit is the literal `HEAD`: one explicit commit anywhere, including a hash that equals HEAD, switches the whole run to checkouts and applies the git options. Prefer this to a historical run whenever the question is about the code as it is now, and run it in someone's live checkout without asking — except `build-settings` with `setupCommands`, which run in that tree and can change files.
 
 ### Monthly time series over the whole history
 

@@ -13,7 +13,8 @@ extension Array where Element: CommitResolvable {
     /// Any explicit commit switches the whole run to checkouts, because once another commit
     /// is checked out the working tree no longer reflects `HEAD`.
     package var analyzesWorkingTree: Bool {
-        allSatisfy { $0.commits.allSatisfy { $0 == "HEAD" } }
+        let commits = flatMap(\.commits)
+        return !commits.isEmpty && commits.allSatisfy { $0 == "HEAD" }
     }
 
     /// Resolves "HEAD" strings to actual commit hashes.
