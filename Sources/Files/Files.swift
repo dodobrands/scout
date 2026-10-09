@@ -43,7 +43,7 @@ public struct Files: Sendable {
     ) async throws {
         let repoPath = URL(filePath: input.git.repoPath)
 
-        let analyzesWorkingTree = input.metrics.analyzesWorkingTree(git: input.git)
+        let checksOutCommits = Git.checksOutCommits(for: input.metrics, git: input.git)
 
         // Resolve HEAD commits to actual hashes
         let resolvedMetrics = try await input.metrics.resolvingHeadCommits(
@@ -58,7 +58,7 @@ public struct Files: Sendable {
 
             Self.logger.debug("Processing commit: \(hash)")
 
-            if !analyzesWorkingTree {
+            if checksOutCommits {
                 try await Git.checkout(hash: hash, git: input.git)
             }
 
