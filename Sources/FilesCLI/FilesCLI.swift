@@ -25,7 +25,7 @@ public struct FilesCLI: AsyncParsableCommand {
     @Option(
         name: [.long, .short],
         parsing: .upToNextOption,
-        help: "Commit hashes to analyze (default: HEAD)"
+        help: "Commits to check out and analyze (default: working tree, no checkout)"
     )
     public var commits: [String] = []
 
@@ -36,14 +36,14 @@ public struct FilesCLI: AsyncParsableCommand {
     public var verbose: Bool = false
 
     @Flag(
-        help: "Clean working directory before analysis (git clean -ffdx && git reset --hard HEAD)"
+        help: "Run git clean -ffdx && git reset --hard HEAD before each checkout"
     )
     public var gitClean: Bool = false
 
-    @Flag(help: "Fix broken LFS pointers by committing modified files after checkout")
+    @Flag(help: "Fix broken LFS pointers by committing modified files after each checkout")
     public var fixLfs: Bool = false
 
-    @Flag(help: "Initialize submodules (reset and update to correct commits)")
+    @Flag(help: "Initialize submodules after each checkout (reset and update to correct commits)")
     public var initializeSubmodules: Bool = false
 
     private static let logger = Logger(label: "scout.CountFiles")

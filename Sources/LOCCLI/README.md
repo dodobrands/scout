@@ -31,14 +31,14 @@ scout loc Swift --commits abc123 def456
 - `--include, -i <paths>` — Paths to include (e.g., Sources App)
 - `--exclude, -e <paths>` — Paths to exclude (e.g., Tests Vendor)
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commits to check out and analyze (default: working tree, no checkout)
 - `--name-template <template>` — Template for metric identifier with placeholders (default: `%langs% | %include%`)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
-- `--git-clean` — Clean working directory before analysis (`git clean -ffdx && git reset --hard HEAD`)
-- `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
-- `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
+- `--git-clean` — Run `git clean -ffdx && git reset --hard HEAD` before each checkout
+- `--fix-lfs` — Fix broken LFS pointers by committing modified files after each checkout
+- `--initialize-submodules` — Initialize submodules after each checkout (reset and update to correct commits)
 
 ## Configuration (Optional)
 
@@ -106,7 +106,7 @@ scout loc Swift --config loc-config.json
 | `metrics[].languages` | `[String]` | Programming languages to count |
 | `metrics[].include` | `[String]` | Paths to include |
 | `metrics[].exclude` | `[String]` | Paths to exclude |
-| `metrics[].commits` | `[String]?` | Commits for this metric (default: `["HEAD"]`) |
+| `metrics[].commits` | `[String]?` | Commits for this metric (default: `["HEAD"]`, see [working tree](../Common/GitConfiguration.md#working-tree-without-checkout)) |
 | `metrics[].nameTemplate` | `String?` | Template for metric identifier (default: `"%langs% | %include%"`) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
 

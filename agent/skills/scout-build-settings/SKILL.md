@@ -129,4 +129,4 @@ jq -r '.[] | .date as $d | .results[] | select(.setting == "SWIFT_VERSION")
 
 ## See also
 
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

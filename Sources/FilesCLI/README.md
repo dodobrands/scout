@@ -26,13 +26,13 @@ scout files swift --commits abc123 def456
 ### Optional
 
 - `--config <path>` — Path to configuration JSON file
-- `--commits, -c <hashes>` — Commit hashes to analyze (default: HEAD)
+- `--commits, -c <hashes>` — Commits to check out and analyze (default: working tree, no checkout)
 - `--output, -o <path>` — Path to save JSON results
 - `--verbose, -v` — Enable verbose logging
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
-- `--git-clean` — Clean working directory before analysis (`git clean -ffdx && git reset --hard HEAD`)
-- `--fix-lfs` — Fix broken LFS pointers by committing modified files after checkout
-- `--initialize-submodules` — Initialize submodules (reset and update to correct commits)
+- `--git-clean` — Run `git clean -ffdx && git reset --hard HEAD` before each checkout
+- `--fix-lfs` — Fix broken LFS pointers by committing modified files after each checkout
+- `--initialize-submodules` — Initialize submodules after each checkout (reset and update to correct commits)
 
 ## Configuration (Optional)
 
@@ -83,7 +83,7 @@ scout files swift --config files-config.json
 |-------|------|-------------|
 | `metrics` | `[Metric]` | Array of file extension metrics to analyze |
 | `metrics[].extension` | `String` | File extension to count (without dot) |
-| `metrics[].commits` | `[String]?` | Commits for this extension (default: `["HEAD"]`) |
+| `metrics[].commits` | `[String]?` | Commits for this extension (default: `["HEAD"]`, see [working tree](../Common/GitConfiguration.md#working-tree-without-checkout)) |
 | `git` | `Object` | [Git configuration](../Common/GitConfiguration.md) (optional) |
 
 ### Per-Metric Commits (Config Only)

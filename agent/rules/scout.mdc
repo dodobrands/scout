@@ -15,11 +15,11 @@ alwaysApply: false
 
 - `--output` is a JSON array, one entry per commit — `{commit, date, results}`. Without it the data only reaches the log. The file is rewritten after every commit, so an interrupted run keeps what it finished.
 - CLI arguments override the config file.
-- Different commits per metric are config-only (`metrics[].commits`); `[]` skips a metric even when `--commits` is passed, omitted means `HEAD`.
+- Different commits per metric are config-only (`metrics[].commits`); `[]` skips a metric even when `--commits` is passed, omitted means `HEAD`. A run with only `HEAD` reads the working tree as is: no checkout, no git options applied.
 - Without `--config`, each subcommand still auto-loads `.scout-<name>.json` from the current directory.
 - Positionals must come before `--commits` / `--include` / `--exclude`; those swallow them, and the run silently does nothing.
 - Paths in the output are relative for `types` and `pattern`, absolute for `files` and `build-settings`.
-- `--git-clean` runs `git clean -ffdx` — keep `--config` and `--output` outside the analyzed repository.
+- `--git-clean` runs `git clean -ffdx` before each checkout — keep `--config` and `--output` outside the analyzed repository.
 - After a historical run the repository sits in detached HEAD on the last commit. Use a throwaway clone or a worktree.
 - Extra requirements: `cloc` for `loc`, `xcodebuild` for `build-settings`, Xcode SDK for full inheritance resolution in `types`.
 - `scout loc` needs `--include`; empty means zero. Its include matches every directory whose path ends with the given string, at any depth, so exclude `.build`, `Pods` and `DerivedData` — otherwise dependency sources are counted too.

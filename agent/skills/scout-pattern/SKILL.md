@@ -96,4 +96,4 @@ jq -r '.[-1].results[] | select(.pattern == "// TODO:") | .matches[].file' /tmp/
 ## See also
 
 - `scout-types` — inheritance-aware counting, including base classes from the SDK.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

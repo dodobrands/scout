@@ -78,7 +78,7 @@ Positional arguments and flags override the config file. `scout types UIView --c
 }
 ```
 
-Omitted `commits` means `HEAD`; an empty array skips the metric. `--commits` on the command line overrides all of them — except `[]`, which still skips: the skip is checked before the override.
+Omitted `commits` means `HEAD`; an empty array skips the metric. A run where every metric is at `HEAD` reads the working tree as is — no checkout, no clean, uncommitted changes counted; one explicit commit anywhere makes the whole run check out every commit, `HEAD` included. `--commits` on the command line overrides all of them — except `[]`, which still skips: the skip is checked before the override.
 
 Every subcommand also accepts a `git` object in its config — `repoPath`, `clean`, `fixLFS`, `initializeSubmodules` — mirroring `--repo-path`, `--git-clean`, `--fix-lfs`, `--initialize-submodules`.
 
@@ -94,9 +94,9 @@ Scout doesn't sort them — it walks the metrics and keeps each commit at its fi
 
 `git clean -ffdx` removes untracked *and ignored* files under `--repo-path`. A config or output file sitting inside the repository disappears mid-run. Keep both outside: `/tmp`, or `$RUNNER_TEMP` on GitHub Actions.
 
-### The repository is left on the last analyzed commit
+### A historical run leaves the repository on the last analyzed commit
 
-Scout checks out commits in the working tree and never restores the original branch — after a historical run the repo sits in detached HEAD. `--fix-lfs` additionally creates local commits (never pushed).
+With explicit commits, scout checks out commits in the working tree and never restores the original branch — after a historical run the repo sits in detached HEAD. `--fix-lfs` additionally creates local commits (never pushed).
 
 So: run history analysis against a throwaway clone or a dedicated `git worktree`, not the checkout someone is working in. If you do use a live checkout, `git -C <repo> checkout -` afterwards and say so.
 

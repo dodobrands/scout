@@ -105,4 +105,4 @@ Give each module its own metric in the config, with `nameTemplate` set to the mo
 
 - [cloc](https://github.com/AlDanial/cloc) — language names and what counts as code.
 - `scout-files` — how many files rather than how many lines.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

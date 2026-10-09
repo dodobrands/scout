@@ -291,6 +291,8 @@ When analyzing multiple commits, the output is an array:
 
 Commits are processed in the order they are provided.
 
+Without commits, every tool analyzes the working tree as is: no checkout, uncommitted changes included, and `--git-clean`, `--fix-lfs` and `--initialize-submodules` are ignored. See [Working tree without checkout](Sources/Common/GitConfiguration.md#working-tree-without-checkout).
+
 Use this to build historical dashboards by analyzing commits at regular intervals (e.g., monthly) from your repository's history.
 
 ### Best Practices for Config and Output Paths

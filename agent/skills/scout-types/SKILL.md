@@ -89,4 +89,4 @@ jq -r '.[-1].results[] | select(.typeName == "UIViewController") | .types[].path
 ## See also
 
 - `scout-pattern` — occurrences of arbitrary text when inheritance isn't the question.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.

@@ -84,4 +84,4 @@ jq '.[-1].results | map(select(.filetype == "storyboard" or .filetype == "xib") 
 ## See also
 
 - `scout-loc` — size rather than count, with include/exclude paths.
-- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a run.
+- `scout` (umbrella) — output envelope, per-metric commits, `--git-clean` footgun, detached HEAD after a historical run.
