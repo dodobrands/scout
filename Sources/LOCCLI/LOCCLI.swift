@@ -59,10 +59,10 @@ public struct LOCCLI: AsyncParsableCommand {
     )
     public var gitClean: Bool = false
 
-    @Flag(help: "Fix broken LFS pointers by committing modified files after each checkout")
+    @Flag(help: "Fix broken LFS pointers by committing modified files on each checkout")
     public var fixLfs: Bool = false
 
-    @Flag(help: "Initialize submodules after each checkout (reset and update to correct commits)")
+    @Flag(help: "Initialize submodules on each checkout (reset and update to correct commits)")
     public var initializeSubmodules: Bool = false
 
     private static let logger = Logger(label: "scout.CountLOC")

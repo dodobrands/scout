@@ -31,8 +31,8 @@ scout files swift --commits abc123 def456
 - `--verbose, -v` — Enable verbose logging
 - `--repo-path, -r <path>` — Path to repository (default: current directory)
 - `--git-clean` — Run `git clean -ffdx && git reset --hard HEAD` before each checkout
-- `--fix-lfs` — Fix broken LFS pointers by committing modified files after each checkout
-- `--initialize-submodules` — Initialize submodules after each checkout (reset and update to correct commits)
+- `--fix-lfs` — Fix broken LFS pointers by committing modified files on each checkout
+- `--initialize-submodules` — Initialize submodules on each checkout (reset and update to correct commits)
 
 ## Configuration (Optional)
 

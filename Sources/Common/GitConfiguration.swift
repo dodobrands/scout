@@ -9,10 +9,10 @@ public struct GitConfiguration: Sendable {
     /// Run `git clean -ffdx && git reset --hard HEAD` before each checkout
     public let clean: Bool
 
-    /// Fix broken LFS pointers by committing modified files after each checkout
+    /// Fix broken LFS pointers by committing modified files on each checkout
     public let fixLFS: Bool
 
-    /// Initialize and update git submodules after each checkout
+    /// Initialize and update git submodules on each checkout
     public let initializeSubmodules: Bool
 
     /// Direct initializer - all fields required

@@ -9,10 +9,10 @@ package struct GitCLIInputs: Sendable {
     /// Run `git clean -ffdx && git reset --hard HEAD` before each checkout
     package let clean: Bool?
 
-    /// Fix broken LFS pointers by committing modified files after each checkout
+    /// Fix broken LFS pointers by committing modified files on each checkout
     package let fixLFS: Bool?
 
-    /// Initialize and update git submodules after each checkout
+    /// Initialize and update git submodules on each checkout
     package let initializeSubmodules: Bool?
 
     package init(

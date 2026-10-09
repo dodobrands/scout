@@ -19,8 +19,8 @@ Any explicit commit switches the whole run to checkouts, `HEAD` included: once a
 |------|---------|-------------|
 | `--repo-path, -r <path>` | current directory | Path to repository |
 | `--git-clean` | `false` | Run `git clean -ffdx && git reset --hard HEAD` before each checkout |
-| `--fix-lfs` | `false` | Fix broken LFS pointers by committing modified files after each checkout |
-| `--initialize-submodules` | `false` | Initialize submodules after each checkout (reset and update to correct commits) |
+| `--fix-lfs` | `false` | Fix broken LFS pointers by committing modified files on each checkout |
+| `--initialize-submodules` | `false` | Initialize submodules on each checkout (reset and update to correct commits) |
 
 ## JSON Configuration
 
@@ -40,8 +40,8 @@ Add optional `git` section to your config file. All fields are optional:
 |-------|------|---------|-------------|
 | `repoPath` | `String` | current directory | Path to repository |
 | `clean` | `Bool` | `false` | Run `git clean -ffdx && git reset --hard HEAD` before each checkout |
-| `fixLFS` | `Bool` | `false` | Fix broken LFS pointers by committing modified files after each checkout |
-| `initializeSubmodules` | `Bool` | `false` | Initialize and update git submodules after each checkout |
+| `fixLFS` | `Bool` | `false` | Fix broken LFS pointers by committing modified files on each checkout |
+| `initializeSubmodules` | `Bool` | `false` | Initialize and update git submodules on each checkout |
 
 > **Note:** CLI flags take priority over config values.
 
