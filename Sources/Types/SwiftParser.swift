@@ -140,17 +140,17 @@ struct SwiftParser {
     /// - Parameters:
     ///   - objectFromCode: The object to check
     ///   - inheritance: Base type pattern (use `<*>` suffix for generic matching)
-    ///   - allObjects: All parsed objects for indirect inheritance lookup
+    ///   - index: All parsed objects, indexed for indirect inheritance lookup
     /// - Returns: `true` if the object inherits from the base type
     func isInherited(
         objectFromCode: ObjectFromCode,
         from inheritance: String,
-        allObjects: [ObjectFromCode]
+        index: ObjectIndex
     ) -> Bool {
         isInherited(
             objectFromCode: objectFromCode,
             from: inheritance,
-            allObjects: allObjects,
+            index: index,
             originIsValueType: objectFromCode.kind.isValueType,
             path: []
         )
@@ -165,7 +165,7 @@ struct SwiftParser {
     private func isInherited(
         objectFromCode: ObjectFromCode,
         from inheritance: String,
-        allObjects: [ObjectFromCode],
+        index: ObjectIndex,
         originIsValueType: Bool,
         path: Set<String>
     ) -> Bool {
@@ -187,7 +187,7 @@ struct SwiftParser {
             guard
                 let parentObject = resolveParent(
                     named: baseTypeName,
-                    allObjects: allObjects,
+                    index: index,
                     excluding: path
                 )
             else {
@@ -204,7 +204,7 @@ struct SwiftParser {
             return isInherited(
                 objectFromCode: parentObject,
                 from: inheritance,
-                allObjects: allObjects,
+                index: index,
                 originIsValueType: originIsValueType,
                 path: path
             )
@@ -222,24 +222,21 @@ struct SwiftParser {
     ///   conformance to a protocol would be misrouted into that typealias's target hierarchy.
     private func resolveParent(
         named typeName: String,
-        allObjects: [ObjectFromCode],
+        index: ObjectIndex,
         excluding path: Set<String>
     ) -> ObjectFromCode? {
-        // Names are compared first: `identity` builds a string, and the pool holds every
-        // source, package and SDK type, so checking it for every object made lookups crawl.
         let isUnvisited = { (candidate: ObjectFromCode) in !path.contains(candidate.identity) }
 
         if typeName.contains("."),
-            let nested = allObjects.first(where: { $0.fullName == typeName && isUnvisited($0) })
+            let nested = index.byFullName[typeName]?.first(where: isUnvisited)
         {
             return nested
         }
 
         let components = typeName.split(separator: ".")
         guard let name = components.last.map(String.init) else { return nil }
-        let candidates = allObjects.lazy.filter { candidate in
-            candidate.name == name && !(candidate.isTypealias && candidate.isNested)
-                && isUnvisited(candidate)
+        let candidates = (index.byName[name] ?? []).lazy.filter { candidate in
+            !(candidate.isTypealias && candidate.isNested) && isUnvisited(candidate)
         }
 
         if components.count > 1, let module = components.first {

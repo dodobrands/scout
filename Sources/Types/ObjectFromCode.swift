@@ -32,8 +32,8 @@ struct ObjectFromCode: Sendable {
     var isNested: Bool { fullName != name }
 
     /// Identifies the declaration within the analyzed pool: same-named types from different
-    /// files or containers stay distinct.
-    var identity: String { "\(filePath)#\(fullName)" }
+    /// files or containers stay distinct. Stored, as the inheritance search checks it per step.
+    let identity: String
 
     init(
         name: String,
@@ -47,5 +47,6 @@ struct ObjectFromCode: Sendable {
         self.filePath = filePath
         self.inheritedTypes = inheritedTypes
         self.kind = kind
+        self.identity = "\(filePath)#\(fullName)"
     }
 }

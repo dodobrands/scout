@@ -49,9 +49,10 @@ public struct Types: Sendable {
             try await hierarchyProvider.externalObjects(forModules: modules)
         }
         let allObjects = objects + packageObjects + externalObjects
+        let index = SwiftParser.ObjectIndex(allObjects)
 
         return input.typeNames.map { typeName in
-            // Typealiases and protocols take part in the inheritance lookup through `allObjects`,
+            // Typealiases and protocols take part in the inheritance lookup through the index,
             // but they can't be instantiated, so they are never reported.
             let types = Signposts.interval("Inheritance search", typeName) {
                 objects.filter {
@@ -60,7 +61,7 @@ public struct Types: Sendable {
                         && parser.isInherited(
                             objectFromCode: $0,
                             from: typeName,
-                            allObjects: allObjects
+                            index: index
                         )
                 }.sorted(by: { $0.name < $1.name })
             }
