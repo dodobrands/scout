@@ -4,6 +4,18 @@ on:
   push:
     tags:
       - "*.*.*"
+  # Build the release binaries on every PR too: tests build debug with dynamic linking,
+  # so a toolchain change that breaks the static release build would surface only on a tag.
+  pull_request:
+    branches:
+      - 'main'
+  merge_group:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 env:
   PRODUCT_NAME: scout
@@ -35,6 +47,7 @@ jobs:
           echo "bin-path=$(swift build -c release --product "$PRODUCT_NAME" --show-bin-path)" >> $GITHUB_OUTPUT
 
       - name: Package binary
+        if: github.ref_type == 'tag'
         id: package
         run: |
           ARCHIVE_NAME="${PRODUCT_NAME}_${GITHUB_REF_NAME}_darwin_arm64.tar.gz"
@@ -42,6 +55,7 @@ jobs:
           echo "archive-name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
+        if: github.ref_type == 'tag'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.package.outputs.archive-name }}
@@ -80,6 +94,7 @@ jobs:
           echo "bin-path=$(swift build -c release --product "$PRODUCT_NAME" --build-system native --show-bin-path)" >> "$GITHUB_OUTPUT"
 
       - name: Package binary
+        if: github.ref_type == 'tag'
         id: package
         run: |
           ARCHIVE_NAME="${PRODUCT_NAME}_${GITHUB_REF_NAME}_linux_${{ matrix.arch }}.tar.gz"
@@ -87,12 +102,14 @@ jobs:
           echo "archive-name=${ARCHIVE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact
+        if: github.ref_type == 'tag'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.package.outputs.archive-name }}
           path: ${{ steps.package.outputs.archive-name }}
 
   release:
+    if: github.ref_type == 'tag'
     needs: [build-macos, build-linux]
     runs-on: ubuntu-latest
     timeout-minutes: 10
