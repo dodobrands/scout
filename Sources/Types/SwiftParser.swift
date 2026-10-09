@@ -239,11 +239,12 @@ struct SwiftParser {
             !(candidate.isTypealias && candidate.isNested) && isUnvisited(candidate)
         }
 
-        if components.count > 1, let module = components.first {
-            let moduleDirectory = "/\(module)/"
-            if let fromModule = candidates.first(where: { $0.filePath.contains(moduleDirectory) }) {
-                return fromModule
-            }
+        if components.count > 1, let module = components.first,
+            let fromModule = index.byModuleQualifiedName["\(module).\(name)"]?.first(
+                where: isUnvisited
+            )
+        {
+            return fromModule
         }
 
         return candidates.first
