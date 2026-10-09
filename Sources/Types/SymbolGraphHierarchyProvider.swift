@@ -29,7 +29,9 @@ actor SymbolGraphHierarchyProvider: ExternalHierarchyProvider {
                 result += cached
                 continue
             }
-            let objects = await extract(module: module, sdkPath: sdkPath, target: target)
+            let objects = await Signposts.interval("Extract symbol graph", module) {
+                await extract(module: module, sdkPath: sdkPath, target: target)
+            }
             cache[key] = objects
             result += objects
         }

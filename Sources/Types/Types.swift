@@ -24,38 +24,50 @@ public struct Types: Sendable {
     /// - Parameter input: Analysis input with repository path and type name
     /// - Returns: Result containing list of matching types
     func countTypes(input: AnalysisInput) async throws -> Result {
+        try await Signposts.interval("Count types", input.typeName) {
+            try await countTypesUnsignposted(input: input)
+        }
+    }
+
+    private func countTypesUnsignposted(input: AnalysisInput) async throws -> Result {
         let repoPath = URL(filePath: input.repoPath)
         let repoPathString = repoPath.path(percentEncoded: false)
         let parser = SwiftParser()
 
-        let swiftFiles = findSwiftFiles(in: repoPath)
-        let objects = try swiftFiles.flatMap {
-            try parser.parseFile(from: $0)
+        let swiftFiles = Signposts.interval("Find Swift files") { findSwiftFiles(in: repoPath) }
+        let objects = try Signposts.interval("Parse sources", "\(swiftFiles.count) files") {
+            try swiftFiles.flatMap { try parser.parseFile(from: $0) }
         }
 
         // Superclasses declared in package dependencies (e.g. an SPM package's
         // `open class StateViewController: UIViewController`) are resolved from the checked-out
         // package sources. They take part in the lookup but are never reported.
-        let packageObjects = parsePackageCheckouts(in: repoPath, parser: parser)
+        let packageObjects = Signposts.interval("Parse package checkouts") {
+            parsePackageCheckouts(in: repoPath, parser: parser)
+        }
 
         // Resolve inheritance past the source boundary (e.g. UICollectionViewCell -> UIView)
         // by merging in external class-inheritance edges for the modules the source imports.
         // Source objects come first so name lookups prefer local definitions.
-        let modules = ImportScanner.modules(in: swiftFiles)
-        let externalObjects = try await hierarchyProvider.externalObjects(forModules: modules)
+        let modules = Signposts.interval("Scan imports") { ImportScanner.modules(in: swiftFiles) }
+        let externalObjects = try await Signposts.interval("External hierarchy") {
+            try await hierarchyProvider.externalObjects(forModules: modules)
+        }
         let allObjects = objects + packageObjects + externalObjects
 
         // Typealiases and protocols take part in the inheritance lookup through `allObjects`,
         // but they can't be instantiated, so they are never reported.
-        let types = objects.filter {
-            !$0.isTypealias
-                && $0.kind != .protocolType
-                && parser.isInherited(
-                    objectFromCode: $0,
-                    from: input.typeName,
-                    allObjects: allObjects
-                )
-        }.sorted(by: { $0.name < $1.name })
+        let types = Signposts.interval("Inheritance search", "\(allObjects.count) objects") {
+            objects.filter {
+                !$0.isTypealias
+                    && $0.kind != .protocolType
+                    && parser.isInherited(
+                        objectFromCode: $0,
+                        from: input.typeName,
+                        allObjects: allObjects
+                    )
+            }.sorted(by: { $0.name < $1.name })
+        }
 
         Self.logger.debug("Types conforming to \(input.typeName): \(types.map { $0.name })")
 
