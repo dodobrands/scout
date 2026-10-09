@@ -66,19 +66,6 @@ jobs:
         with:
           install_args: swift
 
-      # mise exposes swift via a shim, so SourceKitten's `which swift` lookup
-      # can't reach libsourcekitdInProc.so. Point it at the toolchain directly.
-      - name: Locate sourcekitd
-        if: matrix.os == 'linux'
-        run: |
-          lib=$(find "$(mise where swift)" -name 'libsourcekitdInProc.so' -print -quit)
-          if [ -z "$lib" ]; then
-            echo "libsourcekitdInProc.so not found in Swift toolchain" >&2
-            exit 1
-          fi
-          echo "Found sourcekitd at: $lib"
-          echo "LINUX_SOURCEKIT_LIB_PATH=$(dirname "$lib")" >> "$GITHUB_ENV"
-
       - name: Lint
         if: matrix.os == 'macos'
         run: sh scripts/lint.sh

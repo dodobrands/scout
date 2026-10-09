@@ -15,7 +15,7 @@ struct SymbolGraphHierarchyProviderIntegrationTests {
         let sut = Types(hierarchyProvider: SymbolGraphHierarchyProvider())
 
         let input = Types.AnalysisInput(repoPath: cellsURL.path, typeName: "UIView")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         #expect(
             result.types.names == [

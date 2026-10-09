@@ -87,8 +87,12 @@ var targets: [Target] = [
         name: "Types",
         dependencies: [
             .product(
-                name: "SourceKittenFramework",
-                package: "SourceKitten"
+                name: "SwiftSyntax",
+                package: "swift-syntax"
+            ),
+            .product(
+                name: "SwiftParser",
+                package: "swift-syntax"
             ),
             .product(
                 name: "Logging",
@@ -448,10 +452,6 @@ let package = Package(
             .upToNextMajor(from: "1.0.0")
         ),
         .package(
-            url: "https://github.com/jpsim/SourceKitten",
-            .upToNextMajor(from: "0.36.0")
-        ),
-        .package(
             url: "https://github.com/swiftlang/swift-subprocess",
             from: "1.0.0"
         ),
@@ -474,6 +474,10 @@ let package = Package(
         .package(
             url: "https://github.com/apple/swift-system",
             .upToNextMajor(from: "1.0.0")
+        ),
+        .package(
+            url: "https://github.com/swiftlang/swift-syntax",
+            from: "604.0.0"
         ),
         .package(
             url: "https://github.com/davbeck/swift-glob.git",

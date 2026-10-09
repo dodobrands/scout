@@ -22,22 +22,57 @@ actor SymbolGraphHierarchyProvider: ExternalHierarchyProvider {
             return []
         }
 
-        var result: [ObjectFromCode] = []
-        for module in modules.sorted() {
-            let key = "\(module)|\(sdkPath)|\(target)"
-            if let cached = cache[key] {
-                result += cached
-                continue
+        let keys = Dictionary(
+            uniqueKeysWithValues: modules.map { ($0, "\($0)|\(sdkPath)|\(target)") }
+        )
+        let uncached = modules.filter { keys[$0].flatMap { cache[$0] } == nil }.sorted()
+        if !uncached.isEmpty {
+            let extracted = await Self.extract(modules: uncached, sdkPath: sdkPath, target: target)
+            for module in uncached {
+                if let key = keys[module] { cache[key] = extracted[module] ?? [] }
             }
-            let objects = await extract(module: module, sdkPath: sdkPath, target: target)
-            cache[key] = objects
-            result += objects
         }
-        return result
+
+        // Sorted module order keeps the pool, and so the first match of a name, deterministic.
+        return modules.sorted().flatMap { module in keys[module].flatMap { cache[$0] } ?? [] }
     }
 
-    private func extract(module: String, sdkPath: String, target: String) async -> [ObjectFromCode]
-    {
+    /// Extracts modules in parallel, one `swift-symbolgraph-extract` process per module,
+    /// at most one process per core at a time.
+    private static func extract(
+        modules: [String],
+        sdkPath: String,
+        target: String
+    ) async -> [String: [ObjectFromCode]] {
+        let width = max(1, ProcessInfo.processInfo.activeProcessorCount)
+        return await withTaskGroup(of: (String, [ObjectFromCode]).self) { group in
+            var pending = modules[...]
+            var result: [String: [ObjectFromCode]] = [:]
+
+            func addNext() {
+                guard let module = pending.popFirst() else { return }
+                group.addTask {
+                    let objects = await Signposts.interval("Extract symbol graph", module) {
+                        await extract(module: module, sdkPath: sdkPath, target: target)
+                    }
+                    return (module, objects)
+                }
+            }
+
+            for _ in 0..<width { addNext() }
+            for await (module, objects) in group {
+                result[module] = objects
+                addNext()
+            }
+            return result
+        }
+    }
+
+    private static func extract(
+        module: String,
+        sdkPath: String,
+        target: String
+    ) async -> [ObjectFromCode] {
         let outputDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("scout-symbolgraph-\(module)-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: outputDirectory) }
@@ -71,7 +106,7 @@ actor SymbolGraphHierarchyProvider: ExternalHierarchyProvider {
             // Debug: a module without build products (unbuilt project) fails to
             // extract and is expected. At info this dumps the frontend's full
             // "Current visible modules" list per module — hundreds of lines each.
-            Self.logger.debug(
+            logger.debug(
                 "Skipping module '\(module)': \(error.localizedDescription)"
             )
             return []

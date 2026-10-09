@@ -12,7 +12,7 @@ struct PackageCheckoutsTests {
         defer { try? FileManager.default.removeItem(at: repo) }
 
         let input = Types.AnalysisInput(repoPath: repo.path, typeName: "UIViewController")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         #expect(result.types.names == ["OrdersStateViewController", "ProfileStateViewController"])
     }
@@ -23,7 +23,7 @@ struct PackageCheckoutsTests {
         defer { try? FileManager.default.removeItem(at: repo) }
 
         let input = Types.AnalysisInput(repoPath: repo.path, typeName: "UIViewController")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         #expect(result.types.names == ["OrdersStateViewController", "ProfileStateViewController"])
     }
@@ -34,7 +34,7 @@ struct PackageCheckoutsTests {
         defer { try? FileManager.default.removeItem(at: repo) }
 
         let input = Types.AnalysisInput(repoPath: repo.path, typeName: "UIViewController")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         // `StateViewController` and `LoadingViewController` are declared in the package.
         #expect(!result.types.names.contains("StateViewController"))
@@ -47,7 +47,7 @@ struct PackageCheckoutsTests {
         defer { try? FileManager.default.removeItem(at: repo) }
 
         let input = Types.AnalysisInput(repoPath: repo.path, typeName: "UIViewController")
-        let result = try await sut.countTypes(input: input)
+        let result = try await sut.countType(input: input)
 
         #expect(result.types.isEmpty)
     }

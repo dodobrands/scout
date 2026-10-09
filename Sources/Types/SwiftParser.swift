@@ -1,156 +1,56 @@
-import Common
 import Foundation
-import SourceKittenFramework
+import SwiftParser
+import SwiftSyntax
 
-/// Parser for Swift source files using SourceKitten.
+/// Parser for Swift source files using swift-syntax.
 struct SwiftParser {
+    /// Parses Swift source files in parallel.
+    /// - Returns: Parsed objects in file order, so the first declaration of a name stays first.
+    func parseFiles(_ files: [URL]) async -> [ObjectFromCode] {
+        await withTaskGroup(of: (Int, [ObjectFromCode]).self) { group in
+            for (index, file) in files.enumerated() {
+                group.addTask { (index, parseFile(from: file)) }
+            }
+            var parsed = [[ObjectFromCode]](repeating: [], count: files.count)
+            for await (index, objects) in group {
+                parsed[index] = objects
+            }
+            return parsed.flatMap { $0 }
+        }
+    }
+
     /// Parses a Swift source file and extracts type definitions.
+    /// A file that cannot be read as UTF-8 yields no objects.
     /// - Parameter swiftFile: URL to the Swift source file
     /// - Returns: Array of parsed code objects
-    func parseFile(from swiftFile: URL) throws -> [ObjectFromCode] {
-        guard let file = File(path: swiftFile.path(percentEncoded: false)) else { return [] }
-        let structure = try Structure(file: file)
-        guard let substructure = structure.dictionary["key.substructure"] as? [[String: Any]] else {
-            throw ParseError.invalidStructure(key: "key.substructure")
-        }
-
+    func parseFile(from swiftFile: URL) -> [ObjectFromCode] {
         let filePath = swiftFile.path(percentEncoded: false)
-        return parseSubstructure(
-            substructure,
-            parentPath: nil,
-            filePath: filePath,
-            fileContents: file.contents
-        )
-    }
-
-    /// Recursively parses substructure to extract all type definitions including nested types.
-    /// - Parameters:
-    ///   - substructure: Array of AST dictionaries to parse
-    ///   - parentPath: Dot-separated path of parent type names (e.g., "Analytics" for nested types)
-    ///   - filePath: Path to the source file
-    ///   - fileContents: Source file contents for extracting typealias targets
-    private func parseSubstructure(
-        _ substructure: [[String: Any]],
-        parentPath: String?,
-        filePath: String,
-        fileContents: String
-    ) -> [ObjectFromCode] {
-        var results: [ObjectFromCode] = []
-
-        for item in substructure {
-            let kind = item["key.kind"] as? String
-            let name = item["key.name"] as? String
-
-            // Check if this is a type definition (class, struct, enum, protocol)
-            let isTypeDefinition = kind.map { isTypeKind($0) } ?? false
-
-            if isTypeDefinition, let name = name {
-                let inheritedTypes = item["key.inheritedtypes"] as? [[String: String]]
-                let inheritances = inheritedTypes?.compactMap { $0["key.name"] } ?? []
-                let fullName = parentPath.map { "\($0).\(name)" } ?? name
-
-                // Only add to results if there are inherited types (existing behavior)
-                if !inheritances.isEmpty {
-                    results.append(
-                        ObjectFromCode(
-                            name: name,
-                            fullName: fullName,
-                            filePath: filePath,
-                            inheritedTypes: inheritances,
-                            kind: typeKind(for: kind ?? "")
-                        )
-                    )
-                }
-
-                // Recursively parse nested substructure with updated parent path
-                if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
-                    results.append(
-                        contentsOf: parseSubstructure(
-                            nestedSubstructure,
-                            parentPath: fullName,
-                            filePath: filePath,
-                            fileContents: fileContents
-                        )
-                    )
-                }
-            } else if kind == "source.lang.swift.decl.typealias", let name = name {
-                if let targetType = extractTypealiasTarget(from: item, fileContents: fileContents) {
-                    let fullName = parentPath.map { "\($0).\(name)" } ?? name
-                    results.append(
-                        ObjectFromCode(
-                            name: name,
-                            fullName: fullName,
-                            filePath: filePath,
-                            inheritedTypes: [targetType],
-                            kind: .typealiasType
-                        )
-                    )
-                }
-            } else if kind == "source.lang.swift.decl.extension", let name = name {
-                // Extensions update parent path to their extended type
-                if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
-                    let extendedPath = parentPath.map { "\($0).\(name)" } ?? name
-                    results.append(
-                        contentsOf: parseSubstructure(
-                            nestedSubstructure,
-                            parentPath: extendedPath,
-                            filePath: filePath,
-                            fileContents: fileContents
-                        )
-                    )
-                }
-            } else {
-                // Recursively parse nested substructure without updating parent path
-                if let nestedSubstructure = item["key.substructure"] as? [[String: Any]] {
-                    results.append(
-                        contentsOf: parseSubstructure(
-                            nestedSubstructure,
-                            parentPath: parentPath,
-                            filePath: filePath,
-                            fileContents: fileContents
-                        )
-                    )
-                }
-            }
-        }
-
-        return results
-    }
-
-    /// Returns true if the kind represents a type definition (class, struct, enum, protocol).
-    private func isTypeKind(_ kind: String) -> Bool {
-        kind == "source.lang.swift.decl.class"
-            || kind == "source.lang.swift.decl.struct"
-            || kind == "source.lang.swift.decl.enum"
-            || kind == "source.lang.swift.decl.protocol"
-    }
-
-    /// Maps a SourceKitten declaration kind to a `TypeKind`.
-    /// Reference-like declarations (class, actor) map to `.classType`.
-    private func typeKind(for kind: String) -> TypeKind {
-        switch kind {
-        case "source.lang.swift.decl.struct": return .structType
-        case "source.lang.swift.decl.enum": return .enumType
-        case "source.lang.swift.decl.protocol": return .protocolType
-        default: return .classType
-        }
+        guard let data = FileManager.default.contents(atPath: filePath),
+            let source = String(data: data, encoding: .utf8)
+        else { return [] }
+        let collector = DeclarationCollector(filePath: filePath)
+        // The default nesting limit gives up on deeply nested expressions (generated code,
+        // hand-built syntax trees) and leaves the rest of the file unparsed.
+        var parser = Parser(source, maximumNestingLevel: 2048)
+        collector.walk(SourceFileSyntax.parse(from: &parser))
+        return collector.objects
     }
 
     /// Checks if a code object inherits from the specified base type.
     /// - Parameters:
     ///   - objectFromCode: The object to check
     ///   - inheritance: Base type pattern (use `<*>` suffix for generic matching)
-    ///   - allObjects: All parsed objects for indirect inheritance lookup
+    ///   - index: All parsed objects, indexed for indirect inheritance lookup
     /// - Returns: `true` if the object inherits from the base type
     func isInherited(
         objectFromCode: ObjectFromCode,
         from inheritance: String,
-        allObjects: [ObjectFromCode]
+        index: ObjectIndex
     ) -> Bool {
         isInherited(
             objectFromCode: objectFromCode,
             from: inheritance,
-            allObjects: allObjects,
+            index: index,
             originIsValueType: objectFromCode.kind.isValueType,
             path: []
         )
@@ -165,7 +65,7 @@ struct SwiftParser {
     private func isInherited(
         objectFromCode: ObjectFromCode,
         from inheritance: String,
-        allObjects: [ObjectFromCode],
+        index: ObjectIndex,
         originIsValueType: Bool,
         path: Set<String>
     ) -> Bool {
@@ -187,7 +87,7 @@ struct SwiftParser {
             guard
                 let parentObject = resolveParent(
                     named: baseTypeName,
-                    allObjects: allObjects,
+                    index: index,
                     excluding: path
                 )
             else {
@@ -204,7 +104,7 @@ struct SwiftParser {
             return isInherited(
                 objectFromCode: parentObject,
                 from: inheritance,
-                allObjects: allObjects,
+                index: index,
                 originIsValueType: originIsValueType,
                 path: path
             )
@@ -222,28 +122,29 @@ struct SwiftParser {
     ///   conformance to a protocol would be misrouted into that typealias's target hierarchy.
     private func resolveParent(
         named typeName: String,
-        allObjects: [ObjectFromCode],
+        index: ObjectIndex,
         excluding path: Set<String>
     ) -> ObjectFromCode? {
-        let unvisited = allObjects.lazy.filter { !path.contains($0.identity) }
+        let isUnvisited = { (candidate: ObjectFromCode) in !path.contains(candidate.identity) }
 
         if typeName.contains("."),
-            let nested = unvisited.first(where: { $0.fullName == typeName })
+            let nested = index.byFullName[typeName]?.first(where: isUnvisited)
         {
             return nested
         }
 
         let components = typeName.split(separator: ".")
         guard let name = components.last.map(String.init) else { return nil }
-        let candidates = unvisited.filter { candidate in
-            candidate.name == name && !(candidate.isTypealias && candidate.isNested)
+        let candidates = (index.byName[name] ?? []).lazy.filter { candidate in
+            !(candidate.isTypealias && candidate.isNested) && isUnvisited(candidate)
         }
 
-        if components.count > 1, let module = components.first {
-            let moduleDirectory = "/\(module)/"
-            if let fromModule = candidates.first(where: { $0.filePath.contains(moduleDirectory) }) {
-                return fromModule
-            }
+        if components.count > 1, let module = components.first,
+            let fromModule = index.byModuleQualifiedName["\(module).\(name)"]?.first(
+                where: isUnvisited
+            )
+        {
+            return fromModule
         }
 
         return candidates.first
@@ -284,30 +185,4 @@ struct SwiftParser {
         return typeName
     }
 
-    /// Extracts the target type from a typealias declaration source text.
-    /// For example, from `typealias Theme = Stylable` extracts `Stylable`.
-    private func extractTypealiasTarget(
-        from item: [String: Any],
-        fileContents: String
-    ) -> String? {
-        guard let offset = item["key.offset"] as? Int64,
-            let length = item["key.length"] as? Int64
-        else { return nil }
-
-        let bytes = Data(fileContents.utf8)
-        let start = Int(offset)
-        let end = Int(offset + length)
-
-        guard start >= 0, end <= bytes.count else { return nil }
-
-        guard let declaration = String(data: bytes[start..<end], encoding: .utf8) else {
-            return nil
-        }
-
-        guard let equalsIndex = declaration.firstIndex(of: "=") else { return nil }
-        let afterEquals = declaration[declaration.index(after: equalsIndex)...]
-        let target = afterEquals.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        return target.isEmpty ? nil : target
-    }
 }
