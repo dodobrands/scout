@@ -142,7 +142,7 @@ scout build-settings --include "App/**/*.xcodeproj" --config build-settings-conf
 | `metrics` | `[Metric]` | No | Array of build setting metrics to analyze |
 | `metrics[].setting` | `String` | Yes | Build setting name (e.g., `SWIFT_VERSION`) |
 | `metrics[].commits` | `[String]?` | No | Commits for this setting (default: `["HEAD"]`, see [working tree](../Common/GitConfiguration.md#working-tree-without-checkout)) |
-| `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit |
+| `setupCommands` | `[SetupCommand]` | No | Commands to execute before analyzing each commit; without commits they run in the working tree as is |
 | `setupCommands[].command` | `String` | Yes | Command to execute (simple commands run directly, shell operators like `\|`, `&&` trigger `/bin/sh`) |
 | `setupCommands[].workingDirectory` | `String` | No | Directory relative to repo root |
 | `setupCommands[].optional` | `Bool` | No | If `true`, analysis continues even if command fails (default: `false`) |

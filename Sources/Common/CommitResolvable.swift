@@ -1,3 +1,4 @@
+import Logging
 import OrderedCollections
 
 /// Protocol for metric types that have commits which may need HEAD resolution.
@@ -9,11 +10,21 @@ package protocol CommitResolvable {
 extension Array where Element: CommitResolvable {
     /// True when no metric names a commit other than `HEAD`.
     /// Such a run analyzes the working tree as it is: no checkout and no git preparation,
-    /// so uncommitted changes are measured and the repository is left untouched.
+    /// so uncommitted changes are measured and the branch stays attached.
     /// Any explicit commit switches the whole run to checkouts, because once another commit
     /// is checked out the working tree no longer reflects `HEAD`.
-    package var analyzesWorkingTree: Bool {
-        allSatisfy { $0.commits.allSatisfy { $0 == "HEAD" } }
+    /// Warns when `git` asks for clean, LFS fix or submodules, since they only run on checkout.
+    package func analyzesWorkingTree(git: GitConfiguration) -> Bool {
+        let analyzesWorkingTree = allSatisfy { $0.commits.allSatisfy { $0 == "HEAD" } }
+        if analyzesWorkingTree, git.clean || git.fixLFS || git.initializeSubmodules {
+            Logger(label: "scout.Git").warning(
+                """
+                No commits to check out: analyzing the working tree as is, \
+                ignoring clean, fixLFS and initializeSubmodules
+                """
+            )
+        }
+        return analyzesWorkingTree
     }
 
     /// Resolves "HEAD" strings to actual commit hashes.

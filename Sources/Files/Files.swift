@@ -43,7 +43,7 @@ public struct Files: Sendable {
     ) async throws {
         let repoPath = URL(filePath: input.git.repoPath)
 
-        let analyzesWorkingTree = input.metrics.analyzesWorkingTree
+        let analyzesWorkingTree = input.metrics.analyzesWorkingTree(git: input.git)
 
         // Resolve HEAD commits to actual hashes
         let resolvedMetrics = try await input.metrics.resolvingHeadCommits(

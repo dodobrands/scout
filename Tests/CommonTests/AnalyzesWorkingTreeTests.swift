@@ -2,6 +2,12 @@ import Common
 import Testing
 
 struct AnalyzesWorkingTreeTests {
+    let git = GitConfiguration(
+        repoPath: ".",
+        clean: true,
+        fixLFS: false,
+        initializeSubmodules: false
+    )
 
     @Test
     func `When every metric uses HEAD, should analyze the working tree`() {
@@ -10,7 +16,7 @@ struct AnalyzesWorkingTreeTests {
             TestMetric(name: "B", commits: ["HEAD", "HEAD"]),
         ]
 
-        #expect(metrics.analyzesWorkingTree)
+        #expect(metrics.analyzesWorkingTree(git: git))
     }
 
     @Test
@@ -20,6 +26,6 @@ struct AnalyzesWorkingTreeTests {
             TestMetric(name: "B", commits: ["abc123"]),
         ]
 
-        #expect(!metrics.analyzesWorkingTree)
+        #expect(!metrics.analyzesWorkingTree(git: git))
     }
 }

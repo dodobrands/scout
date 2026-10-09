@@ -94,7 +94,7 @@ public struct LOC: Sendable {
 
         try await Self.checkClocInstalled()
 
-        let analyzesWorkingTree = input.metrics.analyzesWorkingTree
+        let analyzesWorkingTree = input.metrics.analyzesWorkingTree(git: input.git)
 
         // Resolve HEAD commits to actual hashes
         let resolvedMetrics = try await input.metrics.resolvingHeadCommits(

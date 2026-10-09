@@ -4,10 +4,10 @@ Git operations configuration shared across all tools. All parameters are optiona
 
 ## Working tree without checkout
 
-When no metric names a commit other than `HEAD` — no `--commits` and no `commits` in the config — scout analyzes the working tree as is:
+When no metric names a commit other than `HEAD` — no `--commits` and no `commits` in the config, or only `HEAD` in them — scout analyzes the working tree as is:
 
 - no checkout, the branch stays attached;
-- no clean, LFS fix or submodule update, even if the config enables them;
+- no clean, LFS fix or submodule update, even if enabled: scout logs a warning instead;
 - uncommitted and untracked files are analyzed;
 - the output reports the `HEAD` hash and date.
 
