@@ -5,7 +5,7 @@ description: Count lines of code with `scout loc`, a `cloc` wrapper that can rep
 
 # `scout loc`
 
-Count lines of code per language and path, at HEAD or across commits. Runs `cloc` under the hood.
+Count lines of code per language and path, in the current working tree or across commits. Runs `cloc` under the hood.
 
 Run `scout loc --help` for flags — it is the source of truth. This file covers what the help does not say.
 
@@ -68,12 +68,14 @@ Pick stable names before running history — the name is the join key of the who
 
 ## Recipes
 
-### One-off count
+### Count in the current working tree (start here)
 
 ```bash
 scout loc Swift --include Sources --exclude .build Tests --output /tmp/loc.json
 jq -r '.[] | .results[] | "\(.metric)\t\(.linesOfCode)"' /tmp/loc.json
 ```
+
+No `--commits`, so scout reads the files as they are — uncommitted changes included — and runs no git command. Start here; replay history only when the question is about change over time.
 
 ### Growth over history, as CSV
 

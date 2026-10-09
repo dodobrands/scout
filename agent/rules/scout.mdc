@@ -1,5 +1,5 @@
 ---
-description: Measure a repository with the `scout` CLI — type, file, pattern, LOC and Xcode build-setting counts at HEAD or replayed across git history.
+description: Measure a repository with the `scout` CLI — type, file, pattern, LOC and Xcode build-setting counts in the current working tree or replayed across git history.
 alwaysApply: false
 ---
 
@@ -27,6 +27,9 @@ alwaysApply: false
 ## Recipes
 
 ```bash
+# Current working tree, uncommitted changes included: no checkout, no git command. Start here.
+scout types UIViewController View --repo-path "$REPO" --output /tmp/types.json
+
 # Monthly series of type counts
 commits=$(git -C "$REPO" log --reverse --format='%H %cI' \
   | awk '{ m = substr($2, 1, 7); if (m != seen) { print $1; seen = m } }')
