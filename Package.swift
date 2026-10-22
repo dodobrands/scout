@@ -65,12 +65,13 @@ var targets: [Target] = [
                 package: "swift-log-oslog",
                 condition: .when(platforms: [.macOS])
             ),
-            // FilePath is provided by the System framework on Apple platforms;
-            // on Linux it comes from the swift-system package.
+            // Common takes FilePath from the System framework on Apple platforms
+            // and from swift-system on Linux, but the dependency stays
+            // unconditional: SwiftBuild applies a platform condition here to the
+            // CLI targets too and hides SystemPackage from them on macOS.
             .product(
                 name: "SystemPackage",
-                package: "swift-system",
-                condition: .when(platforms: [.linux])
+                package: "swift-system"
             ),
             .product(
                 name: "OrderedCollections",
@@ -160,6 +161,10 @@ var targets: [Target] = [
             ),
             "Types",
             "Common",
+            .product(
+                name: "SystemPackage",
+                package: "swift-system"
+            ),
         ],
         exclude: ["README.md"],
         swiftSettings: [
@@ -180,6 +185,10 @@ var targets: [Target] = [
             ),
             "Files",
             "Common",
+            .product(
+                name: "SystemPackage",
+                package: "swift-system"
+            ),
         ],
         exclude: ["README.md"],
         swiftSettings: [
@@ -200,6 +209,10 @@ var targets: [Target] = [
             ),
             "Pattern",
             "Common",
+            .product(
+                name: "SystemPackage",
+                package: "swift-system"
+            ),
         ],
         exclude: ["README.md"],
         swiftSettings: [
@@ -220,6 +233,10 @@ var targets: [Target] = [
             ),
             "LOC",
             "Common",
+            .product(
+                name: "SystemPackage",
+                package: "swift-system"
+            ),
         ],
         exclude: ["README.md"],
         swiftSettings: [
@@ -401,6 +418,10 @@ var targets: [Target] = [
                 ),
                 "BuildSettings",
                 "Common",
+                .product(
+                    name: "SystemPackage",
+                    package: "swift-system"
+                ),
             ],
             exclude: ["README.md"],
             swiftSettings: [
